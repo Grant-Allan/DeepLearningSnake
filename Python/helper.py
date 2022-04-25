@@ -2,6 +2,7 @@ from enum import Enum
 from collections import namedtuple
 import matplotlib.pyplot as plt
 from IPython import display
+import os
 
 
 # Directions dictionary so we can use .RIGHT, .LEFT, etc instead of numbers
@@ -16,7 +17,6 @@ Point = namedtuple("Point", ["x", "y"])
 
 # Game values
 TILE_SIZE = 20
-FPS = 40
 
 # Agent values
 MAX_MEMORY = 100_000
@@ -56,4 +56,7 @@ def plot_data(scores, mean_scores, agent_num=0, gen=1):
     plt.show(block=False)
     plt.pause(0.001)
 
-
+def save_graph(generation):
+    if not os.path.exists("./graphs"):
+        os.makedirs("./graphs")
+    plt.savefig(f"./graphs/graph_gen{generation}.jpg")

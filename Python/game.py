@@ -4,7 +4,7 @@ import random
 import numpy as np
 from agent import Agent
 from genetics import GeneticAlgorithm
-from helper import plot_data, Direction, Point, TILE_SIZE, FPS, WHITE, RED, BLACK
+from helper import plot_data, save_graph, Direction, Point, TILE_SIZE, WHITE, RED, BLACK
 
 pygame.init()
 
@@ -14,7 +14,7 @@ try:
 except:
     FONT = pygame.font.SysFont("arial", int(TILE_SIZE*1.5))
 
-
+FPS = 100
 
 class SnakeGameAI():
     ''' The base logic for the game itself. '''
@@ -85,11 +85,11 @@ class SnakeGameAI():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-        
+
         # Move
         self._move(action) # Update the head
         self.snake.insert(0, self.head)
-        
+
         # Check if game over
         # If the snake hasn't made enough progress, it's executed
         game_over = False
@@ -105,7 +105,7 @@ class SnakeGameAI():
             self._food_gen()
         else:
             self.snake.pop()
-        
+
         # Update ui and clock
         self._update_ui()
         self.clock.tick(FPS)
@@ -225,7 +225,7 @@ def run(population_size=20, max_episodes=10, max_generations=10):
             # Set colors
             game.color1 = agent.color1
             game.color2 = agent.color2
-            
+
             # Set agent number
             game.agent_num = agent_num
 
@@ -262,18 +262,18 @@ def run(population_size=20, max_episodes=10, max_generations=10):
 
                         # Save model if it's the best (and update top score)
                         if score > game.top_score:
-                            if not os.path.exists("./model"):
-                                os.makedirs("./model")
+                            if not os.path.exists("./models"):
+                                os.makedirs("./models")
                             agent.model.save(f"./models/model_gen{cur_gen}.h5")
                             game.top_score = score
-                        
+
                         # Update agent's internal score if needed
                         if score > agent.top_score:
                             agent.top_score = score
 
                         total_score += score
                         game.mean_score = np.round((total_score / cur_episode), 3)
-                        
+
                         # Record data
                         scores.append(score)
                         mean_scores.append(game.mean_score)
@@ -289,7 +289,10 @@ def run(population_size=20, max_episodes=10, max_generations=10):
         # Make new population
         agents = genetics.breed_population(agents)
 
+        # Save generation's graph
+        save_graph(cur_gen)
+
 
 
 if __name__ == "__main__":
-    run(population_size=20, max_episodes=5, max_generations=50)
+    run(population_size=50, max_episodes=20, max_generations=100)
