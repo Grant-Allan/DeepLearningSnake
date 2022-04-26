@@ -66,6 +66,9 @@ class StartMenu():
         self.false_display = self.true_display.copy()
         pyg_set_caption("Snake")
 
+        # Create background snake object
+        self.bg_snake = BackgroundSnake(self.width, self.height, self.margin, self.false_display)
+
 
     def main_menu(self):
         while True:
@@ -99,6 +102,9 @@ class StartMenu():
 
             # Black out previous display
             self.false_display.fill(BLACK)
+
+            # Run the background snake
+            #self.false_display = self.bg_snake.play_step(1)
 
             # Display title
             t_x, t_y = TITLE_FONT.size("Snake")
@@ -242,11 +248,11 @@ class StartMenu():
                     # Start game with a single agent
                     elif SA_x_check and SA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_dqn(fps=100, max_episodes=100)
+                        run_game.run_dqn()
                     # Start game with a population of agents
                     elif PoA_x_check and PoA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_grl(fps=100, population_size=50, max_episodes=20, max_generations=100)
+                        run_game.run_grl()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
                         self.main_menu()
@@ -275,6 +281,208 @@ class StartMenu():
             # Place text
             text = FONT.render(button_text, True, WHITE)
             self.false_display.blit(text, [postion[0]+5, postion[1]+5])
+
+
+
+class BackgroundSnake():
+    ''' The base logic for the game itself. '''
+    def __init__(self, width, height, margin, false_display, fps=100):
+        # Initialize input data
+        self.fps = fps
+        self.width = width
+        self.height = height
+        self.margin = margin
+
+        # Initialze display
+        self.false_display = false_display
+        self.clock = pyg_Clock()
+
+        # Initialize agent
+        self.agent = Agent()
+        #self.model = load model path
+
+        # Initialize game values
+        self.reset()
+
+
+    def reset(self):
+        ''' Reset/Initialize base game state. '''
+        # Default starting direction
+        self.direction = Direction.UP
+
+        # Set head, then add it to the snake, along with two
+        # other body blocks
+        self.head = Point(self.width//2, self.height//2)
+        self.snake = [self.head,
+                      Point(self.head.x, self.head.y+TILE_SIZE),
+                      Point(self.head.x, self.head.y+(2*TILE_SIZE))]
+
+        # Initialize score and food
+        self.score = 0
+        self._food_gen()
+        self.frame_iteration = 0
+
+
+    def _food_gen(self):
+        ''' Randomly place food on the map. '''
+        x = rand_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        y = rand_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        self.food = Point(x, y)
+
+        # Check for conflicting values
+        if self.food in self.snake:
+            self._food_gen()
+
+
+    def play_step(self):
+        ''' Run a frame of the game. '''
+        self.frame_iteration += 1
+
+        # Set-up for getting the state
+        head = self.snake[0]
+        point_l = Point(head.x - TILE_SIZE, head.y)
+        point_r = Point(head.x + TILE_SIZE, head.y)
+        point_u = Point(head.x, head.y - TILE_SIZE)
+        point_d = Point(head.x, head.y + TILE_SIZE)
+
+        dir_l = self.direction == Direction.LEFT
+        dir_r = self.direction == Direction.RIGHT
+        dir_u = self.direction == Direction.UP
+        dir_d = self.direction == Direction.DOWN
+
+        # List of states, using binary checks to fill values
+        state = [
+            # Danger straight
+            (dir_r and self.is_collision(point_r)) or
+            (dir_l and self.is_collision(point_l)) or
+            (dir_u and self.is_collision(point_u)) or
+            (dir_d and self.is_collision(point_d)),
+
+            # Danger right
+            (dir_u and self.is_collision(point_r)) or
+            (dir_d and self.is_collision(point_l)) or
+            (dir_l and self.is_collision(point_u)) or
+            (dir_r and self.is_collision(point_d)),
+
+            # Danger left
+            (dir_d and self.is_collision(point_r)) or
+            (dir_u and self.is_collision(point_l)) or
+            (dir_r and self.is_collision(point_u)) or
+            (dir_l and self.is_collision(point_d)),
+
+            # Move direction
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+
+            # Food location
+            self.food.x < head.x,  # food left
+            self.food.x > head.x,  # food right
+            self.food.y < head.y,  # food up
+            self.food.y > head.y   # food down
+        ]
+
+        # Get action from the agent
+        action = self.agent.get_action(state)
+
+        # Move
+        self._move(action) # Update the head
+        self.snake.insert(0, self.head)
+
+        # Check if game over
+        # If the snake hasn't made enough progress, it's executed
+        if self.is_collision() or (self.frame_iteration > 125*len(self.snake)):
+            self.reset()
+            return self.false_display
+
+        # Place new food or just move
+        if self.head == self.food:
+            self.score += 1
+            self._food_gen()
+        else:
+            self.snake.pop()
+
+        # Update ui and clock
+        self._update_ui()
+        self.clock.tick(self.fps)
+
+        return self.false_display
+
+
+    def is_collision(self, block=None):
+        ''' Check for collision against a wall or the snake's body. '''
+        if block is None:
+            block = self.head
+        # Hits boundary
+        if block.x > self.width - TILE_SIZE or block.x < 0 or block.y > self.height - TILE_SIZE or block.y < 0:
+            return True
+        # Hits itself
+        if block in self.snake[1:]:
+            return True
+        return False
+
+
+    def _update_ui(self):
+        ''' Update the game screen. '''
+        self.false_display.fill(BLACK)
+
+        # Draw out the snake block by block
+        for x, y in self.snake:
+            pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
+
+        # Draw the food block
+        pyg_rect(self.false_display, RED, [self.food.x, self.food.y, TILE_SIZE, TILE_SIZE])
+
+        # Draw a line for the margin
+        pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
+
+        # Show the current score
+        t_x, _ = FONT.size(f"Score: {self.score}")
+        text = FONT.render(f"Score: {self.score}", True, WHITE)
+        self.false_display.blit(text, [self.width//2 - t_x//2, int(self.height+(TILE_SIZE//4)) + TILE_SIZE])
+
+
+    def _move(self, action):
+        '''
+        Choose a new direction from straight, right, or left, where
+        straight is to continue the current direction and right and
+        left are to turn in either direction from the perspective
+        of what direction the snake is currently heading.
+        '''
+        # [straight, right, left]
+
+        clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
+        idx = clock_wise.index(self.direction)
+
+        # No change (straight)
+        if np_array_equal(action, [1, 0, 0]):
+            new_dir = clock_wise[idx]
+        # Right turn r -> d -> l -> u
+        elif np_array_equal(action, [0, 1, 0]):
+            next_idx = (idx + 1) % 4
+            new_dir = clock_wise[next_idx]
+        # Left turn r -> u -> l -> d
+        else: # [0, 0, 1]
+            next_idx = (idx - 1) % 4
+            new_dir = clock_wise[next_idx]
+
+        # Set new direction to the class variable
+        self.direction = new_dir
+
+        # Update the head coordinates
+        x = self.head.x
+        y = self.head.y
+        if self.direction == Direction.RIGHT:
+            x += TILE_SIZE
+        elif self.direction == Direction.LEFT:
+            x -= TILE_SIZE
+        elif self.direction == Direction.DOWN:
+            y += TILE_SIZE
+        elif self.direction == Direction.UP:
+            y -= TILE_SIZE
+        self.head = Point(x, y)
 
 
 
