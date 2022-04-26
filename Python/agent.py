@@ -1,26 +1,36 @@
-import random
-import numpy as np
 from collections import deque
 from model import QNet, QTrainer
 from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR
 
+from random import randint as rand_randint
+from random import sample as rand_sample
+from numpy import expand_dims as np_expand_dims
+from numpy import array as np_array
+from numpy import argmax as np_argmax
+
 
 class Agent():
     ''' The snake agent- not the model itself. '''
-    def __init__(self, num_states=11, num_actions=3):
+    def __init__(self):
+        # Current episode
         self.episode = 0
+
+        # Internal data
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = QNet.linear_QNet(input_size=num_states, hidden_sizes=[128, 128], output_size=num_actions, learning_rate=LR)
+        self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
         self.trainer = QTrainer(self.model, gamma=self.gamma)
         
         # Colors
-        self.color1 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255))
-        self.color2 = (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255))
+        self.color1 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
+        self.color2 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
 
         # Internal score for fitness testing
         self.top_score = 0
+
+        # Internal mean for graphing
+        self.mean = 0
 
 
     def get_state(self, game):
@@ -69,7 +79,7 @@ class Agent():
             game.food.y > game.head.y   # food down
         ]
 
-        return np.array(state, dtype=int)
+        return np_array(state, dtype=int)
 
 
     def remember(self, state, action, reward, next_state, done):
@@ -80,7 +90,7 @@ class Agent():
     def train_long_memory(self):
         ''' The long term memory training done after each episode. '''
         if len(self.memory) > BATCH_SIZE:
-            mini_sample = random.sample(self.memory, BATCH_SIZE) # list of tuples
+            mini_sample = rand_sample(self.memory, BATCH_SIZE) # list of tuples
         else:
             mini_sample = self.memory
 
@@ -104,13 +114,13 @@ class Agent():
         # Random moves (exploration via randomness vs exploitation of "safe" moves)
         self.epsilon = 80 - self.episode
         final_move = [0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
-            move = random.randint(0, 2)
+        if rand_randint(0, 200) < self.epsilon:
+            move = rand_randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = np.expand_dims(np.array(state, dtype=float), 0)
+            state0 = np_expand_dims(np_array(state, dtype=float), 0)
             prediction = self.model(state0)
-            move = np.argmax(prediction).item()
+            move = np_argmax(prediction).item()
             final_move[move] = 1
 
         return final_move
