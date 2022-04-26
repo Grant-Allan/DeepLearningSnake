@@ -14,6 +14,24 @@ class RunGame():
     for training a single DQN snake, or a population of DQN
     snakes in tandem with a deep genetic algorithm.
     '''
+    def main_menu():
+        '''
+        A main menu to open the game into, where you can select
+        your game mode and change various settings.
+        '''
+        pass
+    
+
+    def settings_menu():
+        '''
+        A menu for changing settings such as game speed, number of agents,
+        number of episodes, number of generations, mutation rate, etc.
+
+        Having just a single agent defaults it to run_dqn?
+        '''
+        pass
+
+
     def run_human(self, fps=10):
         ''' Run the snake game in a way that a human can play. '''
         # Create game object
