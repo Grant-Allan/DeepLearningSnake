@@ -127,6 +127,23 @@ class Plotter():
 
         self.ax[1, 0].xlim(xmin=0)
         self.ax[1, 0].ylim(ymin=0)
+    
+
+    def plot_agent(self):
+        ''' Plot the data for an individual. '''
+        self.ax[1, 0].title(f"Agent {self.agent_num} Data")
+        self.ax[1, 0].xlabel("Number of Games")
+        self.ax[1, 0].ylabel("Score")
+
+        self.ax[1, 0].plot(self.agent_scores, label="Scores")
+        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
+        self.ax[1, 0].legend(loc="upper left")
+
+        self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
+        self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
+
+        self.ax[1, 0].xlim(xmin=0)
+        self.ax[1, 0].ylim(ymin=0)
 
     
     def save_session(self):

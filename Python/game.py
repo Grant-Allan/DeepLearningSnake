@@ -1,12 +1,18 @@
-from helper import Direction, Point, TILE_SIZE, WHITE, RED, BLACK
+from helper import Direction, Point, TILE_SIZE, WHITE, RED, BLACK, BLUE1, BLUE2
 
-from random import np_randint
-from numpy import np_array_equal
+from random import randint as rand_randint
+from numpy import array_equal as np_array_equal
 
 from pygame import init as pyg_init
 from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
 from pygame import quit as pyg_quit
+from pygame import KEYDOWN as pyg_KEYDOWN
+from pygame import K_LEFT as pyg_K_LEFT
+from pygame import K_RIGHT as pyg_K_RIGHT
+from pygame import K_UP as pyg_K_UP
+from pygame import K_DOWN as pyg_K_DOWN
+from pygame import Rect as pyg_Rect
 from pygame.font import Font as pyg_Font
 from pygame.time import Clock as pyg_Clock
 from pygame.event import get as pyg_get
@@ -27,7 +33,7 @@ try:
 except:
     FONT = pyg_Font("arial", int(TILE_SIZE*1.5))
 
-class Game():
+class SnakeGameAI():
     ''' The base logic for the game itself. '''
     def __init__(self, fps=60, tiles_wide=32, tiles_high=24, tiles_margin=4):
         self.fps = fps
@@ -79,8 +85,8 @@ class Game():
 
     def _food_gen(self):
         ''' Randomly place food on the map. '''
-        x = np_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
-        y = np_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        x = rand_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        y = rand_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
         self.food = Point(x, y)
 
         # Check for conflicting values
@@ -128,6 +134,7 @@ class Game():
 
 
     def is_collision(self, block=None):
+        ''' Check for collision against a wall or the snake's body. '''
         if block is None:
             block = self.head
         # Hits boundary
@@ -222,4 +229,111 @@ class Game():
             y += TILE_SIZE
         elif self.direction == Direction.UP:
             y -= TILE_SIZE
+        self.head = Point(x, y)
+
+
+class SnakeGameHuman():
+    ''' This is the class to run if you're a human wanting to play snake. '''
+    def __init__(self, fps, w=640, h=480):
+        self.fps = fps
+        self.w = w
+        self.h = h
+        # init display
+        self.display = pyg_set_mode((self.w, self.h))
+        pyg_set_caption("Snake")
+        self.clock = pyg_Clock()
+
+        # init game state
+        self.direction = Direction.RIGHT
+
+        self.head = Point(self.w/2, self.h/2)
+        self.snake = [self.head,
+                      Point(self.head.x-TILE_SIZE, self.head.y),
+                      Point(self.head.x-(2*TILE_SIZE), self.head.y)]
+
+        self.score = 0
+        self.food = None
+        self._place_food()
+
+    def _place_food(self):
+        x = rand_randint(0, (self.w-TILE_SIZE )//TILE_SIZE )*TILE_SIZE
+        y = rand_randint(0, (self.h-TILE_SIZE )//TILE_SIZE )*TILE_SIZE
+        self.food = Point(x, y)
+        if self.food in self.snake:
+            self._place_food()
+
+    def play_step(self):
+        # 1. collect user input
+        for event in pyg_get():
+            if event.type == pyg_QUIT:
+                pyg_quit()
+                quit()
+            if event.type == pyg_KEYDOWN:
+                if event.key == pyg_K_LEFT:
+                    self.direction = Direction.LEFT
+                elif event.key == pyg_K_RIGHT:
+                    self.direction = Direction.RIGHT
+                elif event.key == pyg_K_UP:
+                    self.direction = Direction.UP
+                elif event.key == pyg_K_DOWN:
+                    self.direction = Direction.DOWN
+
+        # 2. move
+        self._move(self.direction) # update the head
+        self.snake.insert(0, self.head)
+
+        # 3. check if game over
+        game_over = False
+        if self._is_collision():
+            game_over = True
+            return game_over, self.score
+
+        # 4. place new food or just move
+        if self.head == self.food:
+            self.score += 1
+            self._place_food()
+        else:
+            self.snake.pop()
+
+        # 5. update ui and clock
+        self._update_ui()
+        self.clock.tick(self.fps)
+        # 6. return game over and score
+        return game_over, self.score
+
+    def _is_collision(self):
+        # hits boundary
+        if self.head.x > self.w - TILE_SIZE or self.head.x < 0 or self.head.y > self.h - TILE_SIZE or self.head.y < 0:
+            return True
+        # hits itself
+        if self.head in self.snake[1:]:
+            return True
+
+        return False
+
+    def _update_ui(self):
+        self.display.fill(BLACK)
+
+        for pt in self.snake:
+            pyg_rect(self.display, BLUE1, pyg_Rect(pt.x, pt.y, TILE_SIZE, TILE_SIZE))
+            pyg_rect(self.display, BLUE2, pyg_Rect(pt.x+4, pt.y+4, 12, 12))
+
+        pyg_rect(self.display, RED, pyg_Rect(self.food.x, self.food.y, TILE_SIZE, TILE_SIZE))
+
+        text = FONT.render("Score: " + str(self.score), True, WHITE)
+        self.display.blit(text, [0, 0])
+        pyg_flip()
+
+    def _move(self, direction):
+        x = self.head.x
+        y = self.head.y
+        if direction == Direction.RIGHT:
+            x += TILE_SIZE
+        elif direction == Direction.LEFT:
+            x -= TILE_SIZE
+        elif direction == Direction.DOWN:
+            y += TILE_SIZE
+        elif direction == Direction.UP:
+            y -= TILE_SIZE
+
         self.head = Point(x, y)

@@ -1,6 +1,6 @@
 from agent import Agent
 from genetics import GeneticAlgorithm
-from game import Game
+from game import SnakeGameAI, SnakeGameHuman
 from helper import Plotter
 
 from os import makedirs as os_makedirs
@@ -17,9 +17,14 @@ class Run():
 
     def run_human(self, fps=40):
         ''' Run the snake game in a way that a human can play. '''
-        # Create objects
-        self.game = Game(fps=fps)
+        # Create game object
+        game = SnakeGameHuman(fps=fps)
 
+        # Game loop
+        while True:
+            game_over, score = game.play_step()
+            if game_over: break
+        print("Final Score", score)
 
 
     def run_dqn(self, fps=100, max_episodes=100):
@@ -28,8 +33,12 @@ class Run():
         self.max_episodes = max_episodes
 
         # Create objects
-        self.game = Game(fps=fps)
+        agent = Agent()
+        self.game = SnakeGameAI(fps=fps)
         self.plotter = Plotter()
+
+        while True:
+            self._run_episode(agent, single_agent=True)
    
 
     def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=10):
@@ -41,7 +50,7 @@ class Run():
 
         # Create class objects
         self.agents = [Agent() for i in range(self.population_size)]
-        self.game = Game(fps=fps)
+        self.game = SnakeGameAI(fps=fps)
         self.genetics = GeneticAlgorithm()
         self.plotter = Plotter()
 
@@ -50,7 +59,7 @@ class Run():
 
         # Run for set number of generations (adjusting to start at gen 1)
         for cur_gen in range(1, self.max_generations+1):
-            self._run_generations(cur_gen)
+            self._run_generation(cur_gen)
         
         # Save session's graph
         self.plotter.save_session()
@@ -70,7 +79,7 @@ class Run():
 
         # Run for set number of generations
         for agent_num, agent in enumerate(self.agents):
-            self.run_agent(cur_gen, agent_num, agent)
+            self._run_agent(cur_gen, agent_num, agent)
         
         # Save generation's graph
         self.plotter.save_gen(cur_gen)
@@ -103,14 +112,14 @@ class Run():
             # Episode loop
             run = True
             while run:
-                run = self._run_episodes(agent)
+                run = self._run_episode(agent)
         
         # Save agent's graph
         self.plotter.save_agent(cur_gen, agent_num)
                 
 
     
-    def _run_episode(self, agent):
+    def _run_episode(self, agent, single_agent=False):
         ''' Run an episode of the game. '''
         # Get old state
         state_old = agent.get_state(self.game)
@@ -140,24 +149,25 @@ class Run():
             if score > agent.top_score:
                 agent.top_score = score
 
-            # Save model if it's the best (and update top score)
-            if score > self.game.top_score:
-                if not os_exists("./models"):
-                    os_makedirs("./models")
-                agent.model.save(f"./models/model_gen{self.game.generation}.h5")
-                self.game.top_score = score
+            if not single_agent:
+                # Save model if it's the best (and update top score)
+                if score > self.game.top_score:
+                    if not os_exists("./models"):
+                        os_makedirs("./models")
+                    agent.model.save(f"./models/model_gen{self.game.generation}.h5")
+                    self.game.top_score = score
 
-            # Update aggregate data
-            self.game.total_score += score
-            self.game.mean_score = np_round((self.game.total_score / self.game.agent_episode), 3)
-            self.all_scores.append(score)
-            self.all_mean_scores.append(self.game.mean_score)
+                # Update aggregate data
+                self.game.total_score += score
+                self.game.mean_score = np_round((self.game.total_score / self.game.agent_episode), 3)
+                self.all_scores.append(score)
+                self.all_mean_scores.append(self.game.mean_score)
 
-            # Updte generation data
-            self.gen_score += score
-            gen_mean = np_round((self.gen_score / self.game.agent_episode), 3)
-            self.gen_scores.append(score)
-            self.gen_mean_scores.append(gen_mean)
+                # Updte generation data
+                self.gen_score += score
+                gen_mean = np_round((self.gen_score / self.game.agent_episode), 3)
+                self.gen_scores.append(score)
+                self.gen_mean_scores.append(gen_mean)
 
             # Updte agent data
             self.agent_score += score
@@ -174,7 +184,6 @@ class Run():
         self._record_data()
         return run
 
-                
 
     def _record_data(self):
         ''' Record the session data as it currently stands. '''
