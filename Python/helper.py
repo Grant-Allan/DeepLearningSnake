@@ -1,8 +1,8 @@
 from enum import Enum
 from collections import namedtuple
 
-from os import os_makedirs
-from os.path import os_exists
+from os import makedirs as os_makedirs
+from os.path import exists as os_exists
 
 from IPython.display import clear_output as dis_clear_output
 from IPython.display import display as dis_display
@@ -52,9 +52,9 @@ BLACK = (0,0,0)
 
 class Plotter():
     ''' Class to hold all plotting functions. '''
-    def __init__(self):
+    def __init__(self, single_agent=False):
         plt_ion() # turn on interactable plots
-        _, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
+        if not single_agent: _, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
 
     def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
         ''' Plot the data for the game. '''
@@ -137,7 +137,7 @@ class Plotter():
         self.ax[1, 0].ylim(ymin=0)
 
 
-    def plot_single_agent(scores, mean_scores):
+    def plot_single_agent(self, scores, mean_scores):
         ''' Plot the data when running a sessions with just one agent. '''
         # Clear previous display
         dis_clear_output(wait=True)

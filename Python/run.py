@@ -5,6 +5,7 @@ from helper import Plotter
 
 from os import makedirs as os_makedirs
 from os.path import exists as os_exists
+
 from numpy import round as np_round
 
     
@@ -15,7 +16,7 @@ class Run():
     snakes in tandem with a deep genetic algorithm.
     '''
 
-    def run_human(self, fps=30):
+    def run_human(self, fps=10):
         ''' Run the snake game in a way that a human can play. '''
         # Create game object
         game = SnakeGameHuman(fps=fps)
@@ -34,11 +35,14 @@ class Run():
 
         # Create objects
         agent = Agent()
-        plotter = Plotter()
+        plotter = Plotter(single_agent=True)
         self.game = SnakeGameAI(fps=fps)
 
         # Set aggregate data lists
         self.agent_scores, self.agent_mean_scores = [], []
+
+        # Set score aggregate for this agent
+        self.agent_score = 0
 
         # Run for set number of episodes (adjusting to start at ep 1)
         for cur_episode in range(1, self.max_episodes+1):
