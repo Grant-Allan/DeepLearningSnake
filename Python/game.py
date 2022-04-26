@@ -218,11 +218,8 @@ def run(population_size=20, max_episodes=10, max_generations=10):
     genetics = GeneticAlgorithm()
 
     scores, mean_scores = [], []
-    all_scores, all_mean_scores, gen_scores, gen_mean_scores, agent_scores, agent_mean_scores = [], [], [], [], [], []
     for cur_gen in range(1, max_generations+1):
-        # Reset generation data
         game.generation = cur_gen
-        gen_scores, gen_mean_scores = [], []
 
         for agent_num, agent in enumerate(agents):
             # Set colors
@@ -231,9 +228,6 @@ def run(population_size=20, max_episodes=10, max_generations=10):
 
             # Set agent number
             game.agent_num = agent_num
-
-            # Refresh agent data lists
-            agent_scores, agent_mean_scores = [], []
 
             total_score = 0
             for cur_episode in range(1, max_episodes+1):
@@ -283,7 +277,7 @@ def run(population_size=20, max_episodes=10, max_generations=10):
                         # Record data
                         scores.append(score)
                         mean_scores.append(game.mean_score)
-                        plot_data(all_scores, all_mean_scores, gen_scores, gen_mean_scores, cur_gen, agent_scores, agent_mean_scores, game.agent_num)
+                        plot_data(scores, mean_scores, agent_num=game.agent_num, gen=cur_gen)
                         print(f"Agent {game.agent_num}")
                         print(f"Populatino {len(agents)}")
                         print(f"Episode: {cur_episode}")
