@@ -1,6 +1,6 @@
 from agent import Agent
 from genetics import GeneticAlgorithm
-from game import MainMenu, SettingsMenu, SnakeGameAI, SnakeGameHuman
+from game import StartMenu, SnakeGameAI, SnakeGameHuman
 from helper import Plotter
 
 from os import makedirs as os_makedirs
@@ -14,22 +14,12 @@ class RunGame():
     for training a single DQN snake, or a population of DQN
     snakes in tandem with a deep genetic algorithm.
     '''
-    def main_menu():
+    def main_menu(self):
         '''
         A main menu to open the game into, where you can select
         your game mode and change various settings.
         '''
-        main_menu = MainMenu()
-    
-
-    def settings_menu():
-        '''
-        A menu for changing settings such as game speed, number of agents,
-        number of episodes, number of generations, mutation rate, etc.
-
-        Having just a single agent defaults it to run_dqn?
-        '''
-        settings_menu = SettingsMenu()
+        start_menu = StartMenu()
 
 
     def run_human(self, fps=10):

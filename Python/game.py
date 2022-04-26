@@ -1,4 +1,4 @@
-from helper import Direction, Point, TILE_SIZE, WHITE, RED, BLACK, GREEN1, GREEN2
+from helper import Direction, Point, TILE_SIZE, WHITE, GRAY, DIM_GRAY, BLACK, RED, GREEN1, GREEN2
 
 from random import randint as rand_randint
 from numpy import array_equal as np_array_equal
@@ -7,6 +7,7 @@ from pygame import init as pyg_init
 from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
 from pygame import quit as pyg_quit
+from pygame import MOUSEBUTTONDOWN as pyg_MOUSEBUTTONDOWN
 from pygame import KEYDOWN as pyg_KEYDOWN
 from pygame import K_UP as pyg_K_UP
 from pygame import K_LEFT as pyg_K_LEFT
@@ -17,6 +18,7 @@ from pygame import K_a as pyg_K_a
 from pygame import K_s as pyg_K_s
 from pygame import K_d as pyg_K_d
 from pygame.font import Font as pyg_Font
+from pygame.mouse import get_pos as pyg_mouse_get_pos
 from pygame.time import Clock as pyg_Clock
 from pygame.event import get as pyg_get
 from pygame.transform import scale as pyg_scale
@@ -38,23 +40,107 @@ except:
 
 
 
-class MainMenu():
+class StartMenu():
     '''
     A main menu to open the game into, where you can select
     your game mode and change various settings.
     '''
     def __init__(self):
+        # Initialize pygame
+        self.fps = 30
+        self.width = 500
+        self.height = 500
+
+        # Initialze display
+        self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
+        self.false_display = self.true_display.copy()
+    
+
+    def main_menu(self):
+        # Get current mouse position
+        mouse_pos = pyg_mouse_get_pos()
+
+        # Set placement values
+        new_game_button_x = 240
+        new_game_menu_button_y = 200
+        new_game_menu_button_width = 40
+        new_game_menu_button_height = 20
+        new_game_menu_button_x_check = new_game_button_x <= mouse_pos[0] <= new_game_button_x+new_game_menu_button_width
+        new_game_menu_button_y_check = new_game_menu_button_y <= mouse_pos[1] <= new_game_menu_button_y+new_game_menu_button_height
+        
+        settings_menu_button_x = 240
+        settings_menu_button_y = 300
+        settings_menu_button_width = 40
+        settings_menu_button_height = 20
+        settings_menu_button_x_check = settings_menu_button_x <= mouse_pos[0] <= settings_menu_button_x+settings_menu_button_width
+        settings_menu_button_y_check = settings_menu_button_y <= mouse_pos[1] <= settings_menu_button_y+settings_menu_button_height
+
+        quit_button_x = 240
+        quit_button_y = 400
+        quit_button_width = 40
+        quit_button_height = 20
+        quit_button_x_check = quit_button_x <= mouse_pos[0] <= quit_button_x+quit_button_width
+        quit_button_y_check = quit_button_y <= mouse_pos[1] <= quit_button_y+quit_button_height
+
+        # Black out previous display
+        self.false_display.fill(BLACK)
+
+        # Draw buttons
+        self.draw_button("New Game", new_game_menu_button_x_check, new_game_menu_button_y_check, (new_game_button_x, new_game_menu_button_y), (new_game_menu_button_width, new_game_menu_button_height))
+        self.draw_button("Settings Menu", settings_menu_button_x_check, settings_menu_button_y_check, (settings_menu_button_x, settings_menu_button_y), (settings_menu_button_width, settings_menu_button_height))
+        self.draw_button("Exit", quit_button_x_check, quit_button_y_check, (quit_button_x, quit_button_y), (quit_button_width, quit_button_height))
+
+        # Update display
+        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+        pyg_flip()
+
+        # Get player input
+        for event in pyg_get():
+            # Check for exiting out of window
+            if event.type == pyg_QUIT:
+                pyg_quit()
+                quit()
+            # Check for if a button is pressed
+            elif event.type == pyg_MOUSEBUTTONDOWN:
+                # Enter game selection menu
+                if new_game_menu_button_x_check and new_game_menu_button_y_check:
+                    self.game_type_selection_menu()
+                # Enter settings menu
+                elif settings_menu_button_x_check and settings_menu_button_y_check:
+                    self.settings_menu()
+                # Quit
+                elif quit_button_x_check and quit_button_y_check:
+                    pyg_quit()
+                    quit()
+
+
+    def game_type_selection_menu(self):
+        pass
+    
+    
+    def settings_menu(self):
         pass
 
 
-
-class SettingsMenu():
-    '''
-    A menu for changing settings such as game speed, number of agents,
-    number of episodes, number of generations, mutation rate, etc.
-    '''
-    def __init__(self):
-        pass
+    def draw_button(self, button_text, x_check, y_check, postion, size, stand_button_color=WHITE, hover_button_color=GRAY, stand_font_color=BLACK, hover_font_color=RED):
+        # If they're hovering over the button
+        if x_check and y_check:
+            # Fill button area
+            pyg_rect(self.false_display, hover_button_color, [postion[0], postion[1], size[0], size[1]])
+            pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
+            
+            # Place text
+            text = FONT.render(button_text, True, hover_font_color)
+            self.false_display.blit(text, [postion[0], postion[1]])
+        # Standard colors
+        else:
+            # Fill button area
+            pyg_rect(self.false_display, stand_button_color, [postion[0], postion[1], size[0], size[1]])
+            pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
+            
+            # Place text
+            text = FONT.render(button_text, True, stand_font_color)
+            self.false_display.blit(button_text, [postion[0], postion[1]])
 
 
 
