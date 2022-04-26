@@ -94,7 +94,6 @@ class RunGame():
         self.plotter.save_session()
 
 
-
     def _run_generation(self, cur_gen):
         ''' Process an entire population of agents. '''
         # Reset generation data
@@ -124,7 +123,7 @@ class RunGame():
         self.game.color2 = agent.color2
 
         # Set agent number
-        self.game.agent_num = agent_num
+        self.game.agent_num = agent_num+1
 
         # Reset agent data lists
         self.agent_scores, self.agent_mean_scores = [], []
