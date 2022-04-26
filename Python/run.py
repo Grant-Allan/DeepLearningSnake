@@ -7,7 +7,7 @@ from os import makedirs as os_makedirs
 from os.path import exists as os_exists
 from numpy import round as np_round
 
-    
+
 class RunGame():
     '''
     Controller class for running the snake game as a human,
@@ -64,11 +64,11 @@ class RunGame():
             run = True
             while run:
                 run = self._run_episode(agent, single_agent=True)
-            
+
             # Plot data
             plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores)
 
-   
+
 
     def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=10):
         ''' Run a session of genetic reinforcement learning. '''
@@ -89,11 +89,11 @@ class RunGame():
         # Run for set number of generations (adjusting to start at gen 1)
         for cur_gen in range(1, self.max_generations+1):
             self._run_generation(cur_gen)
-        
+
         # Save session's graph
         self.plotter.save_session()
-            
-    
+
+
 
     def _run_generation(self, cur_gen):
         ''' Process an entire population of agents. '''
@@ -102,17 +102,17 @@ class RunGame():
 
         # Set score aggregate for this generation
         self.gen_score = 0
-        
+
         # Reset generation data lists
         self.gen_scores, self.gen_mean_scores = [], []
 
         # Run for set number of generations
         for agent_num, agent in enumerate(self.agents):
             self._run_agent(agent_num, agent)
-        
+
         # Save generation's graph
         self.plotter.save_gen(cur_gen)
-        
+
         # Make new population
         self.agents = self.genetics.breed_population(self.agents)
 
@@ -137,20 +137,20 @@ class RunGame():
             # Episode variables
             agent.episode = cur_episode
             self.game.agent_episode = cur_episode
-            
+
             # Episode loop
             run = True
             while run:
                 run = self._run_episode(agent)
-            
+
             # Record data
             self._record_data()
-        
+
         # Save agent's graph
         self.plotter.save_agent(self.game.generation, agent_num)
-                
 
-    
+
+
     def _run_episode(self, agent, single_agent=False):
         ''' Run an episode of the game. '''
         # Get old state
@@ -186,7 +186,8 @@ class RunGame():
                 if score > self.game.top_score:
                     if not os_exists("./models"):
                         os_makedirs("./models")
-                    agent.model.save(f"./models/model_gen{self.game.generation}.h5")
+                    if not os_exists(f"./models/model_gen{self.game.generation}_({self.population_size}-{self.max_episodes}-{self.max_generations}).h5"):
+                        agent.model.save(f"./models/model_gen{self.game.generation}_({self.population_size}-{self.max_episodes}-{self.max_generations}).h5")
                     self.game.top_score = score
 
                 # Update aggregate data
@@ -206,7 +207,7 @@ class RunGame():
             agent_mean = np_round((self.agent_score / self.game.agent_episode), 3)
             self.agent_scores.append(score)
             self.agent_mean_scores.append(agent_mean)
-            
+
 
         # Snake lives
         else:
@@ -225,7 +226,7 @@ class RunGame():
                                self.agent_scores,
                                self.agent_mean_scores,
                                self.game.agent_num)
-        
+
         # Print current state to the console
         print(f"Current Agent {self.game.agent_num} (of {len(self.agents)})")
         print(f"Current Episode: {self.game.agent_episode}")
