@@ -85,6 +85,7 @@ class RunGame():
 
         # Set aggregate data lists
         self.all_scores, self.all_mean_scores = [], []
+        self.all_episodes = 0
 
         # Run for set number of generations (adjusting to start at gen 1)
         for cur_gen in range(1, self.max_generations+1):
@@ -104,6 +105,7 @@ class RunGame():
 
         # Reset generation data lists
         self.gen_scores, self.gen_mean_scores = [], []
+        self.gen_episodes = 0
 
         # Run for set number of generations
         for agent_num, agent in enumerate(self.agents):
@@ -136,6 +138,8 @@ class RunGame():
             # Episode variables
             agent.episode = cur_episode
             self.game.agent_episode = cur_episode
+            self.all_episodes += 1
+            self.gen_episodes += 1
 
             # Episode loop
             run = True
@@ -191,13 +195,13 @@ class RunGame():
 
                 # Update aggregate data
                 self.game.total_score += score
-                self.game.mean_score = np_round((self.game.total_score / self.game.agent_episode), 3)
+                self.game.mean_score = np_round((self.game.total_score / self.all_episodes), 3)
                 self.all_scores.append(score)
                 self.all_mean_scores.append(self.game.mean_score)
 
                 # Updte generation data
                 self.gen_score += score
-                gen_mean = np_round((self.gen_score / self.game.agent_episode), 3)
+                gen_mean = np_round((self.gen_score / self.gen_episodes), 3)
                 self.gen_scores.append(score)
                 self.gen_mean_scores.append(gen_mean)
 
@@ -207,7 +211,6 @@ class RunGame():
             self.agent_scores.append(score)
             self.agent_mean_scores.append(agent_mean)
 
-
         # Snake lives
         else:
             run = True
@@ -216,7 +219,6 @@ class RunGame():
 
     def _record_data(self):
         ''' Record the session data as it currently stands. '''
-        # Plot data
         self.plotter.plot_data(self.all_scores,
                                self.all_mean_scores,
                                self.gen_scores,
@@ -224,12 +226,8 @@ class RunGame():
                                self.game.generation,
                                self.agent_scores,
                                self.agent_mean_scores,
-                               self.game.agent_num)
-
-        # Print current state to the console
-        print(f"Current Agent {self.game.agent_num} (of {len(self.agents)})")
-        print(f"Current Episode: {self.game.agent_episode}")
-        print(f"Current Generation: {self.game.generation}")
-        print(f"Current Score: {self.agent_score}")
-        print(f"Top Score: {self.game.top_score}")
-        print(f"Total Mean: {self.game.mean_score}\n")
+                               self.game.agent_num,
+                               len(self.agents),
+                               self.game.agent_episode,
+                               self.max_episodes,
+                               self.game.top_score)

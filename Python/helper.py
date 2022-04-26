@@ -51,7 +51,7 @@ class Plotter():
         plt_ion() # turn on interactable plots
         if not single_agent:
             fig, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
-            self.ax[1, 1].remove() # get rid of the bottom right plot, since we don't use it
+            self.ax[1, 1].axis("off")
             fig.set_size_inches(8, 6) # set figure size
 
             # set the spacing between subplots
@@ -65,7 +65,9 @@ class Plotter():
             _, self.ax = plt_subplots()
 
 
-    def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
+    def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores,
+                  gen_num, agent_scores, agent_mean_scores, agent_num, num_agents,
+                  cur_episode, num_episodes, top_score):
         ''' Plot the data for the game. '''
         # Set internal values
         self.all_scores = all_scores
@@ -79,10 +81,16 @@ class Plotter():
         self.agent_mean_scores = agent_mean_scores
         self.agent_num = agent_num
 
+        self.num_agents = num_agents
+        self.cur_episode = cur_episode
+        self.num_episodes = num_episodes
+        self.top_score = top_score
+
         # Plot data
         self._plot_aggregate()
         self._plot_generation()
         self._plot_agent()
+        self._show_data()
 
         # Show data
         plt_show(block=False)
@@ -159,6 +167,28 @@ class Plotter():
         # Make sure the graph only shows values with a positive x and y
         self.ax[1, 0].set_xlim(xmin=0)
         self.ax[1, 0].set_ylim(ymin=0)
+
+
+    def _show_data(self):
+        ''' Show the data. '''
+        # Clear previous display
+        self.ax[1, 1].cla()
+
+        # Turn off axes display
+        self.ax[1, 1].axis("off")
+
+        # Set title
+        self.ax[1, 1].set_title("Game Data")
+
+        # Display text
+        self.ax[1, 1].text(0, 0.4,
+                f"Current Agent {self.agent_num} of {self.num_agents}\n" +
+                f"Current Episode: {self.cur_episode} of {self.num_episodes}\n" +
+                f"Current Generation: {self.gen_num}\n" +
+                f"Current Score: {self.agent_scores[-1]}\n" +
+                f"Top Score: {self.top_score}",
+                bbox={"facecolor": "white", "alpha": 0.5, "pad": 10},
+                size=14)
 
 
     def plot_single_agent(self, scores, mean_scores):
