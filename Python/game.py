@@ -1,7 +1,13 @@
-from helper import Direction, Point, TILE_SIZE, WHITE, GRAY, DIM_GRAY, BLACK, RED, GREEN1, GREEN2
+from agent import Agent
+from genetics import GeneticAlgorithm
+from helper import Plotter, Direction, Point, TILE_SIZE, WHITE, GRAY, DIM_GRAY, BLACK, RED, GREEN1, GREEN2
+
+from os import makedirs as os_makedirs
+from os.path import exists as os_exists
 
 from random import randint as rand_randint
 from numpy import array_equal as np_array_equal
+from numpy import round as np_round
 
 from pygame import init as pyg_init
 from pygame import RESIZABLE as pyg_RESIZABLE
@@ -33,10 +39,14 @@ from pygame.draw import line as pyg_line
 pyg_init()
 
 # Fonts
+FONT_SIZE = int(TILE_SIZE*1.5)
+TITLE_FONT_SIZE = int(TILE_SIZE*3)
 try:
-    FONT = pyg_Font("arial.ttf", int(TILE_SIZE*1.5))
+    FONT = pyg_Font("arial.ttf", FONT_SIZE)
+    TITLE_FONT = pyg_Font("arial.ttf", TITLE_FONT_SIZE)
 except:
-    FONT = pyg_Font("arial", int(TILE_SIZE*1.5))
+    FONT = pyg_Font("arial", FONT_SIZE)
+    TITLE_FONT = pyg_Font("arial", TITLE_FONT_SIZE)
 
 
 
@@ -45,119 +55,241 @@ class StartMenu():
     A main menu to open the game into, where you can select
     your game mode and change various settings.
     '''
-    def __init__(self):
-        # Initialize pygame
-        self.fps = 30
-        self.width = 500
-        self.height = 500
+    def __init__(self, tiles_wide=32, tiles_high=24, tiles_margin=4):
+        # Initialize input data
+        self.width = tiles_wide*TILE_SIZE
+        self.height = tiles_high*TILE_SIZE
+        self.margin = tiles_margin*TILE_SIZE
 
         # Initialze display
-        self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
+        self.true_display = pyg_set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
         self.false_display = self.true_display.copy()
+        pyg_set_caption("Snake")
 
 
     def main_menu(self):
-        # Get current mouse position
-        mouse_pos = pyg_mouse_get_pos()
+        while True:
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
 
-        # Set placement values
-        new_game_button_x = 240
-        new_game_menu_button_y = 200
-        new_game_menu_button_width = 40
-        new_game_menu_button_height = 20
-        new_game_menu_button_x_check = new_game_button_x <= mouse_pos[0] <= new_game_button_x+new_game_menu_button_width
-        new_game_menu_button_y_check = new_game_menu_button_y <= mouse_pos[1] <= new_game_menu_button_y+new_game_menu_button_height
+            # Set placement values
+            # NGMB = New Game Menu Button
+            NGMB_text = "New Game"
+            NGMB_width, NGMB_height = FONT.size(NGMB_text)
+            NGMB_x = self.width//2 - NGMB_width//2
+            NGMB_y = TILE_SIZE*5
+            NGMB_x_check = NGMB_x <= mouse_pos[0] <= NGMB_x+NGMB_width
+            NGMB_y_check = NGMB_y <= mouse_pos[1] <= NGMB_y+NGMB_height
 
-        settings_menu_button_x = 240
-        settings_menu_button_y = 300
-        settings_menu_button_width = 40
-        settings_menu_button_height = 20
-        settings_menu_button_x_check = settings_menu_button_x <= mouse_pos[0] <= settings_menu_button_x+settings_menu_button_width
-        settings_menu_button_y_check = settings_menu_button_y <= mouse_pos[1] <= settings_menu_button_y+settings_menu_button_height
+            # SMB = Settings Menu Button
+            SMB_text = "Settings Menu"
+            SMB_width, SMB_height = FONT.size(SMB_text)
+            SMB_x = self.width//2 - SMB_width//2
+            SMB_y = NGMB_y + int(1.5*SMB_height)
+            SMB_x_check = SMB_x <= mouse_pos[0] <= SMB_x+SMB_width
+            SMB_y_check = SMB_y <= mouse_pos[1] <= SMB_y+SMB_height
 
-        quit_button_x = 240
-        quit_button_y = 400
-        quit_button_width = 40
-        quit_button_height = 20
-        quit_button_x_check = quit_button_x <= mouse_pos[0] <= quit_button_x+quit_button_width
-        quit_button_y_check = quit_button_y <= mouse_pos[1] <= quit_button_y+quit_button_height
+            # QB = Quit Button
+            QB_text = "Quit"
+            QB_width, QB_height = FONT.size(QB_text)
+            QB_x = self.width//2 - QB_width//2
+            QB_y = SMB_y + int(1.5*QB_height)
+            QB_x_check = QB_x <= mouse_pos[0] <= QB_x+QB_width
+            QB_y_check = QB_y <= mouse_pos[1] <= QB_y+QB_height
 
-        # Black out previous display
-        self.false_display.fill(BLACK)
+            # Black out previous display
+            self.false_display.fill(BLACK)
 
-        # Draw buttons
-        self.draw_button("New Game", new_game_menu_button_x_check, new_game_menu_button_y_check, (new_game_button_x, new_game_menu_button_y), (new_game_menu_button_width, new_game_menu_button_height))
-        self.draw_button("Settings Menu", settings_menu_button_x_check, settings_menu_button_y_check, (settings_menu_button_x, settings_menu_button_y), (settings_menu_button_width, settings_menu_button_height))
-        self.draw_button("Exit", quit_button_x_check, quit_button_y_check, (quit_button_x, quit_button_y), (quit_button_width, quit_button_height))
+            # Display title
+            t_x, t_y = TITLE_FONT.size("Snake")
+            text = TITLE_FONT.render("Snake", True, GREEN2)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
 
-        # Update display
-        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
-        pyg_flip()
+            # Draw buttons
+            self.draw_button(NGMB_text,
+                             NGMB_x_check,
+                             NGMB_y_check,
+                             (NGMB_x, NGMB_y),
+                             (NGMB_width, NGMB_height))
 
-        # Get player input
-        for event in pyg_get():
-            # Check for exiting out of window
-            if event.type == pyg_QUIT:
-                pyg_quit()
-                quit()
-            # Check for if a button is pressed
-            elif event.type == pyg_MOUSEBUTTONDOWN:
-                # Enter game selection menu
-                if new_game_menu_button_x_check and new_game_menu_button_y_check:
-                    self.game_type_selection_menu()
-                # Enter settings menu
-                elif settings_menu_button_x_check and settings_menu_button_y_check:
-                    self.settings_menu()
-                # Quit
-                elif quit_button_x_check and quit_button_y_check:
+            self.draw_button(SMB_text,
+                             SMB_x_check,
+                             SMB_y_check,
+                             (SMB_x, SMB_y),
+                             (SMB_width, SMB_height))
+            
+            self.draw_button(QB_text,
+                             QB_x_check,
+                             QB_y_check,
+                             (QB_x, QB_y),
+                             (QB_width, QB_height))
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
                     pyg_quit()
                     quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Enter game selection menu
+                    if NGMB_x_check and NGMB_y_check:
+                        self.game_type_selection_menu()
+                    # Enter settings menu
+                    elif SMB_x_check and SMB_y_check:
+                        self.settings_menu()
+                    # Quit
+                    elif QB_x_check and QB_y_check:
+                        pyg_quit()
+                        quit()
 
 
     def game_type_selection_menu(self):
-        pass
+        '''
+        Allow a person to select either playing as a human, having
+        a single agent play, or a population of agents play.
+        '''
+        while True:
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
+
+            # Set placement values
+            # NG = Normal Game
+            NG_text = "Normal Game"
+            NG_width, NG_height = FONT.size(NG_text)
+            NG_x = self.width//2 - NG_width//2
+            NG_y = 100
+            NG_x_check = NG_x <= mouse_pos[0] <= NG_x+NG_width
+            NG_y_check = NG_y <= mouse_pos[1] <= NG_y+NG_height
+
+            # SA = Single Agent
+            SA_text = "Single Agent"
+            SA_width, SA_height = FONT.size(SA_text)
+            SA_x = self.width//2 - SA_width//2
+            SA_y = NG_y + int(1.5*SA_height)
+            SA_x_check = SA_x <= mouse_pos[0] <= SA_x+SA_width
+            SA_y_check = SA_y <= mouse_pos[1] <= SA_y+SA_height
+
+            # PoA = Population of Agents
+            PoA_text = "Multiple Agents"
+            PoA_width, PoA_height = FONT.size(PoA_text)
+            PoA_x = self.width//2 - PoA_width//2
+            PoA_y = SA_y + int(1.5*PoA_height)
+            PoA_x_check = PoA_x <= mouse_pos[0] <= PoA_x+PoA_width
+            PoA_y_check = PoA_y <= mouse_pos[1] <= PoA_y+PoA_height
+
+            # BB = Back Button
+            BB_text = "Back"
+            BB_width, BB_height = FONT.size(BB_text)
+            BB_x = self.width//2 - BB_width//2
+            BB_y = PoA_y + int(1.5*BB_height)
+            BB_x_check = BB_x <= mouse_pos[0] <= BB_x+BB_width
+            BB_y_check = BB_y <= mouse_pos[1] <= BB_y+BB_height
+
+            # Black out previous display
+            self.false_display.fill(BLACK)
+
+            # Display menu title
+            t_x, t_y = TITLE_FONT.size("Select Game Type")
+            text = TITLE_FONT.render("Select Game Type", True, GREEN2)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
+
+            # Draw buttons
+            self.draw_button(NG_text,
+                             NG_x_check,
+                             NG_y_check,
+                             (NG_x, NG_y),
+                             (NG_width, NG_height))
+
+            self.draw_button(SA_text,
+                             SA_x_check,
+                             SA_y_check,
+                             (SA_x, SA_y),
+                             (SA_width, SA_height))
+            
+            self.draw_button(PoA_text,
+                             PoA_x_check,
+                             PoA_y_check,
+                             (PoA_x, PoA_y),
+                             (PoA_width, PoA_height))
+            
+            self.draw_button(BB_text,
+                             BB_x_check,
+                             BB_y_check,
+                             (BB_x, BB_y),
+                             (BB_width, BB_height))
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    pyg_quit()
+                    quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Start normal game
+                    if NG_x_check and NG_y_check:
+                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game.run_human(fps=10)
+                    # Start game with a single agent
+                    elif SA_x_check and SA_y_check:
+                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game.run_dqn(fps=100, max_episodes=100)
+                    # Start game with a population of agents
+                    elif PoA_x_check and PoA_y_check:
+                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game.run_grl(fps=100, population_size=50, max_episodes=20, max_generations=100)
+                    # Back to main menu
+                    elif BB_x_check and BB_y_check:
+                        self.main_menu()
 
 
     def settings_menu(self):
         pass
 
 
-    def draw_button(self, button_text, x_check, y_check, postion, size, stand_button_color=WHITE, hover_button_color=GRAY, stand_font_color=BLACK, hover_font_color=RED):
+    def draw_button(self, button_text, x_check, y_check, postion, size):
         # If they're hovering over the button
         if x_check and y_check:
             # Fill button area
-            pyg_rect(self.false_display, hover_button_color, [postion[0], postion[1], size[0], size[1]])
-            pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
+            #pyg_rect(self.false_display, GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
+            #pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5], 1)
 
             # Place text
-            text = FONT.render(button_text, True, hover_font_color)
-            self.false_display.blit(text, [postion[0], postion[1]])
+            text = FONT.render(button_text, True, RED)
+            self.false_display.blit(text, [postion[0]+5, postion[1]+5])
         # Standard colors
         else:
             # Fill button area
-            pyg_rect(self.false_display, stand_button_color, [postion[0], postion[1], size[0], size[1]])
-            pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
+            #pyg_rect(self.false_display, WHITE, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
+            #pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5], 1)
 
             # Place text
-            text = FONT.render(button_text, True, stand_font_color)
-            self.false_display.blit(button_text, [postion[0], postion[1]])
+            text = FONT.render(button_text, True, WHITE)
+            self.false_display.blit(text, [postion[0]+5, postion[1]+5])
 
 
 
 class SnakeGameAI():
     ''' The base logic for the game itself. '''
-    def __init__(self, fps=100, tiles_wide=32, tiles_high=24, tiles_margin=4):
+    def __init__(self, width, height, margin, fps=100):
         # Initialize input data
         self.fps = fps
-        self.margin_value = tiles_margin
-        self.width = tiles_wide*TILE_SIZE
-        self.height = tiles_high*TILE_SIZE
-        self.margin = tiles_margin*TILE_SIZE # Added to the bottom for diplaying data (score, episode, etc)
+        self.width = width
+        self.height = height
+        self.margin = margin
 
         # Initialze display
         self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
         self.false_display = self.true_display.copy()
-        pyg_set_caption("Snake")
         self.clock = pyg_Clock()
 
         # Initialize game values
@@ -288,15 +420,15 @@ class SnakeGameAI():
 
         # Show the current score
         text = FONT.render(f"Score: {self.score}", True, WHITE)
-        self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+((self.margin_value//2)*TILE_SIZE)))])
+        self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the highest score
         text = FONT.render(f"Top Score: {self.top_score}", True, WHITE)
-        self.false_display.blit(text, [TILE_SIZE*9, int(self.height+((TILE_SIZE//4)+((self.margin_value//2)*TILE_SIZE)))])
+        self.false_display.blit(text, [TILE_SIZE*9, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the mean score
         text = FONT.render(f"Mean: {self.mean_score}", True, WHITE)
-        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+((self.margin_value//2)*TILE_SIZE)))])
+        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Update the display
         self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
@@ -347,16 +479,17 @@ class SnakeGameAI():
 
 class SnakeGameHuman():
     ''' This is the class to run if you're a human wanting to play snake. '''
-    def __init__(self, fps=10, tiles_wide=32, tiles_high=24, tiles_margin=2):
-        # Initialize input data (and score)
+    def __init__(self, width, height, margin, fps=10):
+        # Initialize input data
         self.fps = fps
-        self.width = tiles_wide*TILE_SIZE
-        self.height = tiles_high*TILE_SIZE
-        self.margin = tiles_margin*TILE_SIZE
+        self.width = width
+        self.height = height
+        self.margin = margin
 
         # Initialize internal values
         self.score = 0
         self.direction = Direction.UP
+        self.wait = True
 
         # Initialze display
         self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
@@ -394,6 +527,7 @@ class SnakeGameHuman():
                 pyg_quit()
                 quit()
             if event.type == pyg_KEYDOWN:
+                self.wait = False
                 # Can use arrow keys or WASD
                 # Prevents a person from turning the opposite direction right into the snake body
                 if ((event.key == pyg_K_UP) or (event.key == pyg_K_w)) and (self.direction != Direction.DOWN):
@@ -404,6 +538,12 @@ class SnakeGameHuman():
                     self.direction = Direction.DOWN
                 elif ((event.key == pyg_K_RIGHT) or (event.key == pyg_K_d)) and (self.direction != Direction.LEFT):
                     self.direction = Direction.RIGHT
+
+        # Skip if there's no input
+        if self.wait:
+            self._update_ui()
+            self.clock.tick(self.fps)
+            return False, 0
 
         # Move
         self._move() # Update the head
@@ -459,8 +599,9 @@ class SnakeGameHuman():
         pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
 
         # Show the current score
+        t_x, _ = FONT.size(f"Score: {self.score}")
         text = FONT.render(f"Score: {self.score}", True, WHITE)
-        self.false_display.blit(text, [0, int(self.height+(TILE_SIZE//4))])
+        self.false_display.blit(text, [self.width//2 - t_x//2, int(self.height+(TILE_SIZE//4)) + TILE_SIZE])
 
         # Update the display
         self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
@@ -480,3 +621,233 @@ class SnakeGameHuman():
         elif self.direction == Direction.UP:
             y -= TILE_SIZE
         self.head = Point(x, y)
+
+
+
+class RunGame():
+    '''
+    Controller class for running the snake game as a human,
+    for training a single DQN snake, or a population of DQN
+    snakes in tandem with a deep genetic algorithm.
+    '''
+    def __init__(self, width, height, margin):
+        # Initialize input data
+        self.width = width
+        self.height = height
+        self.margin = margin
+
+
+    def run_human(self, fps=10):
+        ''' Run the snake game in a way that a human can play. '''
+        # Create game object
+        game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
+
+        # Game loop
+        while True:
+            game_over, score = game.play_step()
+            if game_over: break
+        print(f"\nFinal Score: {score}\n")
+
+
+    def run_dqn(self, fps=100, max_episodes=120):
+        ''' Run a single deep Q learning snake. '''
+        # Set internal variables
+        self.max_episodes = max_episodes
+
+        # Create objects
+        agent = Agent()
+        plotter = Plotter(single_agent=True)
+        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
+
+        # Set colors
+        self.game.color1 = agent.color1
+        self.game.color2 = agent.color2
+
+        # Set aggregate data lists
+        self.agent_scores, self.agent_mean_scores = [], []
+
+        # Set score aggregate for this agent
+        self.agent_score = 0
+
+        # Run for set number of episodes (adjusting to start at ep 1)
+        for cur_episode in range(1, self.max_episodes+1):
+            # Episode variables
+            agent.episode = cur_episode
+            self.game.agent_episode = cur_episode
+
+            # Episode loop
+            run = True
+            while run:
+                run = self._run_episode(agent, single_agent=True)
+
+            # Plot data
+            plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores)
+        
+        if not os_exists("./models"):
+            os_makedirs("./models")
+        if not os_exists(f"./models/single_model_({self.max_episodes}).h5"):
+            agent.model.save(f"./models/single_model_({self.max_episodes}).h5")
+
+
+
+    def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=10):
+        ''' Run a session of genetic reinforcement learning. '''
+        # Set internal variables
+        self.population_size = population_size
+        self.max_episodes = max_episodes
+        self.max_generations = max_generations
+
+        # Create class objects
+        self.agents = [Agent() for i in range(self.population_size)]
+        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
+        self.genetics = GeneticAlgorithm()
+        self.plotter = Plotter()
+
+        # Set aggregate data lists
+        self.all_scores, self.all_mean_scores = [], []
+        self.all_episodes = 0
+
+        # Run for set number of generations (adjusting to start at gen 1)
+        for cur_gen in range(1, self.max_generations+1):
+            self._run_generation(cur_gen)
+
+        # Save session's graph
+        self.plotter.save_session()
+
+
+    def _run_generation(self, cur_gen):
+        ''' Process an entire population of agents. '''
+        # Reset generation data
+        self.game.generation = cur_gen
+
+        # Set score aggregate for this generation
+        self.gen_score = 0
+
+        # Reset generation data lists
+        self.gen_scores, self.gen_mean_scores = [], []
+        self.gen_episodes = 0
+
+        # Run for set number of generations
+        for agent_num, agent in enumerate(self.agents):
+            self._run_agent(agent_num, agent)
+
+        # Save generation's graph
+        self.plotter.save_gen(cur_gen)
+
+        # Make new population
+        self.agents = self.genetics.breed_population(self.agents)
+
+
+    def _run_agent(self, agent_num, agent):
+        ''' Run an agent, whether on it's own or as part of a population. '''
+        # Set colors
+        self.game.color1 = agent.color1
+        self.game.color2 = agent.color2
+
+        # Set agent number
+        self.game.agent_num = agent_num+1
+
+        # Reset agent data lists
+        self.agent_scores, self.agent_mean_scores = [], []
+
+        # Set score aggregate for this agent
+        self.agent_score = 0
+
+        # Run for set number of episodes (adjusting to start at ep 1)
+        for cur_episode in range(1, self.max_episodes+1):
+            # Episode variables
+            agent.episode = cur_episode
+            self.game.agent_episode = cur_episode
+            self.all_episodes += 1
+            self.gen_episodes += 1
+
+            # Episode loop
+            run = True
+            while run:
+                run = self._run_episode(agent)
+
+            # Record data
+            self._record_data()
+
+        # Save agent's graph
+        self.plotter.save_agent(self.game.generation, agent_num)
+
+
+
+    def _run_episode(self, agent, single_agent=False):
+        ''' Run an episode of the game. '''
+        # Get old state
+        state_old = agent.get_state(self.game)
+
+        # Get move
+        final_move = agent.get_action(state_old)
+
+        # Perform move and get new state
+        reward, done, score = self.game.play_step(final_move)
+        state_new = agent.get_state(self.game)
+
+        # Train short memory
+        agent.train_short_memory(state_old, final_move, reward, state_new, done)
+
+        # Remember
+        agent.remember(state_old, final_move, reward, state_new, done)
+
+        # Snake died
+        if done:
+            run = False
+
+            # Train long memory
+            self.game.reset()
+            agent.train_long_memory()
+
+            # Update agent's internal score if needed
+            if score > agent.top_score:
+                agent.top_score = score
+
+            if not single_agent:
+                # Save model if it's the best (and update top score)
+                if score > self.game.top_score:
+                    if not os_exists("./models"):
+                        os_makedirs("./models")
+                    if not os_exists(f"./models/model_gen{self.game.generation}_({self.population_size}-{self.max_episodes}-{self.max_generations}).h5"):
+                        agent.model.save(f"./models/model_gen{self.game.generation}_({self.population_size}-{self.max_episodes}-{self.max_generations}).h5")
+                    self.game.top_score = score
+
+                # Update aggregate data
+                self.game.total_score += score
+                self.game.mean_score = np_round((self.game.total_score / self.all_episodes), 3)
+                self.all_scores.append(score)
+                self.all_mean_scores.append(self.game.mean_score)
+
+                # Updte generation data
+                self.gen_score += score
+                gen_mean = np_round((self.gen_score / self.gen_episodes), 3)
+                self.gen_scores.append(score)
+                self.gen_mean_scores.append(gen_mean)
+
+            # Update agent data
+            self.agent_score += score
+            agent_mean = np_round((self.agent_score / self.game.agent_episode), 3)
+            self.agent_scores.append(score)
+            self.agent_mean_scores.append(agent_mean)
+
+        # Snake lives
+        else:
+            run = True
+        return run
+
+
+    def _record_data(self):
+        ''' Record the session data as it currently stands. '''
+        self.plotter.plot_data(self.all_scores,
+                               self.all_mean_scores,
+                               self.gen_scores,
+                               self.gen_mean_scores,
+                               self.game.generation,
+                               self.agent_scores,
+                               self.agent_mean_scores,
+                               self.game.agent_num,
+                               len(self.agents),
+                               self.game.agent_episode,
+                               self.max_episodes,
+                               self.game.top_score)
