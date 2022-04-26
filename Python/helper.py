@@ -1,8 +1,19 @@
 from enum import Enum
 from collections import namedtuple
-import matplotlib.pyplot as plt
-from IPython import display
-import os
+
+from os import os_makedirs
+from os.path import os_exists
+
+from IPython.display import clear_output as dis_clear_output
+from IPython.display import display as dis_display
+
+from matplotlib.pyplot import ion as plt_ion
+from matplotlib.pyplot import subplots as plt_subplots
+from matplotlib.pyplot import gcf as plt_gcf
+from matplotlib.pyplot import clf as plt_clf
+from matplotlib.pyplot import show as plt_show
+from matplotlib.pyplot import pause as plt_pause
+from matplotlib.pyplot import savefig as plt_savefig
 
 
 # Directions dictionary so we can use .RIGHT, .LEFT, etc instead of numbers
@@ -31,78 +42,113 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 
+class Plotter():
+    ''' Class to hold all plotting functions. '''
+    def __init__(self):
+        plt_ion() # turn on interactable plots
+        _, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
 
-plt.ion() # turn on interactable plots
-fig, ax = plt.subplots(2, 2) # initialize 2x2 graphs
+    def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
+        ''' Plot the data for the game. '''
+        # Set internal values
+        self.all_scores = all_scores
+        self.all_mean_scores = all_mean_scores
 
-def plot_data(all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
-    ''' Plot the data for the game. '''
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
-    #clearConsole()
-    plt.clf()
+        self.gen_scores = gen_scores
+        self.gen_mean_scores = gen_mean_scores
+        self.gen_num = gen_num
 
-    plot_aggregate(all_scores, all_mean_scores)
-    plot_generation(gen_scores, gen_mean_scores, gen_num)
-    plot_agent(agent_scores, agent_mean_scores, agent_num)
+        self.agent_scores = agent_scores
+        self.agent_mean_scores = agent_mean_scores
+        self.agent_num = agent_num
 
-    plt.show(block=False)
-    plt.pause(0.001)
+        # Clear previous display
+        dis_clear_output(wait=True)
+        dis_display(plt_gcf())
+        #clearConsole()
+        plt_clf()
 
+        # Plot data
+        self.plot_aggregate()
+        self.plot_generation()
+        self.plot_agent()
 
-
-def plot_aggregate(all_scores, all_mean_scores):
-    ''' Plot all data collected by the game. '''
-    ax[0, 0].title("Total Aggregate Data")
-    ax[0, 0].xlabel("Number of Games")
-    ax[0, 0].ylabel("Score")
-
-    ax[0, 0].plot(all_scores, label="Scores")
-    ax[0, 0].plot(all_mean_scores, label="Mean Scores")
-    ax[0, 0].legend(loc="upper left")
-
-    ax[0, 0].text(len(all_scores)-1, all_scores[-1], str(all_scores[-1]))
-    ax[0, 0].text(len(all_mean_scores)-1, all_mean_scores[-1], str(all_mean_scores[-1]))
-
-    ax[0, 0].xlim(xmin=0)
-    ax[0, 0].ylim(ymin=0)
-
-
-def plot_generation(gen_scores, gen_mean_scores, gen_num):
-    ''' Plot the data for the current generation. '''
-    ax[0, 1].title(f"Generation {gen_num} Data")
-    ax[0, 1].xlabel("Number of Games")
-    ax[0, 1].ylabel("Score")
-
-    ax[0, 1].plot(gen_scores, label="Scores")
-    ax[0, 1].plot(gen_mean_scores, label="Mean Scores")
-    ax[0, 1].legend(loc="upper left")
-
-    ax[0, 1].text(len(gen_scores)-1, gen_scores[-1], str(gen_scores[-1]))
-    ax[0, 1].text(len(gen_mean_scores)-1, gen_mean_scores[-1], str(gen_mean_scores[-1]))
-
-    ax[0, 1].xlim(xmin=0)
-    ax[0, 1].ylim(ymin=0)
+        # Show data
+        plt_show(block=False)
+        plt_pause(0.001)
 
 
-def plot_agent(agent_scores, agent_mean_scores, agent_num):
-    ''' Plot the data for the current agent. '''
-    ax[1, 0].title(f"Agent {agent_num} Data")
-    ax[1, 0].xlabel("Number of Games")
-    ax[1, 0].ylabel("Score")
+    def plot_aggregate(self):
+        ''' Plot all data collected by the game. '''
+        self.ax[0, 0].title("Total Aggregate Data")
+        self.ax[0, 0].xlabel("Number of Games")
+        self.ax[0, 0].ylabel("Score")
 
-    ax[1, 0].plot(agent_scores, label="Scores")
-    ax[1, 0].plot(agent_mean_scores, label="Mean Scores")
-    ax[1, 0].legend(loc="upper left")
+        self.ax[0, 0].plot(self.all_scores, label="Scores")
+        self.ax[0, 0].plot(self.all_mean_scores, label="Mean Scores")
+        self.ax[0, 0].legend(loc="upper left")
 
-    ax[1, 0].text(len(agent_scores)-1, agent_scores[-1], str(agent_scores[-1]))
-    ax[1, 0].text(len(agent_mean_scores)-1, agent_mean_scores[-1], str(agent_mean_scores[-1]))
+        self.ax[0, 0].text(len(self.all_scores)-1, self.all_scores[-1], str(self.all_scores[-1]))
+        self.ax[0, 0].text(len(self.all_mean_scores)-1, self.all_mean_scores[-1], str(self.all_mean_scores[-1]))
 
-    ax[1, 0].xlim(xmin=0)
-    ax[1, 0].ylim(ymin=0)
+        self.ax[0, 0].xlim(xmin=0)
+        self.ax[0, 0].ylim(ymin=0)
 
 
-def save_graph(generation):
-    if not os.path.exists("./graphs"):
-        os.makedirs("./graphs")
-    plt.savefig(f"./graphs/graph_gen{generation}.jpg")
+    def plot_generation(self):
+        ''' Plot the data for the current generation. '''
+        self.ax[0, 1].title(f"Generation {self.gen_num} Data")
+        self.ax[0, 1].xlabel("Number of Games")
+        self.ax[0, 1].ylabel("Score")
+
+        self.ax[0, 1].plot(self.gen_scores, label="Scores")
+        self.ax[0, 1].plot(self.gen_mean_scores, label="Mean Scores")
+        self.ax[0, 1].legend(loc="upper left")
+
+        self.ax[0, 1].text(len(self.gen_scores)-1, self.gen_scores[-1], str(self.gen_scores[-1]))
+        self.ax[0, 1].text(len(self.gen_mean_scores)-1, self.gen_mean_scores[-1], str(self.gen_mean_scores[-1]))
+
+        self.ax[0, 1].xlim(xmin=0)
+        self.ax[0, 1].ylim(ymin=0)
+
+
+    def plot_agent(self):
+        ''' Plot the data for the current agent. '''
+        self.ax[1, 0].title(f"Agent {self.agent_num} Data")
+        self.ax[1, 0].xlabel("Number of Games")
+        self.ax[1, 0].ylabel("Score")
+
+        self.ax[1, 0].plot(self.agent_scores, label="Scores")
+        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
+        self.ax[1, 0].legend(loc="upper left")
+
+        self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
+        self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
+
+        self.ax[1, 0].xlim(xmin=0)
+        self.ax[1, 0].ylim(ymin=0)
+
+    
+    def save_session(self):
+        ''' Save the data for the entire session. '''
+        if not os_exists("./graphs"):
+            os_makedirs("./graphs")
+        plt_savefig("./graphs/session_graph.jpg")
+
+
+    def save_gen(self, gen_num):
+        ''' Save the data for this generation. '''
+        if not os_exists("./graphs"):
+            os_makedirs("./graphs")
+        if not os_exists("./graphs/generation_graphs"):
+            os_makedirs("./graphs/generation_graphs")
+        plt_savefig(f"./graphs/generation_graphs/graph_gen{gen_num}.jpg")
+    
+
+    def save_gen(self, gen_num, agent_num):
+        ''' Save the data for this agent. '''
+        if not os_exists("./graphs"):
+            os_makedirs("./graphs")
+        if not os_exists(f"./graphs/agent_graphs/gen{gen_num}"):
+            os_makedirs(f"./graphs/agent_graphs/gen{gen_num}")
+        plt_savefig(f"./graphs/agent_graphs/graph_agent{agent_num}.jpg")

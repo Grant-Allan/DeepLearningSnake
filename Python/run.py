@@ -1,4 +1,12 @@
-    
+from agent import Agent
+from genetics import GeneticAlgorithm
+from game import Game
+from helper import Plotter
+
+from os import makedirs as os_makedirs
+from os.path import exists as os_exists
+from numpy import round as np_round
+
     
 class Run():
     '''
@@ -7,118 +15,183 @@ class Run():
     snakes in tandem with a deep genetic algorithm.
     '''
 
-    def run_human(self):
-        pass
+    def run_human(self, fps=40):
+        ''' Run the snake game in a way that a human can play. '''
+        # Create objects
+        self.game = Game(fps=fps)
 
 
-    def run_dqn(self):
-        pass
 
-    def run_grl(self, population_size=20, max_episodes=10, max_generations=10):
+    def run_dqn(self, fps=100, max_episodes=100):
+        ''' Run a single deep Q learning snake. '''
+        # Set internal variables
+        self.max_episodes = max_episodes
+
+        # Create objects
+        self.game = Game(fps=fps)
+        self.plotter = Plotter()
+   
+
+    def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=10):
         ''' Run a session of genetic reinforcement learning. '''
-        agents = [Agent() for i in range(population_size)]
-        game = SnakeGameAI()
-        genetics = GeneticAlgorithm()
+        # Set internal variables
+        self.population_size = population_size
+        self.max_episodes = max_episodes
+        self.max_generations = max_generations
 
-        scores, mean_scores = [], []
-        all_scores, all_mean_scores, gen_scores, gen_mean_scores, agent_scores, agent_mean_scores = [], [], [], [], [], []
+        # Create class objects
+        self.agents = [Agent() for i in range(self.population_size)]
+        self.game = Game(fps=fps)
+        self.genetics = GeneticAlgorithm()
+        self.plotter = Plotter()
+
+        # Reset aggregate data lists
+        self.all_scores, self.all_mean_scores = [], []
+
+        # Run for set number of generations (adjusting to start at gen 1)
+        for cur_gen in range(1, self.max_generations+1):
+            self._run_generations(cur_gen)
         
-        for cur_gen in range(1, max_generations+1):
-            self.run_generations()
+        # Save session's graph
+        self.plotter.save_session()
             
     
 
-    def run_generation(self):
+    def _run_generation(self, cur_gen):
+        ''' Process an entire population of agents. '''
         # Reset generation data
-        game.generation = cur_gen
-        gen_scores, gen_mean_scores = [], []
+        self.game.generation = cur_gen
 
-        # Make new population
-        agents = genetics.breed_population(agents)
-
-        # Save generation's graph
-        save_graph(cur_gen)
-
-        for agent_num, agent in enumerate(agents):
-            self.run_agent()
-
-            
-
-    def run_agent(self):
+        # Set score aggregate for this generation
+        self.gen_score = 0
         
+        # Reset generation data lists
+        self.gen_scores, self.gen_mean_scores = [], []
+
+        # Run for set number of generations
+        for agent_num, agent in enumerate(self.agents):
+            self.run_agent(cur_gen, agent_num, agent)
+        
+        # Save generation's graph
+        self.plotter.save_gen(cur_gen)
+        
+        # Make new population
+        self.agents = self.genetics.breed_population(self.agents)
+
+
+    def _run_agent(self, cur_gen, agent_num, agent):
+        ''' Run an agent, whether on it's own or as part of a population. '''
         # Set colors
-        game.color1 = agent.color1
-        game.color2 = agent.color2
+        self.game.color1 = agent.color1
+        self.game.color2 = agent.color2
 
         # Set agent number
-        game.agent_num = agent_num
+        self.game.agent_num = agent_num
 
         # Reset agent data lists
-        agent_scores, agent_mean_scores = [], []
+        self.agent_scores, self.agent_mean_scores = [], []
 
-        total_score = 0
+        # Set score aggregate for this agent
+        self.agent_score = 0
 
-        for cur_episode in range(1, max_episodes+1):
-            self.run_episodes()
+        # Run for set number of episodes (adjusting to start at ep 1)
+        for cur_episode in range(1, self.max_episodes+1):
+            # Episode variables
+            agent.episode = cur_episode
+            self.game.agent_episode = cur_episode
+            
+            # Episode loop
+            run = True
+            while run:
+                run = self._run_episodes(agent)
+        
+        # Save agent's graph
+        self.plotter.save_agent(cur_gen, agent_num)
                 
 
     
-    def run_episode(self):
-        agent.episode = cur_episode
-        game.agent_episode = cur_episode
-        run = True
-        while run:
-            # Get old state
-            state_old = agent.get_state(game)
+    def _run_episode(self, agent):
+        ''' Run an episode of the game. '''
+        # Get old state
+        state_old = agent.get_state(self.game)
 
-            # Get move
-            final_move = agent.get_action(state_old)
+        # Get move
+        final_move = agent.get_action(state_old)
 
-            # Perform move and get new state
-            reward, done, score = game.play_step(final_move)
-            state_new = agent.get_state(game)
+        # Perform move and get new state
+        reward, done, score = self.game.play_step(final_move)
+        state_new = agent.get_state(self.game)
 
-            # Train short memory
-            agent.train_short_memory(state_old, final_move, reward, state_new, done)
+        # Train short memory
+        agent.train_short_memory(state_old, final_move, reward, state_new, done)
 
-            # Remember
-            agent.remember(state_old, final_move, reward, state_new, done)
+        # Remember
+        agent.remember(state_old, final_move, reward, state_new, done)
 
-            # Snake died
-            if done:
-                run = False
-                # Train long memory, plot result
-                game.reset()
-                agent.episode = cur_episode
-                game.agent_episode = cur_episode
-                agent.train_long_memory()
+        # Snake died
+        if done:
+            run = False
 
-                # Save model if it's the best (and update top score)
-                if score > game.top_score:
-                    if not os.path.exists("./models"):
-                        os.makedirs("./models")
-                    agent.model.save(f"./models/model_gen{cur_gen}.h5")
-                    game.top_score = score
+            # Train long memory
+            self.game.reset()
+            agent.train_long_memory()
 
-                # Update agent's internal score if needed
-                if score > agent.top_score:
-                    agent.top_score = score
+            # Update agent's internal score if needed
+            if score > agent.top_score:
+                agent.top_score = score
 
-                total_score += score
-                game.mean_score = np.round((total_score / cur_episode), 3)
+            # Save model if it's the best (and update top score)
+            if score > self.game.top_score:
+                if not os_exists("./models"):
+                    os_makedirs("./models")
+                agent.model.save(f"./models/model_gen{self.game.generation}.h5")
+                self.game.top_score = score
+
+            # Update aggregate data
+            self.game.total_score += score
+            self.game.mean_score = np_round((self.game.total_score / self.game.agent_episode), 3)
+            self.all_scores.append(score)
+            self.all_mean_scores.append(self.game.mean_score)
+
+            # Updte generation data
+            self.gen_score += score
+            gen_mean = np_round((self.gen_score / self.game.agent_episode), 3)
+            self.gen_scores.append(score)
+            self.gen_mean_scores.append(gen_mean)
+
+            # Updte agent data
+            self.agent_score += score
+            agent_mean = np_round((self.agent_score / self.game.agent_episode), 3)
+            self.agent_scores.append(score)
+            self.agent_mean_scores.append(agent_mean)
+            
+
+        # Snake lives
+        else:
+            run = True
+
+        # Record data
+        self._record_data()
+        return run
 
                 
 
-    def record_data():
-        # Record data
-        scores.append(score)
-        mean_scores.append(game.mean_score)
+    def _record_data(self):
+        ''' Record the session data as it currently stands. '''
+        # Plot data
+        self.plotter.plot_data(self.all_scores,
+                               self.all_mean_scores,
+                               self.gen_scores,
+                               self.gen_mean_scores,
+                               self.game.generation,
+                               self.agent_scores,
+                               self.agent_mean_scores,
+                               self.game.agent_num)
         
-        plot_data(all_scores, all_mean_scores, gen_scores, gen_mean_scores, cur_gen, agent_scores, agent_mean_scores, game.agent_num)
-        print(f"Agent {game.agent_num}")
-        print(f"Populatino {len(agents)}")
-        print(f"Episode: {cur_episode}")
-        print(f"Generation: {cur_gen}")
-        print(f"Score: {score}")
-        print(f"Top Score: {game.top_score}")
-        print(f"Mean: {game.mean_score}\n")
+        # Print current state to the console
+        print(f"Current Agent {self.game.agent_num} (of {len(self.agents)})")
+        print(f"Current Episode: {self.game.agent_episode}")
+        print(f"Current Generation: {self.game.generation}")
+        print(f"Current Score: {self.score}")
+        print(f"Top Score: {self.game.top_score}")
+        print(f"Total Mean: {self.game.mean_score}\n")

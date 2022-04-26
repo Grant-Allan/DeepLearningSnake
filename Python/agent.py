@@ -8,7 +8,10 @@ from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR
 class Agent():
     ''' The snake agent- not the model itself. '''
     def __init__(self, num_states=11, num_actions=3):
+        # Current episode
         self.episode = 0
+
+        # Internal data
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
@@ -21,6 +24,9 @@ class Agent():
 
         # Internal score for fitness testing
         self.top_score = 0
+
+        # Internal mean for graphing
+        self.mean = 0
 
 
     def get_state(self, game):

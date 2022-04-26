@@ -1,33 +1,45 @@
-import os
-import pygame
-import random
-import numpy as np
-from agent import Agent
-from genetics import GeneticAlgorithm
-from helper import plot_data, save_graph, Direction, Point, TILE_SIZE, WHITE, RED, BLACK
+from helper import Direction, Point, TILE_SIZE, WHITE, RED, BLACK
 
-pygame.init()
+from random import np_randint
+from numpy import np_array_equal
+
+from pygame import init as pyg_init
+from pygame import RESIZABLE as pyg_RESIZABLE
+from pygame import QUIT as pyg_QUIT
+from pygame import quit as pyg_quit
+from pygame.font import Font as pyg_Font
+from pygame.time import Clock as pyg_Clock
+from pygame.event import get as pyg_get
+from pygame.transform import scale as pyg_scale
+from pygame.display import set_mode as pyg_set_mode
+from pygame.display import set_caption as pyg_set_caption
+from pygame.display import flip as pyg_flip
+from pygame.draw import rect as pyg_rect
+from pygame.draw import line as pyg_line
+
+
+# Initialize pygame
+pyg_init()
 
 # Fonts
 try:
-    FONT = pygame.font.Font("arial.ttf", int(TILE_SIZE*1.5))
+    FONT = pyg_Font("arial.ttf", int(TILE_SIZE*1.5))
 except:
-    FONT = pygame.font.SysFont("arial", int(TILE_SIZE*1.5))
+    FONT = pyg_Font("arial", int(TILE_SIZE*1.5))
 
-FPS = 100
-
-class SnakeGameAI():
+class Game():
     ''' The base logic for the game itself. '''
-    def __init__(self, tiles_wide=32, tiles_high=24, tiles_margin=4):
+    def __init__(self, fps=60, tiles_wide=32, tiles_high=24, tiles_margin=4):
+        self.fps = fps
         self.width = tiles_wide*TILE_SIZE
         self.height = tiles_high*TILE_SIZE
         self.margin = tiles_margin*TILE_SIZE # Added to the bottom for diplaying data (score, episode, etc)
 
         # Initialze display
-        self.true_display = pygame.display.set_mode((self.width, self.height + self.margin), pygame.RESIZABLE)
+        self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
         self.false_display = self.true_display.copy()
-        pygame.display.set_caption("Snake")
-        self.clock = pygame.time.Clock()
+        pyg_set_caption("Snake")
+        self.clock = pyg_Clock()
 
         # Initialize game values
         self.reset()
@@ -36,6 +48,7 @@ class SnakeGameAI():
         self.top_score = 0
         self.agent_episode = 0
         self.mean_score = 0.0
+        self.total_score = 0
 
         # Reward values
         self.food_reward = 10
@@ -66,8 +79,8 @@ class SnakeGameAI():
 
     def _food_gen(self):
         ''' Randomly place food on the map. '''
-        x = random.randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
-        y = random.randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        x = np_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        y = np_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
         self.food = Point(x, y)
 
         # Check for conflicting values
@@ -81,9 +94,9 @@ class SnakeGameAI():
         reward = 0
 
         # Check for if the game has been closed
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        for event in pyg_get():
+            if event.type == pyg_QUIT:
+                pyg_quit()
                 quit()
 
         # Move
@@ -108,7 +121,7 @@ class SnakeGameAI():
 
         # Update ui and clock
         self._update_ui()
-        self.clock.tick(FPS)
+        self.clock.tick(self.fps)
 
         # Return values for the agent to process
         return reward, game_over, self.score
@@ -133,14 +146,14 @@ class SnakeGameAI():
 
         # Draw out the snake block by block
         for x, y in self.snake:
-            pygame.draw.rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE])
-            pygame.draw.rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE], 1)
+            pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
         # Draw the food block
-        pygame.draw.rect(self.false_display, RED, [self.food.x, self.food.y, TILE_SIZE, TILE_SIZE])
+        pyg_rect(self.false_display, RED, [self.food.x, self.food.y, TILE_SIZE, TILE_SIZE])
 
         # Draw a line for the margin
-        pygame.draw.line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
+        pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
 
         # Show the current agent
         text = FONT.render(f"Agent {self.agent_num}", True, WHITE)
@@ -167,8 +180,8 @@ class SnakeGameAI():
         self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(2*TILE_SIZE)))])
 
         # Update the display
-        self.true_display.blit(pygame.transform.scale(self.false_display, self.true_display.get_rect().size), (0, 0))
-        pygame.display.flip()
+        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+        pyg_flip()
 
 
     def _move(self, action):
@@ -184,10 +197,10 @@ class SnakeGameAI():
         idx = clock_wise.index(self.direction)
 
         # No change (straight)
-        if np.array_equal(action, [1, 0, 0]):
+        if np_array_equal(action, [1, 0, 0]):
             new_dir = clock_wise[idx]
         # Right turn r -> d -> l -> u
-        elif np.array_equal(action, [0, 1, 0]):
+        elif np_array_equal(action, [0, 1, 0]):
             next_idx = (idx + 1) % 4
             new_dir = clock_wise[next_idx]
         # Left turn r -> u -> l -> d
@@ -210,95 +223,3 @@ class SnakeGameAI():
         elif self.direction == Direction.UP:
             y -= TILE_SIZE
         self.head = Point(x, y)
-
-
-def run(population_size=20, max_episodes=10, max_generations=10):
-    agents = [Agent() for i in range(population_size)]
-    game = SnakeGameAI()
-    genetics = GeneticAlgorithm()
-
-    scores, mean_scores = [], []
-    all_scores, all_mean_scores, gen_scores, gen_mean_scores, agent_scores, agent_mean_scores = [], [], [], [], [], []
-    for cur_gen in range(1, max_generations+1):
-        # Reset generation data
-        game.generation = cur_gen
-        gen_scores, gen_mean_scores = [], []
-
-        for agent_num, agent in enumerate(agents):
-            # Set colors
-            game.color1 = agent.color1
-            game.color2 = agent.color2
-
-            # Set agent number
-            game.agent_num = agent_num
-
-            # Refresh agent data lists
-            agent_scores, agent_mean_scores = [], []
-
-            total_score = 0
-            for cur_episode in range(1, max_episodes+1):
-                agent.episode = cur_episode
-                game.agent_episode = cur_episode
-                run = True
-                while run:
-                    # Get old state
-                    state_old = agent.get_state(game)
-
-                    # Get move
-                    final_move = agent.get_action(state_old)
-
-                    # Perform move and get new state
-                    reward, done, score = game.play_step(final_move)
-                    state_new = agent.get_state(game)
-
-                    # Train short memory
-                    agent.train_short_memory(state_old, final_move, reward, state_new, done)
-
-                    # Remember
-                    agent.remember(state_old, final_move, reward, state_new, done)
-
-                    # Snake died
-                    if done:
-                        run = False
-                        # Train long memory, plot result
-                        game.reset()
-                        agent.episode = cur_episode
-                        game.agent_episode = cur_episode
-                        agent.train_long_memory()
-
-                        # Save model if it's the best (and update top score)
-                        if score > game.top_score:
-                            if not os.path.exists("./models"):
-                                os.makedirs("./models")
-                            agent.model.save(f"./models/model_gen{cur_gen}.h5")
-                            game.top_score = score
-
-                        # Update agent's internal score if needed
-                        if score > agent.top_score:
-                            agent.top_score = score
-
-                        total_score += score
-                        game.mean_score = np.round((total_score / cur_episode), 3)
-
-                        # Record data
-                        scores.append(score)
-                        mean_scores.append(game.mean_score)
-                        plot_data(all_scores, all_mean_scores, gen_scores, gen_mean_scores, cur_gen, agent_scores, agent_mean_scores, game.agent_num)
-                        print(f"Agent {game.agent_num}")
-                        print(f"Populatino {len(agents)}")
-                        print(f"Episode: {cur_episode}")
-                        print(f"Generation: {cur_gen}")
-                        print(f"Score: {score}")
-                        print(f"Top Score: {game.top_score}")
-                        print(f"Mean: {game.mean_score}\n")
-
-        # Make new population
-        agents = genetics.breed_population(agents)
-
-        # Save generation's graph
-        save_graph(cur_gen)
-
-
-
-if __name__ == "__main__":
-    run(population_size=50, max_episodes=20, max_generations=100)

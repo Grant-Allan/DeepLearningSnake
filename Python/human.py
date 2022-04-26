@@ -1,7 +1,5 @@
 import pygame
 import random
-from enum import Enum
-from collections import namedtuple
 from helper import Direction, Point, TILE_SIZE, WHITE, RED, BLUE1, BLUE2, BLACK
 
 pygame.init()
