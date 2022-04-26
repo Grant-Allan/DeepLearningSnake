@@ -51,6 +51,7 @@ class Plotter():
         plt_ion() # turn on interactable plots
         if not single_agent:
             fig, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
+            self.ax[1, 1].remove() # get rid of the bottom right plot, since we don't use it
             fig.set_size_inches(8, 6) # set figure size
 
             # set the spacing between subplots
@@ -61,7 +62,7 @@ class Plotter():
                                 wspace=0.4,
                                 hspace=0.4)
         else:
-            _, self.ax = plt_subplots() 
+            _, self.ax = plt_subplots()
 
 
     def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
@@ -123,8 +124,8 @@ class Plotter():
         self.ax[0, 1].set_ylabel("Score")
 
         # Plot data and set legend
-        self.ax[0, 1].plot(self.all_scores, label="Scores")
-        self.ax[0, 1].plot(self.all_mean_scores, label="Mean Scores")
+        self.ax[0, 1].plot(self.gen_scores, label="Scores")
+        self.ax[0, 1].plot(self.gen_mean_scores, label="Mean Scores")
         self.ax[0, 1].legend(loc="upper left", prop={'size': 8})
 
         # Set number at tip of each line declaring the current value
@@ -147,8 +148,8 @@ class Plotter():
         self.ax[1, 0].set_ylabel("Score")
 
         # Plot data and set legend
-        self.ax[1, 0].plot(self.all_scores, label="Scores")
-        self.ax[1, 0].plot(self.all_mean_scores, label="Mean Scores")
+        self.ax[1, 0].plot(self.agent_scores, label="Scores")
+        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
         self.ax[1, 0].legend(loc="upper left", prop={'size': 8})
 
         # Set number at tip of each line declaring the current value
@@ -187,7 +188,7 @@ class Plotter():
         plt_show(block=False)
         plt_pause(0.001)
 
-    
+
     def save_session(self):
         ''' Save the data for the entire session. '''
         if not os_exists("./graphs"):
@@ -202,7 +203,7 @@ class Plotter():
         if not os_exists("./graphs/generation_graphs"):
             os_makedirs("./graphs/generation_graphs")
         plt_savefig(f"./graphs/generation_graphs/graph_gen{gen_num}.jpg")
-    
+
 
     def save_agent(self, gen_num, agent_num):
         ''' Save the data for this agent. '''

@@ -54,7 +54,7 @@ class StartMenu():
         # Initialze display
         self.true_display = pyg_set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
         self.false_display = self.true_display.copy()
-    
+
 
     def main_menu(self):
         # Get current mouse position
@@ -67,7 +67,7 @@ class StartMenu():
         new_game_menu_button_height = 20
         new_game_menu_button_x_check = new_game_button_x <= mouse_pos[0] <= new_game_button_x+new_game_menu_button_width
         new_game_menu_button_y_check = new_game_menu_button_y <= mouse_pos[1] <= new_game_menu_button_y+new_game_menu_button_height
-        
+
         settings_menu_button_x = 240
         settings_menu_button_y = 300
         settings_menu_button_width = 40
@@ -116,8 +116,8 @@ class StartMenu():
 
     def game_type_selection_menu(self):
         pass
-    
-    
+
+
     def settings_menu(self):
         pass
 
@@ -128,7 +128,7 @@ class StartMenu():
             # Fill button area
             pyg_rect(self.false_display, hover_button_color, [postion[0], postion[1], size[0], size[1]])
             pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
-            
+
             # Place text
             text = FONT.render(button_text, True, hover_font_color)
             self.false_display.blit(text, [postion[0], postion[1]])
@@ -137,7 +137,7 @@ class StartMenu():
             # Fill button area
             pyg_rect(self.false_display, stand_button_color, [postion[0], postion[1], size[0], size[1]])
             pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1], size[0], size[1]], 1)
-            
+
             # Place text
             text = FONT.render(button_text, True, stand_font_color)
             self.false_display.blit(button_text, [postion[0], postion[1]])
@@ -225,7 +225,7 @@ class SnakeGameAI():
         # Check if game over
         # If the snake hasn't made enough progress, it's executed
         game_over = False
-        if self._is_collision() or (self.frame_iteration > 125*len(self.snake)):
+        if self.is_collision() or (self.frame_iteration > 125*len(self.snake)):
             game_over = True
             reward = self.death_reward
             return reward, game_over, self.score
@@ -246,7 +246,7 @@ class SnakeGameAI():
         return reward, game_over, self.score
 
 
-    def _is_collision(self, block=None):
+    def is_collision(self, block=None):
         ''' Check for collision against a wall or the snake's body. '''
         if block is None:
             block = self.head
@@ -384,7 +384,7 @@ class SnakeGameHuman():
         # Check for conflicting values
         if self.food in self.snake:
             self._food_gen()
-    
+
 
     def play_step(self):
         ''' Run a frame of the game. '''
@@ -411,7 +411,7 @@ class SnakeGameHuman():
 
         # Check if game over
         game_over = False
-        if self._is_collision():
+        if self.is_collision():
             game_over = True
             return game_over, self.score
 
@@ -430,7 +430,7 @@ class SnakeGameHuman():
         return game_over, self.score
 
 
-    def _is_collision(self, block=None):
+    def is_collision(self, block=None):
         ''' Check for collision against a wall or the snake's body. '''
         if block is None:
             block = self.head
