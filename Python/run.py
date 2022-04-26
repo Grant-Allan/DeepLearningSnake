@@ -1,6 +1,6 @@
 from agent import Agent
 from genetics import GeneticAlgorithm
-from game import SnakeGameAI, SnakeGameHuman
+from game import MainMenu, SettingsMenu, SnakeGameAI, SnakeGameHuman
 from helper import Plotter
 
 from os import makedirs as os_makedirs
@@ -19,7 +19,7 @@ class RunGame():
         A main menu to open the game into, where you can select
         your game mode and change various settings.
         '''
-        pass
+        main_menu = MainMenu()
     
 
     def settings_menu():
@@ -29,7 +29,7 @@ class RunGame():
 
         Having just a single agent defaults it to run_dqn?
         '''
-        pass
+        settings_menu = SettingsMenu()
 
 
     def run_human(self, fps=10):

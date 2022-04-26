@@ -36,6 +36,28 @@ try:
 except:
     FONT = pyg_Font("arial", int(TILE_SIZE*1.5))
 
+
+
+class MainMenu():
+    '''
+    A main menu to open the game into, where you can select
+    your game mode and change various settings.
+    '''
+    def __init__(self):
+        pass
+
+
+
+class SettingsMenu():
+    '''
+    A menu for changing settings such as game speed, number of agents,
+    number of episodes, number of generations, mutation rate, etc.
+    '''
+    def __init__(self):
+        pass
+
+
+
 class SnakeGameAI():
     ''' The base logic for the game itself. '''
     def __init__(self, fps=100, tiles_wide=32, tiles_high=24, tiles_margin=4):
@@ -234,6 +256,7 @@ class SnakeGameAI():
         elif self.direction == Direction.UP:
             y -= TILE_SIZE
         self.head = Point(x, y)
+
 
 
 class SnakeGameHuman():
