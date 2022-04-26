@@ -2,6 +2,8 @@ from enum import Enum
 from collections import namedtuple
 
 from os import makedirs as os_makedirs
+from os import system as os_system
+from os import name as os_name
 from os.path import exists as os_exists
 
 from IPython.display import clear_output as dis_clear_output
@@ -23,6 +25,9 @@ from matplotlib.pyplot import text as plt_text
 from matplotlib.pyplot import xlim as plt_xlim
 from matplotlib.pyplot import ylim as plt_ylim
 
+
+# Set up a clear console function
+clearConsole = lambda: os_system('cls' if os_name in ('nt', 'dos') else 'clear')
 
 # Directions dictionary so we can use .RIGHT, .LEFT, etc instead of numbers
 class Direction(Enum):
@@ -88,9 +93,9 @@ class Plotter():
 
     def _plot_aggregate(self):
         ''' Plot all data collected by the game. '''
-        self.ax[0, 0].title("Total Aggregate Data")
-        self.ax[0, 0].xlabel("Number of Games")
-        self.ax[0, 0].ylabel("Score")
+        self.ax[0, 0].set_title("Total Aggregate Data")
+        self.ax[0, 0].set_xlabel("Number of Games")
+        self.ax[0, 0].set_ylabel("Score")
 
         self.ax[0, 0].plot(self.all_scores, label="Scores")
         self.ax[0, 0].plot(self.all_mean_scores, label="Mean Scores")
@@ -99,15 +104,15 @@ class Plotter():
         self.ax[0, 0].text(len(self.all_scores)-1, self.all_scores[-1], str(self.all_scores[-1]))
         self.ax[0, 0].text(len(self.all_mean_scores)-1, self.all_mean_scores[-1], str(self.all_mean_scores[-1]))
 
-        self.ax[0, 0].xlim(xmin=0)
-        self.ax[0, 0].ylim(ymin=0)
+        self.ax[0, 0].set_xlim(xmin=0)
+        self.ax[0, 0].set_ylim(ymin=0)
 
 
     def _plot_generation(self):
         ''' Plot the data for the current generation. '''
-        self.ax[0, 1].title(f"Generation {self.gen_num} Data")
-        self.ax[0, 1].xlabel("Number of Games")
-        self.ax[0, 1].ylabel("Score")
+        self.ax[0, 1].set_title(f"Generation {self.gen_num} Data")
+        self.ax[0, 1].set_xlabel("Number of Games")
+        self.ax[0, 1].set_ylabel("Score")
 
         self.ax[0, 1].plot(self.gen_scores, label="Scores")
         self.ax[0, 1].plot(self.gen_mean_scores, label="Mean Scores")
@@ -116,15 +121,15 @@ class Plotter():
         self.ax[0, 1].text(len(self.gen_scores)-1, self.gen_scores[-1], str(self.gen_scores[-1]))
         self.ax[0, 1].text(len(self.gen_mean_scores)-1, self.gen_mean_scores[-1], str(self.gen_mean_scores[-1]))
 
-        self.ax[0, 1].xlim(xmin=0)
-        self.ax[0, 1].ylim(ymin=0)
+        self.ax[0, 1].set_xlim(xmin=0)
+        self.ax[0, 1].set_ylim(ymin=0)
 
 
     def _plot_agent(self):
         ''' Plot the data for the current agent. '''
-        self.ax[1, 0].title(f"Agent {self.agent_num} Data")
-        self.ax[1, 0].xlabel("Number of Games")
-        self.ax[1, 0].ylabel("Score")
+        self.ax[1, 0].set_title(f"Agent {self.agent_num} Data")
+        self.ax[1, 0].set_xlabel("Number of Games")
+        self.ax[1, 0].set_ylabel("Score")
 
         self.ax[1, 0].plot(self.agent_scores, label="Scores")
         self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
@@ -133,8 +138,8 @@ class Plotter():
         self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
         self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
 
-        self.ax[1, 0].xlim(xmin=0)
-        self.ax[1, 0].ylim(ymin=0)
+        self.ax[1, 0].set_xlim(xmin=0)
+        self.ax[1, 0].set_ylim(ymin=0)
 
 
     def plot_single_agent(self, scores, mean_scores):
@@ -142,7 +147,7 @@ class Plotter():
         # Clear previous display
         dis_clear_output(wait=True)
         dis_display(plt_gcf())
-        #clearConsole()
+        clearConsole()
         plt_clf()
 
         # Plot data

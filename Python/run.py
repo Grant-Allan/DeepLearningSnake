@@ -38,6 +38,10 @@ class Run():
         plotter = Plotter(single_agent=True)
         self.game = SnakeGameAI(fps=fps)
 
+        # Set colors
+        self.game.color1 = agent.color1
+        self.game.color2 = agent.color2
+
         # Set aggregate data lists
         self.agent_scores, self.agent_mean_scores = [], []
 
@@ -98,7 +102,7 @@ class Run():
 
         # Run for set number of generations
         for agent_num, agent in enumerate(self.agents):
-            self._run_agent(cur_gen, agent_num, agent)
+            self._run_agent(agent_num, agent)
         
         # Save generation's graph
         self.plotter.save_gen(cur_gen)
@@ -107,7 +111,7 @@ class Run():
         self.agents = self.genetics.breed_population(self.agents)
 
 
-    def _run_agent(self, cur_gen, agent_num, agent):
+    def _run_agent(self, agent_num, agent):
         ''' Run an agent, whether on it's own or as part of a population. '''
         # Set colors
         self.game.color1 = agent.color1
@@ -132,9 +136,12 @@ class Run():
             run = True
             while run:
                 run = self._run_episode(agent)
+            
+            # Record data
+            self._record_data()
         
         # Save agent's graph
-        self.plotter.save_agent(cur_gen, agent_num)
+        self.plotter.save_agent(self.game.generation, agent_num)
                 
 
     
@@ -198,9 +205,6 @@ class Run():
         # Snake lives
         else:
             run = True
-
-        # Record data
-        if not single_agent: self._record_data()
         return run
 
 
@@ -220,6 +224,6 @@ class Run():
         print(f"Current Agent {self.game.agent_num} (of {len(self.agents)})")
         print(f"Current Episode: {self.game.agent_episode}")
         print(f"Current Generation: {self.game.generation}")
-        print(f"Current Score: {self.score}")
+        print(f"Current Score: {self.agent_score}")
         print(f"Top Score: {self.game.top_score}")
         print(f"Total Mean: {self.game.mean_score}\n")
