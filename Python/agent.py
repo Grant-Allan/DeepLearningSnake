@@ -11,7 +11,7 @@ from numpy import argmax as np_argmax
 
 class Agent():
     ''' The snake agent- not the model itself. '''
-    def __init__(self, num_states=11, num_actions=3):
+    def __init__(self):
         # Current episode
         self.episode = 0
 
@@ -19,7 +19,7 @@ class Agent():
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = QNet.linear_QNet(input_size=num_states, hidden_sizes=[128, 128], output_size=num_actions, learning_rate=LR)
+        self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
         self.trainer = QTrainer(self.model, gamma=self.gamma)
         
         # Colors

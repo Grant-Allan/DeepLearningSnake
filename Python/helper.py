@@ -6,24 +6,12 @@ from os import system as os_system
 from os import name as os_name
 from os.path import exists as os_exists
 
-from IPython.display import clear_output as dis_clear_output
-from IPython.display import display as dis_display
-
 from matplotlib.pyplot import ion as plt_ion
 from matplotlib.pyplot import subplots as plt_subplots
-from matplotlib.pyplot import gcf as plt_gcf
-from matplotlib.pyplot import clf as plt_clf
+from matplotlib.pyplot import subplots_adjust as plt_subplots_adjust
 from matplotlib.pyplot import show as plt_show
 from matplotlib.pyplot import pause as plt_pause
 from matplotlib.pyplot import savefig as plt_savefig
-from matplotlib.pyplot import title as plt_title
-from matplotlib.pyplot import xlabel as plt_xlabel
-from matplotlib.pyplot import ylabel as plt_ylabel
-from matplotlib.pyplot import plot as plt_plot
-from matplotlib.pyplot import legend as plt_legend
-from matplotlib.pyplot import text as plt_text
-from matplotlib.pyplot import xlim as plt_xlim
-from matplotlib.pyplot import ylim as plt_ylim
 
 
 # Set up a clear console function
@@ -49,17 +37,30 @@ LR = 0.001
 
 # RGB colors
 WHITE = (255, 255, 255)
-RED = (200,0,0)
-BLUE1 = (0, 0, 255)
-BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
+RED = (200,0,0)
+GREEN1 = (0, 100, 0)
+GREEN2 = (0, 150, 0)
 
 
 class Plotter():
     ''' Class to hold all plotting functions. '''
     def __init__(self, single_agent=False):
         plt_ion() # turn on interactable plots
-        if not single_agent: _, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
+        if not single_agent:
+            fig, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
+            fig.set_size_inches(8, 6) # set figure size
+
+            # set the spacing between subplots
+            plt_subplots_adjust(left=0.1,
+                                bottom=0.1,
+                                right=0.9,
+                                top=0.9,
+                                wspace=0.4,
+                                hspace=0.4)
+        else:
+            _, self.ax = plt_subplots() 
+
 
     def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores, gen_num, agent_scores, agent_mean_scores, agent_num):
         ''' Plot the data for the game. '''
@@ -75,12 +76,6 @@ class Plotter():
         self.agent_mean_scores = agent_mean_scores
         self.agent_num = agent_num
 
-        # Clear previous display
-        dis_clear_output(wait=True)
-        dis_display(plt_gcf())
-        #clearConsole()
-        plt_clf()
-
         # Plot data
         self._plot_aggregate()
         self._plot_generation()
@@ -93,51 +88,72 @@ class Plotter():
 
     def _plot_aggregate(self):
         ''' Plot all data collected by the game. '''
+        # Clear previous display
+        self.ax[0, 0].cla()
+
+        # Set title and axes labels
         self.ax[0, 0].set_title("Total Aggregate Data")
         self.ax[0, 0].set_xlabel("Number of Games")
         self.ax[0, 0].set_ylabel("Score")
 
+        # Plot data and set legend
         self.ax[0, 0].plot(self.all_scores, label="Scores")
         self.ax[0, 0].plot(self.all_mean_scores, label="Mean Scores")
-        self.ax[0, 0].legend(loc="upper left")
+        self.ax[0, 0].legend(loc="upper left", prop={'size': 8})
 
+        # Set number at tip of each line declaring the current value
         self.ax[0, 0].text(len(self.all_scores)-1, self.all_scores[-1], str(self.all_scores[-1]))
         self.ax[0, 0].text(len(self.all_mean_scores)-1, self.all_mean_scores[-1], str(self.all_mean_scores[-1]))
 
+        # Make sure the graph only shows values with a positive x and y
         self.ax[0, 0].set_xlim(xmin=0)
         self.ax[0, 0].set_ylim(ymin=0)
 
 
     def _plot_generation(self):
         ''' Plot the data for the current generation. '''
+        # Clear previous display
+        self.ax[0, 1].cla()
+
+        # Set title and axes labels
         self.ax[0, 1].set_title(f"Generation {self.gen_num} Data")
         self.ax[0, 1].set_xlabel("Number of Games")
         self.ax[0, 1].set_ylabel("Score")
 
-        self.ax[0, 1].plot(self.gen_scores, label="Scores")
-        self.ax[0, 1].plot(self.gen_mean_scores, label="Mean Scores")
-        self.ax[0, 1].legend(loc="upper left")
+        # Plot data and set legend
+        self.ax[0, 1].plot(self.all_scores, label="Scores")
+        self.ax[0, 1].plot(self.all_mean_scores, label="Mean Scores")
+        self.ax[0, 1].legend(loc="upper left", prop={'size': 8})
 
+        # Set number at tip of each line declaring the current value
         self.ax[0, 1].text(len(self.gen_scores)-1, self.gen_scores[-1], str(self.gen_scores[-1]))
         self.ax[0, 1].text(len(self.gen_mean_scores)-1, self.gen_mean_scores[-1], str(self.gen_mean_scores[-1]))
 
+        # Make sure the graph only shows values with a positive x and y
         self.ax[0, 1].set_xlim(xmin=0)
         self.ax[0, 1].set_ylim(ymin=0)
 
 
     def _plot_agent(self):
         ''' Plot the data for the current agent. '''
+        # Clear previous display
+        self.ax[1, 0].cla()
+
+        # Set title and axes labels
         self.ax[1, 0].set_title(f"Agent {self.agent_num} Data")
         self.ax[1, 0].set_xlabel("Number of Games")
         self.ax[1, 0].set_ylabel("Score")
 
-        self.ax[1, 0].plot(self.agent_scores, label="Scores")
-        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
-        self.ax[1, 0].legend(loc="upper left")
+        # Plot data and set legend
+        self.ax[1, 0].plot(self.all_scores, label="Scores")
+        self.ax[1, 0].plot(self.all_mean_scores, label="Mean Scores")
+        self.ax[1, 0].legend(loc="upper left", prop={'size': 8})
 
+        # Set number at tip of each line declaring the current value
         self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
         self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
 
+        # Make sure the graph only shows values with a positive x and y
         self.ax[1, 0].set_xlim(xmin=0)
         self.ax[1, 0].set_ylim(ymin=0)
 
@@ -145,25 +161,25 @@ class Plotter():
     def plot_single_agent(self, scores, mean_scores):
         ''' Plot the data when running a sessions with just one agent. '''
         # Clear previous display
-        dis_clear_output(wait=True)
-        dis_display(plt_gcf())
-        clearConsole()
-        plt_clf()
+        self.ax.cla()
 
-        # Plot data
-        plt_title(f"Score Tracker")
-        plt_xlabel("Number of Games")
-        plt_ylabel("Score")
+        # Set title and axes labels
+        self.ax.set_title(f"Score Tracker")
+        self.ax.set_xlabel("Number of Games")
+        self.ax.set_ylabel("Score")
 
-        plt_plot(scores, label="Scores")
-        plt_plot(mean_scores, label="Mean Scores")
-        plt_legend(loc="upper left")
+        # Plot data and set legend
+        self.ax.plot(scores, label="Scores")
+        self.ax.plot(mean_scores, label="Mean Scores")
+        self.ax.legend(loc="upper left")
 
-        plt_text(len(scores)-1, scores[-1], str(scores[-1]))
-        plt_text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+        # Set number at tip of each line declaring the current value
+        self.ax.text(len(scores)-1, scores[-1], str(scores[-1]))
+        self.ax.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
 
-        plt_xlim(xmin=0)
-        plt_ylim(ymin=0)
+        # Make sure the graph only shows values with a positive x and y
+        self.ax.set_xlim(xmin=0)
+        self.ax.set_ylim(ymin=0)
 
         # Show data
         plt_show(block=False)
@@ -186,7 +202,7 @@ class Plotter():
         plt_savefig(f"./graphs/generation_graphs/graph_gen{gen_num}.jpg")
     
 
-    def save_gen(self, gen_num, agent_num):
+    def save_agent(self, gen_num, agent_num):
         ''' Save the data for this agent. '''
         if not os_exists("./graphs"):
             os_makedirs("./graphs")

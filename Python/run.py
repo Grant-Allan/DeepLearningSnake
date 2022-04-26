@@ -5,17 +5,15 @@ from helper import Plotter
 
 from os import makedirs as os_makedirs
 from os.path import exists as os_exists
-
 from numpy import round as np_round
 
     
-class Run():
+class RunGame():
     '''
     Controller class for running the snake game as a human,
     for training a single DQN snake, or a population of DQN
     snakes in tandem with a deep genetic algorithm.
     '''
-
     def run_human(self, fps=10):
         ''' Run the snake game in a way that a human can play. '''
         # Create game object
@@ -25,7 +23,7 @@ class Run():
         while True:
             game_over, score = game.play_step()
             if game_over: break
-        print("Final Score", score)
+        print(f"\nFinal Score: {score}\n")
 
 
     def run_dqn(self, fps=100, max_episodes=100):
@@ -77,7 +75,7 @@ class Run():
         self.genetics = GeneticAlgorithm()
         self.plotter = Plotter()
 
-        # Reset aggregate data lists
+        # Set aggregate data lists
         self.all_scores, self.all_mean_scores = [], []
 
         # Run for set number of generations (adjusting to start at gen 1)
