@@ -15,7 +15,7 @@ class Run():
     snakes in tandem with a deep genetic algorithm.
     '''
 
-    def run_human(self, fps=40):
+    def run_human(self, fps=30):
         ''' Run the snake game in a way that a human can play. '''
         # Create game object
         game = SnakeGameHuman(fps=fps)
@@ -34,11 +34,26 @@ class Run():
 
         # Create objects
         agent = Agent()
+        plotter = Plotter()
         self.game = SnakeGameAI(fps=fps)
-        self.plotter = Plotter()
 
-        while True:
-            self._run_episode(agent, single_agent=True)
+        # Set aggregate data lists
+        self.agent_scores, self.agent_mean_scores = [], []
+
+        # Run for set number of episodes (adjusting to start at ep 1)
+        for cur_episode in range(1, self.max_episodes+1):
+            # Episode variables
+            agent.episode = cur_episode
+            self.game.agent_episode = cur_episode
+
+            # Episode loop
+            run = True
+            while run:
+                run = self._run_episode(agent, single_agent=True)
+            
+            # Plot data
+            plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores)
+
    
 
     def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=10):
@@ -169,7 +184,7 @@ class Run():
                 self.gen_scores.append(score)
                 self.gen_mean_scores.append(gen_mean)
 
-            # Updte agent data
+            # Update agent data
             self.agent_score += score
             agent_mean = np_round((self.agent_score / self.game.agent_episode), 3)
             self.agent_scores.append(score)
@@ -181,7 +196,7 @@ class Run():
             run = True
 
         # Record data
-        self._record_data()
+        if not single_agent: self._record_data()
         return run
 
 

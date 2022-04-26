@@ -14,6 +14,14 @@ from matplotlib.pyplot import clf as plt_clf
 from matplotlib.pyplot import show as plt_show
 from matplotlib.pyplot import pause as plt_pause
 from matplotlib.pyplot import savefig as plt_savefig
+from matplotlib.pyplot import title as plt_title
+from matplotlib.pyplot import xlabel as plt_xlabel
+from matplotlib.pyplot import ylabel as plt_ylabel
+from matplotlib.pyplot import plot as plt_plot
+from matplotlib.pyplot import legend as plt_legend
+from matplotlib.pyplot import text as plt_text
+from matplotlib.pyplot import xlim as plt_xlim
+from matplotlib.pyplot import ylim as plt_ylim
 
 
 # Directions dictionary so we can use .RIGHT, .LEFT, etc instead of numbers
@@ -69,16 +77,16 @@ class Plotter():
         plt_clf()
 
         # Plot data
-        self.plot_aggregate()
-        self.plot_generation()
-        self.plot_agent()
+        self._plot_aggregate()
+        self._plot_generation()
+        self._plot_agent()
 
         # Show data
         plt_show(block=False)
         plt_pause(0.001)
 
 
-    def plot_aggregate(self):
+    def _plot_aggregate(self):
         ''' Plot all data collected by the game. '''
         self.ax[0, 0].title("Total Aggregate Data")
         self.ax[0, 0].xlabel("Number of Games")
@@ -95,7 +103,7 @@ class Plotter():
         self.ax[0, 0].ylim(ymin=0)
 
 
-    def plot_generation(self):
+    def _plot_generation(self):
         ''' Plot the data for the current generation. '''
         self.ax[0, 1].title(f"Generation {self.gen_num} Data")
         self.ax[0, 1].xlabel("Number of Games")
@@ -112,7 +120,7 @@ class Plotter():
         self.ax[0, 1].ylim(ymin=0)
 
 
-    def plot_agent(self):
+    def _plot_agent(self):
         ''' Plot the data for the current agent. '''
         self.ax[1, 0].title(f"Agent {self.agent_num} Data")
         self.ax[1, 0].xlabel("Number of Games")
@@ -127,23 +135,34 @@ class Plotter():
 
         self.ax[1, 0].xlim(xmin=0)
         self.ax[1, 0].ylim(ymin=0)
-    
 
-    def plot_agent(self):
-        ''' Plot the data for an individual. '''
-        self.ax[1, 0].title(f"Agent {self.agent_num} Data")
-        self.ax[1, 0].xlabel("Number of Games")
-        self.ax[1, 0].ylabel("Score")
 
-        self.ax[1, 0].plot(self.agent_scores, label="Scores")
-        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
-        self.ax[1, 0].legend(loc="upper left")
+    def plot_single_agent(scores, mean_scores):
+        ''' Plot the data when running a sessions with just one agent. '''
+        # Clear previous display
+        dis_clear_output(wait=True)
+        dis_display(plt_gcf())
+        #clearConsole()
+        plt_clf()
 
-        self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
-        self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
+        # Plot data
+        plt_title(f"Score Tracker")
+        plt_xlabel("Number of Games")
+        plt_ylabel("Score")
 
-        self.ax[1, 0].xlim(xmin=0)
-        self.ax[1, 0].ylim(ymin=0)
+        plt_plot(scores, label="Scores")
+        plt_plot(mean_scores, label="Mean Scores")
+        plt_legend(loc="upper left")
+
+        plt_text(len(scores)-1, scores[-1], str(scores[-1]))
+        plt_text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+
+        plt_xlim(xmin=0)
+        plt_ylim(ymin=0)
+
+        # Show data
+        plt_show(block=False)
+        plt_pause(0.001)
 
     
     def save_session(self):
