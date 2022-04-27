@@ -123,7 +123,7 @@ class StartMenu():
                              SMB_y_check,
                              (SMB_x, SMB_y),
                              (SMB_width, SMB_height))
-            
+
             self.draw_button(QB_text,
                              QB_x_check,
                              QB_y_check,
@@ -219,13 +219,13 @@ class StartMenu():
                              SA_y_check,
                              (SA_x, SA_y),
                              (SA_width, SA_height))
-            
+
             self.draw_button(PoA_text,
                              PoA_x_check,
                              PoA_y_check,
                              (PoA_x, PoA_y),
                              (PoA_width, PoA_height))
-            
+
             self.draw_button(BB_text,
                              BB_x_check,
                              BB_y_check,
@@ -430,10 +430,11 @@ class BackgroundSnake():
     def _update_ui(self):
         ''' Update the game screen. '''
         # Draw out the snake block by block
-        x, y = self.snake[0]
-        pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
-        pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-        for x, y in self.snake[1:]:
+        #x, y = self.snake[0]
+        #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
+        #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        #for x, y in self.snake[1:]:
+        for x, y in self.snake:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -617,7 +618,8 @@ class SnakeGameAI():
         #x, y = self.snake[0]
         #pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE])
         #pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-        for x, y in self.snake[1:]:
+        #for x, y in self.snake[1:]:
+        for x, y in self.snake:
             pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -812,7 +814,8 @@ class SnakeGameHuman():
         #x, y = self.snake[0]
         #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
         #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-        for x, y in self.snake[1:]:
+        #for x, y in self.snake[1:]:
+        for x, y in self.snake:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -873,7 +876,7 @@ class RunGame():
         print(f"\nFinal Score: {score}\n")
 
 
-    def run_dqn(self, fps=100, max_episodes=5000):
+    def run_dqn(self, fps=1000, max_episodes=5000):
         ''' Run a single deep Q learning snake. '''
         # Set internal variables
         self.max_episodes = max_episodes
@@ -904,14 +907,14 @@ class RunGame():
 
             # Plot data
             plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores)
-        
+
         if not os_exists(r"./models"):
             os_makedirs(r"./models")
         if not os_exists(r"./models/single_model_({}).h5".format(self.max_episodes)):
             agent.model.save(r"./models/single_model_({}).h5".format(self.max_episodes))
 
 
-    def run_grl(self, fps=100, population_size=1, max_episodes=10, max_generations=10):
+    def run_grl(self, fps=1000, population_size=50, max_episodes=10, max_generations=25):
         ''' Run a session of genetic reinforcement learning. '''
         # Set internal variables
         self.population_size = population_size
@@ -987,10 +990,10 @@ class RunGame():
 
                 # Record data
                 self._record_data()
-            
+
             # Update the agent in the population
             self.agents[agent_num] = agent
-            
+
 
         # Save agent's graph
         self.plotter.save_agent(self.game.generation, agent_num)
