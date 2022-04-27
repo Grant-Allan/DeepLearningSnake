@@ -1272,25 +1272,25 @@ class RunGame():
         ''' Run a session of genetic reinforcement learning. '''
         # Get data
         try:
-            with open(r"./Resources/SingleAgentGameSettings/FPS.txt") as file:
+            with open(r"./Resources/PopulationGameSettings/FPS.txt") as file:
                 lines = file.readlines()
                 fps = int(lines[0])
         except:
             print("Couldn't find FPS.txt (run_grl)")
         try:
-            with open(r"./Resources/SingleAgentGameSettings/EPs.txt") as file:
+            with open(r"./Resources/PopulationGameSettings/EPs.txt") as file:
                 lines = file.readlines()
                 max_episodes = int(lines[0])
         except:
             print("Couldn't find EPs.txt (run_grl)")
         try:
-            with open(r"./Resources/SingleAgentGameSettings/Pop.txt") as file:
+            with open(r"./Resources/PopulationGameSettings/Pop.txt") as file:
                 lines = file.readlines()
                 population_size = int(lines[0])
         except:
             print("Couldn't find Pop.txt (run_grl)")
         try:
-            with open(r"./Resources/SingleAgentGameSettings/Gens.txt") as file:
+            with open(r"./Resources/PopulationGameSettings/Gens.txt") as file:
                 lines = file.readlines()
                 max_generations = int(lines[0])
         except:
