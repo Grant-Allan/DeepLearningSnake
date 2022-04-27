@@ -614,9 +614,9 @@ class SnakeGameAI():
         self.false_display.fill(BLACK)
 
         # Draw out the snake block by block
-        x, y = self.snake[0]
-        pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE])
-        pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        #x, y = self.snake[0]
+        #pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE])
+        #pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE], 1)
         for x, y in self.snake[1:]:
             pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE], 1)
@@ -809,9 +809,9 @@ class SnakeGameHuman():
         self.false_display.fill(BLACK)
 
         # Draw out the snake block by block
-        x, y = self.snake[0]
-        pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
-        pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        #x, y = self.snake[0]
+        #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
+        #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
         for x, y in self.snake[1:]:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
