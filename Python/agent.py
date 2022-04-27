@@ -2,6 +2,7 @@ from collections import deque
 from model import QNet, QTrainer
 from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR
 
+from tensorflow.keras.models import load_model as tf_load_model
 from random import randint as rand_randint
 from random import sample as rand_sample
 from numpy import expand_dims as np_expand_dims
@@ -11,7 +12,7 @@ from numpy import argmax as np_argmax
 
 class Agent():
     ''' The snake agent- not the model itself. '''
-    def __init__(self):
+    def __init__(self, model_path=None):
         # Current episode
         self.episode = 0
 
@@ -19,7 +20,12 @@ class Agent():
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
+        
+        if model_path == None:
+            self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
+        else:
+            self.model = tf_load_model(model_path)
+
         self.trainer = QTrainer(self.model, gamma=self.gamma)
 
         # Colors
@@ -78,7 +84,6 @@ class Agent():
             game.food.y < game.head.y,  # food up
             game.food.y > game.head.y   # food down
         ]
-
         return np_array(state, dtype=int)
 
 

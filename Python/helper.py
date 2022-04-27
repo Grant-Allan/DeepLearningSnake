@@ -38,6 +38,7 @@ LR = 0.001
 # RGB colors
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
+SLATE_GRAY = (112, 128, 144)
 DIM_GRAY = (105, 105, 105)
 BLACK = (0, 0, 0)
 RED = (200, 0, 0)
@@ -221,24 +222,24 @@ class Plotter():
 
     def save_session(self):
         ''' Save the data for the entire session. '''
-        if not os_exists("./graphs"):
-            os_makedirs("./graphs")
-        plt_savefig("./graphs/session_graph.jpg")
+        if not os_exists(r"./graphs"):
+            os_makedirs(r"./graphs")
+        plt_savefig(r"./graphs/session_graph.jpg")
 
 
     def save_gen(self, gen_num):
         ''' Save the data for this generation. '''
-        if not os_exists("./graphs"):
-            os_makedirs("./graphs")
-        if not os_exists("./graphs/generation_graphs"):
-            os_makedirs("./graphs/generation_graphs")
-        plt_savefig(f"./graphs/generation_graphs/graph_gen{gen_num}.jpg")
+        if not os_exists(r"./graphs"):
+            os_makedirs(r"./graphs")
+        if not os_exists(r"./graphs/generation_graphs"):
+            os_makedirs(r"r./graphs/generation_graphs")
+        plt_savefig(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num))
 
 
     def save_agent(self, gen_num, agent_num):
         ''' Save the data for this agent. '''
-        if not os_exists("./graphs"):
-            os_makedirs("./graphs")
-        if not os_exists(f"./graphs/agent_graphs/gen{gen_num}"):
-            os_makedirs(f"./graphs/agent_graphs/gen{gen_num}")
-        plt_savefig(f"./graphs/agent_graphs/graph_agent{agent_num}.jpg")
+        if not os_exists(r"./graphs"):
+            os_makedirs(r"./graphs")
+        if not os_exists(r"./graphs/agent_graphs/gen{}".format(gen_num)):
+            os_makedirs(r"./graphs/agent_graphs/gen{}".format(gen_num))
+        plt_savefig(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num))
