@@ -44,6 +44,7 @@ BLACK = (0, 0, 0)
 RED = (200, 0, 0)
 GREEN1 = (0, 100, 0)
 GREEN2 = (0, 150, 0)
+GREEN3 = (0, 200, 0)
 
 
 class Plotter():
@@ -192,13 +193,13 @@ class Plotter():
                 size=14)
 
 
-    def plot_single_agent(self, scores, mean_scores):
+    def plot_single_agent(self, scores, mean_scores, cur_ep, num_eps):
         ''' Plot the data when running a sessions with just one agent. '''
         # Clear previous display
         self.ax.cla()
 
         # Set title and axes labels
-        self.ax.set_title(f"Score Tracker")
+        self.ax.set_title(f"Score Tracker\nEpisode {cur_ep} of {num_eps}")
         self.ax.set_xlabel("Number of Games")
         self.ax.set_ylabel("Score")
 

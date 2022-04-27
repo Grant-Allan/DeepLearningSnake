@@ -1,6 +1,6 @@
 from agent import Agent
 from genetics import GeneticAlgorithm
-from helper import Plotter, Direction, Point, TILE_SIZE, WHITE, GRAY, SLATE_GRAY, DIM_GRAY, BLACK, RED, GREEN1, GREEN2
+from helper import Plotter, Direction, Point, TILE_SIZE, WHITE, GRAY, SLATE_GRAY, DIM_GRAY, BLACK, RED, GREEN1, GREEN2, GREEN3
 
 from os import makedirs as os_makedirs
 from os.path import exists as os_exists
@@ -15,6 +15,8 @@ from pygame import QUIT as pyg_QUIT
 from pygame import quit as pyg_quit
 from pygame import MOUSEBUTTONDOWN as pyg_MOUSEBUTTONDOWN
 from pygame import KEYDOWN as pyg_KEYDOWN
+from pygame import K_RETURN as pyg_K_RETURN
+from pygame import K_BACKSPACE as pyg_K_BACKSPACE
 from pygame import K_UP as pyg_K_UP
 from pygame import K_LEFT as pyg_K_LEFT
 from pygame import K_DOWN as pyg_K_DOWN
@@ -78,27 +80,15 @@ class StartMenu():
             # Set placement values
             # NGMB = New Game Menu Button
             NGMB_text = "New Game"
-            NGMB_width, NGMB_height = FONT.size(NGMB_text)
-            NGMB_x = self.width//2 - NGMB_width//2
-            NGMB_y = TILE_SIZE*5
-            NGMB_x_check = NGMB_x <= mouse_pos[0] <= NGMB_x+NGMB_width
-            NGMB_y_check = NGMB_y <= mouse_pos[1] <= NGMB_y+NGMB_height
+            NGMB_x_check, NGMB_y_check, NGMB_pos, NGMB_size = self.button_values(NGMB_text, 60, mouse_pos)
 
             # SMB = Settings Menu Button
             SMB_text = "Settings"
-            SMB_width, SMB_height = FONT.size(SMB_text)
-            SMB_x = self.width//2 - SMB_width//2
-            SMB_y = NGMB_y + int(1.5*SMB_height)
-            SMB_x_check = SMB_x <= mouse_pos[0] <= SMB_x+SMB_width
-            SMB_y_check = SMB_y <= mouse_pos[1] <= SMB_y+SMB_height
+            SMB_x_check, SMB_y_check, SMB_pos, SMB_size = self.button_values(SMB_text, NGMB_pos[1], mouse_pos)
 
             # QB = Quit Button
             QB_text = "Quit"
-            QB_width, QB_height = FONT.size(QB_text)
-            QB_x = self.width//2 - QB_width//2
-            QB_y = SMB_y + int(1.5*QB_height)
-            QB_x_check = QB_x <= mouse_pos[0] <= QB_x+QB_width
-            QB_y_check = QB_y <= mouse_pos[1] <= QB_y+QB_height
+            QB_x_check, QB_y_check, QB_pos, QB_size = self.button_values(QB_text, SMB_pos[1], mouse_pos)
 
             # Black out previous display
             self.false_display.fill(BLACK)
@@ -108,27 +98,13 @@ class StartMenu():
 
             # Display title
             t_x, t_y = TITLE_FONT.size("Snake")
-            text = TITLE_FONT.render("Snake", True, GREEN2)
+            text = TITLE_FONT.render("Snake", True, GREEN3)
             self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
 
             # Draw buttons
-            self.draw_button(NGMB_text,
-                             NGMB_x_check,
-                             NGMB_y_check,
-                             (NGMB_x, NGMB_y),
-                             (NGMB_width, NGMB_height))
-
-            self.draw_button(SMB_text,
-                             SMB_x_check,
-                             SMB_y_check,
-                             (SMB_x, SMB_y),
-                             (SMB_width, SMB_height))
-
-            self.draw_button(QB_text,
-                             QB_x_check,
-                             QB_y_check,
-                             (QB_x, QB_y),
-                             (QB_width, QB_height))
+            self.draw_button(NGMB_text, NGMB_x_check, NGMB_y_check, NGMB_pos, NGMB_size)
+            self.draw_button(SMB_text, SMB_x_check, SMB_y_check, SMB_pos, SMB_size)
+            self.draw_button(QB_text, QB_x_check, QB_y_check, QB_pos, QB_size)
 
             # Update display
             self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
@@ -166,35 +142,19 @@ class StartMenu():
             # Set placement values
             # NG = Normal Game
             NG_text = "Normal Game"
-            NG_width, NG_height = FONT.size(NG_text)
-            NG_x = self.width//2 - NG_width//2
-            NG_y = 100
-            NG_x_check = NG_x <= mouse_pos[0] <= NG_x+NG_width
-            NG_y_check = NG_y <= mouse_pos[1] <= NG_y+NG_height
+            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
 
             # SA = Single Agent
             SA_text = "Single Agent"
-            SA_width, SA_height = FONT.size(SA_text)
-            SA_x = self.width//2 - SA_width//2
-            SA_y = NG_y + int(1.5*SA_height)
-            SA_x_check = SA_x <= mouse_pos[0] <= SA_x+SA_width
-            SA_y_check = SA_y <= mouse_pos[1] <= SA_y+SA_height
+            SA_x_check, SA_y_check, SA_pos, SA_size = self.button_values(SA_text, NG_pos[1], mouse_pos)
 
             # PoA = Population of Agents
             PoA_text = "Multiple Agents"
-            PoA_width, PoA_height = FONT.size(PoA_text)
-            PoA_x = self.width//2 - PoA_width//2
-            PoA_y = SA_y + int(1.5*PoA_height)
-            PoA_x_check = PoA_x <= mouse_pos[0] <= PoA_x+PoA_width
-            PoA_y_check = PoA_y <= mouse_pos[1] <= PoA_y+PoA_height
+            PoA_x_check, PoA_y_check, PoA_pos, PoA_size = self.button_values(PoA_text, SA_pos[1], mouse_pos)
 
             # BB = Back Button
             BB_text = "Back"
-            BB_width, BB_height = FONT.size(BB_text)
-            BB_x = self.width//2 - BB_width//2
-            BB_y = PoA_y + int(1.5*BB_height)
-            BB_x_check = BB_x <= mouse_pos[0] <= BB_x+BB_width
-            BB_y_check = BB_y <= mouse_pos[1] <= BB_y+BB_height
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, PoA_pos[1], mouse_pos)
 
             # Black out previous display
             self.false_display.fill(BLACK)
@@ -204,33 +164,14 @@ class StartMenu():
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("Select Game Type")
-            text = TITLE_FONT.render("Select Game Type", True, GREEN2)
+            text = TITLE_FONT.render("Select Game Type", True, GREEN3)
             self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
 
             # Draw buttons
-            self.draw_button(NG_text,
-                             NG_x_check,
-                             NG_y_check,
-                             (NG_x, NG_y),
-                             (NG_width, NG_height))
-
-            self.draw_button(SA_text,
-                             SA_x_check,
-                             SA_y_check,
-                             (SA_x, SA_y),
-                             (SA_width, SA_height))
-
-            self.draw_button(PoA_text,
-                             PoA_x_check,
-                             PoA_y_check,
-                             (PoA_x, PoA_y),
-                             (PoA_width, PoA_height))
-
-            self.draw_button(BB_text,
-                             BB_x_check,
-                             BB_y_check,
-                             (BB_x, BB_y),
-                             (BB_width, BB_height))
+            self.draw_button(NG_text, NG_x_check, NG_y_check, NG_pos, NG_size)
+            self.draw_button(SA_text, SA_x_check, SA_y_check, SA_pos, SA_size)
+            self.draw_button(PoA_text, PoA_x_check, PoA_y_check, PoA_pos, PoA_size)
+            self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
             self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
@@ -262,7 +203,346 @@ class StartMenu():
 
 
     def settings_menu(self):
-        pass
+        '''
+        Allow a person to decide the frame rate, number of of episodes,
+        population size, model values, etc.
+        '''
+        while True:
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
+
+            # Set placement values
+            # NG = Normal Game
+            NG_text = "Normal Game Settings"
+            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
+
+            # SA = Single Agent
+            SA_text = "Single Agent Settings"
+            SA_x_check, SA_y_check, SA_pos, SA_size = self.button_values(SA_text, NG_pos[1], mouse_pos)
+
+            # PoA = Population of Agents
+            PoA_text = "Multiple Agents Settings"
+            PoA_x_check, PoA_y_check, PoA_pos, PoA_size = self.button_values(PoA_text, SA_pos[1], mouse_pos)
+
+            # BB = Back Button
+            BB_text = "Back"
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, PoA_pos[1], mouse_pos)
+
+            # Black out previous display
+            self.false_display.fill(BLACK)
+
+            # Run the background snake
+            self.false_display = self.bg_snake.play_step()
+
+            # Display menu title
+            t_x, t_y = TITLE_FONT.size("Settings Menu")
+            text = TITLE_FONT.render("Settings Menu", True, GREEN3)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
+
+            # Draw buttons
+            self.draw_button(NG_text, NG_x_check, NG_y_check, NG_pos, NG_size)
+            self.draw_button(SA_text, SA_x_check, SA_y_check, SA_pos, SA_size)
+            self.draw_button(PoA_text, PoA_x_check, PoA_y_check, PoA_pos, PoA_size)
+            self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    pyg_quit()
+                    quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Start normal game
+                    if NG_x_check and NG_y_check:
+                        self.human_settings()
+                    # Start game with a single agent
+                    elif SA_x_check and SA_y_check:
+                        self.indiv_settings()
+                    # Start game with a population of agents
+                    elif PoA_x_check and PoA_y_check:
+                        self.pop_settings()
+                    # Back to main menu
+                    elif BB_x_check and BB_y_check:
+                        self.main_menu()
+
+    
+    def human_settings(self):
+        ''' Set settings for playing as a human. '''
+        active = "" # typing boolean
+        input_text = "" # box text
+
+        while True:
+            # Black out previous display
+            self.false_display.fill(BLACK)
+
+            # Run the background snake
+            self.false_display = self.bg_snake.play_step()
+
+            # Display menu title
+            t_x, t_y = TITLE_FONT.size("Normal Game Settings")
+            text = TITLE_FONT.render("Normal Game Settings", True, GREEN3)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
+
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
+
+            # Settings
+            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("HG", "FPS: ", 0, 45, "FPS", active, mouse_pos, input_text, center=True)
+
+            # BB = Back Button
+            BB_text = "Back"
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, (self.height - self.margin - TILE_SIZE), mouse_pos)
+            self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    pyg_quit()
+                    quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Reset active
+                    active = ""
+
+                    # Back to main menu
+                    if BB_x_check and BB_y_check:
+                        self.settings_menu()
+
+                    # Check to see if you clicked into a text box
+                    if FPS_x_check and FPS_y_check:
+                        active = "FPS"
+                
+                # Check for typing
+                if active=="FPS":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/StandardGameSettings/FPS.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < FPS_box_size[0]:
+                                input_text += event.unicode
+    
+
+    def indiv_settings(self):
+        ''' Set settings for a single agent session. '''
+        active = "" # typing check
+        input_text = "" # box text
+
+        while True:
+            # Black out previous display
+            self.false_display.fill(BLACK)
+
+            # Run the background snake
+            self.false_display = self.bg_snake.play_step()
+
+            # Display menu title
+            t_x, t_y = TITLE_FONT.size("Single Agent Settings")
+            text = TITLE_FONT.render("Single Agent Settings", True, GREEN3)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
+
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
+
+            # Settings
+            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("SA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
+            EP_x_check, EP_y_check, EP_box_size = self.draw_option("SA", "Episodes: ", 1, 65, "EP", active, mouse_pos, input_text)
+
+            # BB = Back Button
+            BB_text = "Back"
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, (self.height - self.margin - TILE_SIZE), mouse_pos)
+            self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    pyg_quit()
+                    quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Reset active
+                    active = ""
+
+                    # Back to main menu
+                    if BB_x_check and BB_y_check:
+                        self.settings_menu()
+
+                    # Check to see if you clicked into a text box
+                    if FPS_x_check and FPS_y_check:
+                        active = "FPS"
+                    elif EP_x_check and EP_y_check:
+                        active = "EP"
+                
+                # Check for typing
+                if active=="FPS":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/FPS.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < FPS_box_size[0]:
+                                input_text += event.unicode
+                elif active=="EP":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/EPs.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < EP_box_size[0]:
+                                input_text += event.unicode
+
+
+    def pop_settings(self):
+        ''' Set settings for a population of agents session. '''
+        active = "" # typing check
+        input_text = "" # box text
+
+        while True:
+            # Black out previous display
+            self.false_display.fill(BLACK)
+
+            # Run the background snake
+            self.false_display = self.bg_snake.play_step()
+
+            # Display menu title
+            t_x, t_y = TITLE_FONT.size("Population Settings")
+            text = TITLE_FONT.render("Population Settings", True, GREEN3)
+            self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
+
+            # Get current mouse position
+            mouse_pos = pyg_mouse_get_pos()
+
+            # Settings
+            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("MA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
+            EP_x_check, EP_y_check, EP_box_size = self.draw_option("MA", "Episodes: ", 1, 65, "EP", active, mouse_pos, input_text)
+            POP_x_check, POP_y_check, POP_box_size = self.draw_option("MA", "Population Size: ", 2, 65, "POP", active, mouse_pos, input_text)
+            NoG_x_check, NoG_y_check, NoG_box_size = self.draw_option("MA", "Number of Generations: ", 3, 65, "NoG", active, mouse_pos, input_text)
+
+            # BB = Back Button
+            BB_text = "Back"
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, (self.height - self.margin - TILE_SIZE), mouse_pos)
+            self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
+
+            # Update display
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            pyg_flip()
+
+            # Get player input
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    pyg_quit()
+                    quit()
+                # Check for if a button is pressed
+                elif event.type == pyg_MOUSEBUTTONDOWN:
+                    # Reset active
+                    active = ""
+
+                    # Back to main menu
+                    if BB_x_check and BB_y_check:
+                        self.settings_menu()
+
+                    # Check to see if you clicked into a text box
+                    if FPS_x_check and FPS_y_check:
+                        active = "FPS"
+                    elif EP_x_check and EP_y_check:
+                        active = "EP"
+                    elif POP_x_check and POP_y_check:
+                        active = "POP"
+                    elif NoG_x_check and NoG_y_check:
+                        active = "NoG"
+                
+                # Check for typing
+                if active=="FPS":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/FPS.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < FPS_box_size[0]:
+                                input_text += event.unicode
+                elif active=="EP":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/EPs.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < EP_box_size[0]:
+                                input_text += event.unicode
+                elif active=="POP":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/Pop.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < POP_box_size[0]:
+                                input_text += event.unicode
+                elif active=="NoG":
+                    if event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_RETURN:
+                            with open(r"./Resources/SingleAgentGameSettings/Gens.txt", "w") as file:
+                                file.write(input_text)
+                            input_text = ""
+                            active = ""
+                        elif event.key == pyg_K_BACKSPACE:
+                            input_text = input_text[:-1]
+                        else:
+                            x, _ = FONT.size(input_text)
+                            if x < NoG_box_size[0]:
+                                input_text += event.unicode
+
+
+    def button_values(self, text, y_start, mouse_pos):
+        width, height = FONT.size(text)
+        x = self.width//2 - width//2
+        y = y_start + int(1.5*height)
+        x_check = x <= mouse_pos[0] <= x+width
+        y_check = y <= mouse_pos[1] <= y+height
+        return x_check, y_check, (x, y), (width, height)
 
 
     def draw_button(self, button_text, x_check, y_check, postion, size):
@@ -270,7 +550,6 @@ class StartMenu():
         if x_check and y_check:
             # Fill button area
             #pyg_rect(self.false_display, GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
-            #pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5], 1)
 
             # Place text
             text = FONT.render(button_text, True, RED)
@@ -279,11 +558,64 @@ class StartMenu():
         else:
             # Fill button area
             #pyg_rect(self.false_display, SLATE_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
-            #pyg_rect(self.false_display, DIM_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5], 1)
 
             # Place text
             text = FONT.render(button_text, True, WHITE)
             self.false_display.blit(text, [postion[0]+5, postion[1]+5])
+    
+
+    def draw_option(self, menu, option_text, position, box_x, active_checker, active, mouse_pos, input_text, center=False):
+        # Get width, height, x, y
+        w, h = FONT.size(option_text)
+        x = TILE_SIZE*7 if not center else self.width//2 - w//2 - box_x//2
+        y = TILE_SIZE*(7 + (1.5*position))
+
+        # Text display
+        text = FONT.render(option_text, True, GREEN2)
+        self.false_display.blit(text, [x, y])
+
+        # Input box
+        box_pos = (x+w, y-5)
+        box_size = (box_x, h-10)
+        x_check = box_pos[0] <= mouse_pos[0] <= box_pos[0]+box_size[0]
+        y_check = box_pos[1] <= mouse_pos[1] <= box_pos[1]+box_size[1]
+
+        self.input_box(input_text, active, active_checker, menu, box_pos, box_size)
+        return x_check, y_check, box_size
+    
+
+    def input_box(self, button_text, active, active_checker, menu, postion, size):
+        if active==active_checker:
+            # Fill text area
+            pyg_rect(self.false_display, GRAY, [postion[0], postion[1]+7, size[0]+10, size[1]+5])
+            
+        else:
+            # Get settings folder
+            if menu=="HG":
+                folder = "StandardGameSettings"
+            elif menu=="SA":
+                folder = "SingleAgentGameSettings"
+            elif menu=="MA":
+                folder = "PopulationGameSettings"
+
+            # Get file path
+            if active_checker=="FPS":
+                path = r"./Resources/{}/FPS.txt".format(folder)
+            elif active_checker=="EP":
+                path = r"./Resources/{}/EPs.txt".format(folder)
+            elif active_checker=="POP":
+                path = r"./Resources/{}/Pop.txt".format(folder)
+            elif active_checker=="NoG":
+                path = r"./Resources/{}/Gens.txt".format(folder)
+
+            # Read value
+            with open(path) as file:
+                lines = file.readlines()
+                button_text = lines[0]
+
+        # Place text
+        text = FONT.render(button_text, True, WHITE)
+        self.false_display.blit(text, [postion[0]+2, postion[1]+3])
 
 
 
@@ -301,7 +633,7 @@ class BackgroundSnake():
         self.clock = pyg_Clock()
 
         # Initialize agent
-        self.agent = Agent(model_path=r"./resources/background_model.h5")
+        self.agent = Agent(model_path=r"./Resources/background_model.h5")
 
         # Initialize game values
         self.reset()
@@ -866,6 +1198,14 @@ class RunGame():
 
     def run_human(self, fps=10):
         ''' Run the snake game in a way that a human can play. '''
+        # Get data
+        try:
+            with open(r"./Resources/StandardGameSettings/FPS.txt") as file:
+                lines = file.readlines()
+                fps = int(lines[0])
+        except:
+            print("Couldn't find FPS.txt (run_human)")
+
         # Create game object
         game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
 
@@ -878,6 +1218,20 @@ class RunGame():
 
     def run_dqn(self, fps=1000, max_episodes=5000):
         ''' Run a single deep Q learning snake. '''
+        # Get data
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/FPS.txt") as file:
+                lines = file.readlines()
+                fps = int(lines[0])
+        except:
+            print("Couldn't find FPS.txt (run_dqn)")
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/EPs.txt") as file:
+                lines = file.readlines()
+                max_episodes = int(lines[0])
+        except:
+            print("Couldn't find EPs.txt (run_dqn)")
+
         # Set internal variables
         self.max_episodes = max_episodes
 
@@ -906,7 +1260,7 @@ class RunGame():
             agent = self._run_episode(agent, single_agent=True)
 
             # Plot data
-            plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores)
+            plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores, cur_episode, self.max_episodes)
 
         if not os_exists(r"./models"):
             os_makedirs(r"./models")
@@ -916,6 +1270,32 @@ class RunGame():
 
     def run_grl(self, fps=1000, population_size=50, max_episodes=10, max_generations=25):
         ''' Run a session of genetic reinforcement learning. '''
+        # Get data
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/FPS.txt") as file:
+                lines = file.readlines()
+                fps = int(lines[0])
+        except:
+            print("Couldn't find FPS.txt (run_grl)")
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/EPs.txt") as file:
+                lines = file.readlines()
+                max_episodes = int(lines[0])
+        except:
+            print("Couldn't find EPs.txt (run_grl)")
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/Pop.txt") as file:
+                lines = file.readlines()
+                population_size = int(lines[0])
+        except:
+            print("Couldn't find Pop.txt (run_grl)")
+        try:
+            with open(r"./Resources/SingleAgentGameSettings/Gens.txt") as file:
+                lines = file.readlines()
+                max_generations = int(lines[0])
+        except:
+            print("Couldn't find Gens.txt (run_grl)")
+
         # Set internal variables
         self.population_size = population_size
         self.max_episodes = max_episodes
