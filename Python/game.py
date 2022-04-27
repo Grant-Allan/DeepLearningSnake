@@ -430,7 +430,10 @@ class BackgroundSnake():
     def _update_ui(self):
         ''' Update the game screen. '''
         # Draw out the snake block by block
-        for x, y in self.snake:
+        for x, y in self.snake[0]:
+            pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        for x, y in self.snake[1:]:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -611,7 +614,10 @@ class SnakeGameAI():
         self.false_display.fill(BLACK)
 
         # Draw out the snake block by block
-        for x, y in self.snake:
+        for x, y in self.snake[0]:
+            pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        for x, y in self.snake[1:]:
             pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -803,7 +809,10 @@ class SnakeGameHuman():
         self.false_display.fill(BLACK)
 
         # Draw out the snake block by block
-        for x, y in self.snake:
+        for x, y in self.snake[0]:
+            pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        for x, y in self.snake[1:]:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
 
@@ -864,7 +873,7 @@ class RunGame():
         print(f"\nFinal Score: {score}\n")
 
 
-    def run_dqn(self, fps=100, max_episodes=200):
+    def run_dqn(self, fps=100, max_episodes=5000):
         ''' Run a single deep Q learning snake. '''
         # Set internal variables
         self.max_episodes = max_episodes
