@@ -254,7 +254,7 @@ class BackgroundSnake():
 
 class SnakeGameAI():
     ''' The logic for having a Deep Q Learning snake run. '''
-    def __init__(self, width, height, margin, true_display, false_display, fps=100):
+    def __init__(self, width, height, margin, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
@@ -262,8 +262,9 @@ class SnakeGameAI():
         self.margin = margin
 
         # Initialze display
-        self.true_display = true_display
-        self.false_display = false_display
+        self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
+        self.false_display = self.true_display.copy()
+        pyg_display.set_caption("Snake")
         self.clock = pyg_Clock()
 
         # Initialize game values
@@ -457,7 +458,7 @@ class SnakeGameAI():
 
 class SnakeGameHuman():
     ''' The logic for playing Snake as a human. '''
-    def __init__(self, width, height, margin, true_display, false_display, fps=100):
+    def __init__(self, width, height, margin, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
@@ -465,8 +466,8 @@ class SnakeGameHuman():
         self.margin = margin
 
         # Initialze display
-        self.true_display = true_display
-        self.false_display = false_display
+        self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
+        self.false_display = self.true_display.copy()
         pyg_display.set_caption("Snake")
         self.clock = pyg_Clock()
 

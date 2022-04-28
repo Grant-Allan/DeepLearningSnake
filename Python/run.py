@@ -8,11 +8,15 @@ from os.path import exists as os_exists
 from time import time as time_time
 from numpy import round as np_round
 
+from pygame import RESIZABLE as pyg_RESIZABLE
+from pygame import display as pyg_display
 from pygame import QUIT as pyg_QUIT
 from pygame import KEYDOWN as pyg_KEYDOWN
 from pygame import K_ESCAPE as pyg_K_ESCAPE
 from pygame.event import get as pyg_get
 
+# Initialize the display
+pyg_display.init()
 
 
 class RunGame():
@@ -31,7 +35,7 @@ class RunGame():
         self.quit = False
 
 
-    def run_human(self, true_display, false_display, fps=10):
+    def run_human(self):
         ''' Run the snake game in a way that a human can play. '''
         # Get data
         try:
@@ -46,7 +50,7 @@ class RunGame():
             print("Couldn't find StandardGameSettings.txt (run_dqn)")
 
         # Create game object
-        game = SnakeGameHuman(self.width, self.height, self.margin, true_display, false_display, fps=fps)
+        game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
 
         # Game loop
         while True:
@@ -58,7 +62,7 @@ class RunGame():
         print(f"\nFinal Score: {score}\n")
 
 
-    def run_dqn(self, true_display, false_display, fps=100, max_episodes=120):
+    def run_dqn(self):
         ''' Run a single deep Q learning snake. '''
         # Get data
         try:
@@ -83,7 +87,7 @@ class RunGame():
         # Create objects
         agent = Agent()
         plotter = Plotter(single_agent=True)
-        self.game = SnakeGameAI(self.width, self.height, self.margin, true_display, false_display, fps=fps)
+        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
 
         # Set colors
         self.game.color1 = agent.color1
@@ -123,7 +127,7 @@ class RunGame():
             agent.model.save(r"./models/single_model_({}).h5".format(self.max_episodes))
 
 
-    def run_grl(self, true_display, false_display, fps=100, population_size=20, max_episodes=10, max_generations=25):
+    def run_grl(self):
         ''' Run a session of genetic reinforcement learning. '''
         # Get data
         try:
@@ -159,7 +163,7 @@ class RunGame():
 
         # Create class objects
         self.agents = [Agent() for i in range(self.population_size)]
-        self.game = SnakeGameAI(self.width, self.height, self.margin, true_display, false_display, fps=fps)
+        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
         self.genetics = GeneticAlgorithm()
         self.plotter = Plotter()
 

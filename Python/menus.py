@@ -209,17 +209,17 @@ class StartMenu():
                     # Start normal game
                     if NG_x_check and NG_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_human(self.true_display, self.false_display)
+                        run_game.run_human()
                         self.main_menu()
                     # Start game with a single agent
                     elif SA_x_check and SA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_dqn(self.true_display, self.false_display)
+                        run_game.run_dqn()
                         self.main_menu()
                     # Start game with a population of agents
                     elif PoA_x_check and PoA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_grl(self.true_display, self.false_display)
+                        run_game.run_grl()
                         self.main_menu()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
