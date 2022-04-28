@@ -51,6 +51,29 @@ class StartMenu():
         # Create background snake object
         self.bg_snake = BackgroundSnake(self.width, self.height, self.margin, self.false_display)
 
+        # Load menu values
+        try:
+            with open(r"./Resources/StandardGameSettings.txt", "r") as file:
+                self.StandardGameSettings = file.readlines()
+        except:
+            self.StandardGameSettings = ["10"] # FPS
+            with open(r"./Resources/StandardGameSettings.txt", "w") as file:
+                file.write('\n'.join(self.StandardGameSettings))
+        try:
+            with open(r"./Resources/SingleAgentSettings.txt", "r") as file:
+                self.SingleAgentSettings = file.readlines()
+        except:
+            self.SingleAgentSettings = ["100", "120"] # FPS, Episodes
+            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
+                file.write('\n'.join(self.SingleAgentSettings))
+        try:
+            with open(r"./Resources/ManyAgentsSettings.txt", "r") as file:
+                self.ManyAgentsSettings = file.readlines()
+        except:
+            self.ManyAgentsSettings = ["100", "10", "20", "20"] # FPS, Episodes, Agents, Generations
+            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
+                file.write('\n'.join(self.ManyAgentsSettings))
+
 
     def main_menu(self):
         while True:
@@ -309,8 +332,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/StandardGameSettings/FPS.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/StandardGameSettings.txt", "w") as file:
+                                self.StandardGameSettings[0] = input_text
+                                file.write('\n'.join(self.StandardGameSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -319,6 +343,7 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
+                        self.StandardGameSettings[0] = input_text
     
 
     def indiv_settings(self):
@@ -379,8 +404,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/FPS.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
+                                self.SingleAgentSettings[0] = input_text
+                                file.write('\n'.join(self.SingleAgentSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -389,11 +415,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
+                        self.SingleAgentSettings[0] = input_text
                 elif active=="EP":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/EPs.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
+                                self.SingleAgentSettings[1] = input_text
+                                file.write('\n'.join(self.SingleAgentSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -402,6 +430,7 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < EP_box_size[0]:
                                 input_text += event.unicode
+                        self.SingleAgentSettings[1] = input_text
 
 
     def pop_settings(self):
@@ -468,8 +497,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/FPS.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
+                                self.ManyAgentsSettings[0] = input_text
+                                file.write('\n'.join(self.ManyAgentsSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -478,11 +508,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
+                        self.ManyAgentsSettings[0] = input_text
                 elif active=="EP":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/EPs.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
+                                self.ManyAgentsSettings[1] = input_text
+                                file.write('\n'.join(self.ManyAgentsSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -491,11 +523,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < EP_box_size[0]:
                                 input_text += event.unicode
+                        self.ManyAgentsSettings[1] = input_text
                 elif active=="POP":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/Pop.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
+                                self.ManyAgentsSettings[2] = input_text
+                                file.write('\n'.join(self.ManyAgentsSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -504,11 +538,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < POP_box_size[0]:
                                 input_text += event.unicode
+                        self.ManyAgentsSettings[2] = input_text
                 elif active=="NoG":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentGameSettings/Gens.txt", "w") as file:
-                                file.write(input_text)
+                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
+                                self.ManyAgentsSettings[3] = input_text
+                                file.write('\n'.join(self.ManyAgentsSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -517,6 +553,7 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < NoG_box_size[0]:
                                 input_text += event.unicode
+                        self.ManyAgentsSettings[3] = input_text
 
 
     def button_values(self, text, y_start, mouse_pos):
@@ -575,26 +612,21 @@ class StartMenu():
         else:
             # Get settings folder
             if menu=="HG":
-                folder = "StandardGameSettings"
+                lines = self.StandardGameSettings
             elif menu=="SA":
-                folder = "SingleAgentGameSettings"
+                lines = self.SingleAgentSettings
             elif menu=="MA":
-                folder = "PopulationGameSettings"
+                lines = self.ManyAgentsSettings
 
             # Get file path
             if active_checker=="FPS":
-                path = r"./Resources/{}/FPS.txt".format(folder)
-            elif active_checker=="EP":
-                path = r"./Resources/{}/EPs.txt".format(folder)
-            elif active_checker=="POP":
-                path = r"./Resources/{}/Pop.txt".format(folder)
-            elif active_checker=="NoG":
-                path = r"./Resources/{}/Gens.txt".format(folder)
-
-            # Read value
-            with open(path) as file:
-                lines = file.readlines()
                 button_text = lines[0]
+            elif active_checker=="EP":
+                button_text = lines[1]
+            elif active_checker=="POP":
+                button_text = lines[2]
+            elif active_checker=="NoG":
+                button_text = lines[3]
 
         # Place text
         text = FONT.render(button_text, True, WHITE)

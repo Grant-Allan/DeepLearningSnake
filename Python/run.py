@@ -9,7 +9,6 @@ from time import time as time_time
 from numpy import round as np_round
 
 from pygame import QUIT as pyg_QUIT
-from pygame import quit as pyg_quit
 from pygame import KEYDOWN as pyg_KEYDOWN
 from pygame import K_ESCAPE as pyg_K_ESCAPE
 from pygame.event import get as pyg_get
@@ -36,11 +35,15 @@ class RunGame():
         ''' Run the snake game in a way that a human can play. '''
         # Get data
         try:
-            with open(r"./Resources/StandardGameSettings/FPS.txt") as file:
+            with open(r"./Resources/StandardGameSettings.txt") as file:
                 lines = file.readlines()
-                fps = int(lines[0])
+                try:
+                    fps = int(lines[0])
+                except:
+                    fps = 10
+                    print("Couldn't load fps (run_human)")
         except:
-            print("Couldn't find FPS.txt (run_human)")
+            print("Couldn't find StandardGameSettings.txt (run_dqn)")
 
         # Create game object
         game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
@@ -64,21 +67,24 @@ class RunGame():
         print(f"\nFinal Score: {score}\n")
 
 
-    def run_dqn(self, fps=1000, max_episodes=5000):
+    def run_dqn(self, fps=100, max_episodes=120):
         ''' Run a single deep Q learning snake. '''
         # Get data
         try:
-            with open(r"./Resources/SingleAgentGameSettings/FPS.txt") as file:
+            with open(r"./Resources/SingleAgentSettings.txt") as file:
                 lines = file.readlines()
-                fps = int(lines[0])
+                try:
+                    fps = int(lines[0])
+                except:
+                    fps = 100
+                    print("Couldn't load fps (run_dqn)")
+                try:
+                    max_episodes = int(lines[1])
+                except:
+                    max_episodes = 120
+                    print("Couldn't load max_episodes (run_dqn)")
         except:
-            print("Couldn't find FPS.txt (run_dqn)")
-        try:
-            with open(r"./Resources/SingleAgentGameSettings/EPs.txt") as file:
-                lines = file.readlines()
-                max_episodes = int(lines[0])
-        except:
-            print("Couldn't find EPs.txt (run_dqn)")
+            print("Couldn't find SingleAgentSettings.txt (run_dqn)")
 
         # Set internal variables
         self.max_episodes = max_episodes
@@ -126,33 +132,34 @@ class RunGame():
             agent.model.save(r"./models/single_model_({}).h5".format(self.max_episodes))
 
 
-    def run_grl(self, fps=1000, population_size=50, max_episodes=10, max_generations=25):
+    def run_grl(self, fps=100, population_size=20, max_episodes=10, max_generations=25):
         ''' Run a session of genetic reinforcement learning. '''
         # Get data
         try:
-            with open(r"./Resources/PopulationGameSettings/FPS.txt") as file:
+            with open(r"./Resources/ManyAgentsSettings.txt") as file:
                 lines = file.readlines()
-                fps = int(lines[0])
+                try:
+                    fps = int(lines[0])
+                except:
+                    fps = 100
+                    print("Couldn't load fps (run_grl)")
+                try:
+                    max_episodes = int(lines[1])
+                except:
+                    max_episodes = 10
+                    print("Couldn't load max_episodes (run_grl)")
+                try:
+                    population_size = int(lines[2])
+                except:
+                    population_size = 20
+                    print("Couldn't load population_size (run_grl)")
+                try:
+                    max_generations = int(lines[3])
+                except:
+                    max_generations = 25
+                    print("Couldn't load max_generations (run_grl)")
         except:
-            print("Couldn't find FPS.txt (run_grl)")
-        try:
-            with open(r"./Resources/PopulationGameSettings/EPs.txt") as file:
-                lines = file.readlines()
-                max_episodes = int(lines[0])
-        except:
-            print("Couldn't find EPs.txt (run_grl)")
-        try:
-            with open(r"./Resources/PopulationGameSettings/Pop.txt") as file:
-                lines = file.readlines()
-                population_size = int(lines[0])
-        except:
-            print("Couldn't find Pop.txt (run_grl)")
-        try:
-            with open(r"./Resources/PopulationGameSettings/Gens.txt") as file:
-                lines = file.readlines()
-                max_generations = int(lines[0])
-        except:
-            print("Couldn't find Gens.txt (run_grl)")
+            print("Couldn't find ManyAgentsSettings.txt (run_grl)")
 
         # Set internal variables
         self.population_size = population_size
