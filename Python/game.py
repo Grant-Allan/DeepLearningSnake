@@ -254,7 +254,7 @@ class BackgroundSnake():
 
 class SnakeGameAI():
     ''' The logic for having a Deep Q Learning snake run. '''
-    def __init__(self, width, height, margin, fps=100):
+    def __init__(self, width, height, margin, true_display, false_display, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
@@ -262,8 +262,8 @@ class SnakeGameAI():
         self.margin = margin
 
         # Initialze display
-        self.true_display = pyg_display.set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
-        self.false_display = self.true_display.copy()
+        self.true_display = true_display
+        self.false_display = false_display
         self.clock = pyg_Clock()
 
         # Initialize game values
@@ -409,7 +409,7 @@ class SnakeGameAI():
         self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Update the display
-        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
         pyg_display.flip()
 
 
@@ -457,24 +457,24 @@ class SnakeGameAI():
 
 class SnakeGameHuman():
     ''' The logic for playing Snake as a human. '''
-    def __init__(self, width, height, margin, fps=10):
+    def __init__(self, width, height, margin, true_display, false_display, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
         self.height = height
         self.margin = margin
 
+        # Initialze display
+        self.true_display = true_display
+        self.false_display = false_display
+        pyg_display.set_caption("Snake")
+        self.clock = pyg_Clock()
+
         # Initialize internal values
         self.score = 0
         self.direction = Direction.UP
         self.wait = True
         self.escape = False
-
-        # Initialze display
-        self.true_display = pyg_display.set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
-        self.false_display = self.true_display.copy()
-        pyg_display.set_caption("Snake")
-        self.clock = pyg_Clock()
 
         # Set head, then add it to the snake, along with two
         # other body blocks
@@ -588,7 +588,7 @@ class SnakeGameHuman():
         self.false_display.blit(text, [self.width//2 - t_x//2, int(self.height+(TILE_SIZE//4)) + TILE_SIZE])
 
         # Update the display
-        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
         pyg_display.flip()
 
 

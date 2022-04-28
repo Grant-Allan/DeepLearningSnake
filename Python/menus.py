@@ -48,6 +48,12 @@ class StartMenu():
         self.false_display = self.true_display.copy()
         pyg_display.set_caption("Snake")
 
+        # Set initial scale
+        tw, th = self.true_display.get_size()
+        fw, fh = self.false_display.get_size()
+        self.w_scale = tw/fw
+        self.h_scale = th/fh
+
         # Create background snake object
         self.bg_snake = BackgroundSnake(self.width, self.height, self.margin, self.false_display)
 
@@ -77,6 +83,12 @@ class StartMenu():
 
     def main_menu(self):
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+
             # Get current mouse position
             mouse_pos = pyg_mouse_get_pos()
 
@@ -110,7 +122,7 @@ class StartMenu():
             self.draw_button(QB_text, QB_x_check, QB_y_check, QB_pos, QB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -139,6 +151,12 @@ class StartMenu():
         a single agent play, or a population of agents play.
         '''
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+            
             # Get current mouse position
             mouse_pos = pyg_mouse_get_pos()
 
@@ -177,7 +195,7 @@ class StartMenu():
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -191,17 +209,17 @@ class StartMenu():
                     # Start normal game
                     if NG_x_check and NG_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_human(fps=10)
+                        run_game.run_human(self.true_display, self.false_display)
                         self.main_menu()
                     # Start game with a single agent
                     elif SA_x_check and SA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_dqn()
+                        run_game.run_dqn(self.true_display, self.false_display)
                         self.main_menu()
                     # Start game with a population of agents
                     elif PoA_x_check and PoA_y_check:
                         run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_grl()
+                        run_game.run_grl(self.true_display, self.false_display)
                         self.main_menu()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
@@ -214,6 +232,12 @@ class StartMenu():
         population size, model values, etc.
         '''
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+            
             # Get current mouse position
             mouse_pos = pyg_mouse_get_pos()
 
@@ -252,7 +276,7 @@ class StartMenu():
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -283,6 +307,12 @@ class StartMenu():
         input_text = "" # box text
 
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+            
             # Black out previous display
             self.false_display.fill(BLACK)
 
@@ -306,7 +336,7 @@ class StartMenu():
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -352,6 +382,12 @@ class StartMenu():
         input_text = "" # box text
 
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+            
             # Black out previous display
             self.false_display.fill(BLACK)
 
@@ -376,7 +412,7 @@ class StartMenu():
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -439,6 +475,12 @@ class StartMenu():
         input_text = "" # box text
 
         while True:
+            # Update width and height scale
+            tw, th = self.true_display.get_size()
+            fw, fh = self.false_display.get_size()
+            self.w_scale = tw/fw
+            self.h_scale = th/fh
+            
             # Black out previous display
             self.false_display.fill(BLACK)
 
@@ -465,7 +507,7 @@ class StartMenu():
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
-            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_rect().size), (0, 0))
+            self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
             pyg_display.flip()
 
             # Get player input
@@ -560,8 +602,8 @@ class StartMenu():
         width, height = FONT.size(text)
         x = self.width//2 - width//2
         y = y_start + int(1.5*height)
-        x_check = x <= mouse_pos[0] <= x+width
-        y_check = y <= mouse_pos[1] <= y+height
+        x_check = self.w_scale*(x) <= mouse_pos[0] <= self.w_scale*(x+width)
+        y_check = self.h_scale*(y) <= mouse_pos[1] <= self.h_scale*(y+height)
         return x_check, y_check, (x, y), (width, height)
 
 
@@ -577,7 +619,7 @@ class StartMenu():
         # Standard colors
         else:
             # Fill button area
-            #pyg_rect(self.false_display, SLATE_GRAY, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
+            #pyg_rect(self.false_display, RED, [postion[0], postion[1]+5, size[0]+10, size[1]+5])
 
             # Place text
             text = FONT.render(button_text, True, WHITE)
