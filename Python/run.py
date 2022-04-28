@@ -8,6 +8,12 @@ from os.path import exists as os_exists
 from time import time as time_time
 from numpy import round as np_round
 
+from pygame import QUIT as pyg_QUIT
+from pygame import quit as pyg_quit
+from pygame import KEYDOWN as pyg_KEYDOWN
+from pygame import K_ESCAPE as pyg_K_ESCAPE
+from pygame.event import get as pyg_get
+
 
 
 class RunGame():
@@ -21,6 +27,9 @@ class RunGame():
         self.width = width
         self.height = height
         self.margin = margin
+
+        # To escape a game/session early
+        self.quit = False
 
 
     def run_human(self, fps=10):
@@ -38,7 +47,19 @@ class RunGame():
 
         # Game loop
         while True:
+            # Run game step
             game_over, score = game.play_step()
+            
+            # Check for escape
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    game_over = True
+                elif event.type == pyg_KEYDOWN:
+                    if event.key == pyg_K_ESCAPE:
+                        game_over = True
+
+            # Check for death
             if game_over: break
         print(f"\nFinal Score: {score}\n")
 
@@ -85,6 +106,16 @@ class RunGame():
 
             # Episode loop
             agent = self._run_episode(agent, single_agent=True)
+
+            # Check for escape
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    self.quit = True
+                elif event.type == pyg_KEYDOWN:
+                    if event.key == pyg_K_ESCAPE:
+                        self.quit = True
+            if self.quit: break
 
             # Plot data
             plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores, cur_episode, self.max_episodes)
@@ -167,6 +198,16 @@ class RunGame():
             # Run for set number of generations
             self._run_agent()
 
+            # Check for escape
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    self.quit = True
+                elif event.type == pyg_KEYDOWN:
+                    if event.key == pyg_K_ESCAPE:
+                        self.quit = True
+            if self.quit: break
+
             # Save generation's graph
             self.plotter.save_gen(cur_gen)
 
@@ -207,11 +248,31 @@ class RunGame():
                 # Episode loop
                 agent = self._run_episode(agent)
 
+                # Check for escape
+                for event in pyg_get():
+                    # Check for exiting out of window
+                    if event.type == pyg_QUIT:
+                        self.quit = True
+                    elif event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_ESCAPE:
+                            self.quit = True
+                if self.quit: break
+
                 # Record data
                 self._record_data()
 
             # Update the agent in the population
             self.agents[agent_num] = agent
+
+            # Check for esapce
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    self.quit = True
+                elif event.type == pyg_KEYDOWN:
+                    if event.key == pyg_K_ESCAPE:
+                        self.quit = True
+            if self.quit: break
 
         # Save agent's graph
         self.plotter.save_agent(self.game.generation, agent_num)
@@ -221,6 +282,16 @@ class RunGame():
         ''' Run an episode of the game. '''
         run = True
         while run:
+            # Check for esapce
+            for event in pyg_get():
+                # Check for exiting out of window
+                if event.type == pyg_QUIT:
+                    self.quit = True
+                elif event.type == pyg_KEYDOWN:
+                    if event.key == pyg_K_ESCAPE:
+                        self.quit = True
+            if self.quit: break
+
             # Get old state
             state_old = agent.get_state(self.game)
 

@@ -4,7 +4,7 @@ import operator
 
 
 class GeneticAlgorithm():
-    def breed_population(self, agents, fittness_threshold=0.10, crossover_rate=0.50, mutation_rate=0.05, mutation_degree=0.05, mutate=True):
+    def breed_population(self, agents, fittness_threshold=0.10, crossover_rate=0.50, mutation_rate=0.001, mutation_degree=0.001, mutate=True):
         '''
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
