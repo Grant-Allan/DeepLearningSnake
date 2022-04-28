@@ -4,7 +4,7 @@ import operator
 
 
 class GeneticAlgorithm():
-    def breed_population(self, agents, fitness=0.10, crossover_rate=0.50, mutation_rate=0.10, mutation_degree=0.10, mutate=True):
+    def breed_population(self, agents, fittness_threshold=0.10, crossover_rate=0.50, mutation_rate=0.05, mutation_degree=0.05, mutate=True):
         '''
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
@@ -14,7 +14,7 @@ class GeneticAlgorithm():
 
         # Get the number of breeding agents
         pop_size = len(agents)
-        cutoff = (int)(fitness * pop_size)
+        cutoff = (int)(fittness_threshold * pop_size)
         if not cutoff % 2: cutoff -= 1
         if cutoff < 2: return agents
 

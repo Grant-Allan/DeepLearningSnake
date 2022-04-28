@@ -239,7 +239,8 @@ class Plotter():
         ''' Save the data for the entire session. '''
         if not os_exists(r"./graphs"):
             os_makedirs(r"./graphs")
-        plt_savefig(r"./graphs/session_graph.jpg")
+        if not os_exists(r"./graphs/session_graph.jpg"):
+            plt_savefig(r"./graphs/session_graph.jpg")
 
 
     def save_gen(self, gen_num):
@@ -248,7 +249,8 @@ class Plotter():
             os_makedirs(r"./graphs")
         if not os_exists(r"./graphs/generation_graphs"):
             os_makedirs(r"./graphs/generation_graphs")
-        plt_savefig(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num))
+        if not os_exists(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num)):
+            plt_savefig(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num))
 
 
     def save_agent(self, gen_num, agent_num):
@@ -257,4 +259,5 @@ class Plotter():
             os_makedirs(r"./graphs")
         if not os_exists(r"./graphs/agent_graphs/gen{}".format(gen_num)):
             os_makedirs(r"./graphs/agent_graphs/gen{}".format(gen_num))
-        plt_savefig(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num))
+        if not os_exists(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num)):
+            plt_savefig(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num))

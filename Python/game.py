@@ -1339,7 +1339,7 @@ class RunGame():
             self.gen_time = time_time()
 
             # Run for set number of generations
-            self.agents = self._run_agent()
+            self._run_agent()
 
             # Save generation's graph
             self.plotter.save_gen(cur_gen)
@@ -1386,7 +1386,6 @@ class RunGame():
 
             # Update the agent in the population
             self.agents[agent_num] = agent
-
 
         # Save agent's graph
         self.plotter.save_agent(self.game.generation, agent_num)
