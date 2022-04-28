@@ -71,7 +71,7 @@ class Plotter():
     def plot_data(self, all_scores, all_mean_scores,
                   gen_scores, gen_mean_scores, gen_num,
                   agent_scores, agent_mean_scores, agent_num,
-                  num_agents, cur_episode, num_episodes, top_score,
+                  num_gens, num_agents, cur_episode, num_episodes, top_score,
                   session_time_elapsed, gen_time_elapsed, agent_time_elapsed, ep_time_elapsed):
         ''' Plot the data for the game. '''
         # Set internal values
@@ -86,6 +86,7 @@ class Plotter():
         self.agent_mean_scores = agent_mean_scores
         self.agent_num = agent_num
 
+        self.num_gens = num_gens
         self.num_agents = num_agents
         self.cur_episode = cur_episode
         self.num_episodes = num_episodes
@@ -191,10 +192,10 @@ class Plotter():
         self.ax[1, 1].set_title("Game Data")
 
         # Display text
-        self.ax[1, 1].text(0.10, 0,
+        self.ax[1, 1].text(0.50, 0.45,
                 f"Current Agent {self.agent_num} of {self.num_agents}\n" +
                 f"Current Episode: {self.cur_episode} of {self.num_episodes}\n" +
-                f"Current Generation: {self.gen_num}\n" +
+                f"Current Generation: {self.gen_num} of {self.num_gens}\n" +
                 f"Current Score: {self.agent_scores[-1]}\n\n" +
 
                 f"(hours:minutes:seconds)\n" +
@@ -203,7 +204,9 @@ class Plotter():
                 f"Generation: {int(self.gen_time_elapsed//3600)}:{int(self.gen_time_elapsed//60 % 60)}:{int(self.gen_time_elapsed % 60)}\n" +
                 f"Session Time: {int(self.session_time_elapsed//3600)}:{int(self.session_time_elapsed//60 % 60)}:{int(self.session_time_elapsed % 60)}",
 
-                bbox={"facecolor": "white", "alpha": 0.5, "pad": 10},
+                bbox={"facecolor": "white", "alpha": 1, "pad": 10},
+                ha="center",
+                va="center",
                 size=12)
 
 

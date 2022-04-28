@@ -4,13 +4,15 @@ import operator
 
 
 class GeneticAlgorithm():
-    def breed_population(self, agents, fittness_threshold=0.10, crossover_rate=0.50, mutation_rate=0.05, mutation_degree=0.05, mutate=True):
+    def breed_population(self, agents, fittness_threshold=0.10, crossover_rate=0.20, mutation_rate=0.05, mutation_degree=0.05, mutate=True):
         '''
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
         '''
         # Sort by highest to lowest score
         agents.sort(key=operator.attrgetter("top_score"))
+        print(f"Top: {agents[0].top_score}")
+        print(f"Bottom: {agents[-1].top_score}")
 
         # Get the number of breeding agents
         pop_size = len(agents)
