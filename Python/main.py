@@ -1,4 +1,4 @@
-from game import StartMenu
+from menus import StartMenu
 
 
 if __name__ == "__main__":
