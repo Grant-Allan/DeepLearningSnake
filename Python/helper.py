@@ -53,7 +53,7 @@ class Plotter():
         plt_ion() # turn on interactable plots
         if not single_agent:
             fig, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
-            self.ax[1, 1].axis("off")
+            self.ax[1, 1].axis("off") # turn axes off for bottom right graph
             fig.set_size_inches(8, 6) # set figure size
 
             # set the spacing between subplots
@@ -64,12 +64,15 @@ class Plotter():
                                 wspace=0.4,
                                 hspace=0.4)
         else:
+            # Single subplot for single agent session
             _, self.ax = plt_subplots()
 
 
-    def plot_data(self, all_scores, all_mean_scores, gen_scores, gen_mean_scores,
-                  gen_num, agent_scores, agent_mean_scores, agent_num, num_agents,
-                  cur_episode, num_episodes, top_score):
+    def plot_data(self, all_scores, all_mean_scores,
+                  gen_scores, gen_mean_scores, gen_num,
+                  agent_scores, agent_mean_scores, agent_num,
+                  num_agents, cur_episode, num_episodes, top_score,
+                  session_time_elapsed, gen_time_elapsed, agent_time_elapsed, ep_time_elapsed):
         ''' Plot the data for the game. '''
         # Set internal values
         self.all_scores = all_scores
@@ -87,6 +90,11 @@ class Plotter():
         self.cur_episode = cur_episode
         self.num_episodes = num_episodes
         self.top_score = top_score
+
+        self.session_time_elapsed = session_time_elapsed
+        self.gen_time_elapsed = gen_time_elapsed
+        self.agent_time_elapsed = agent_time_elapsed
+        self.ep_time_elapsed = ep_time_elapsed
 
         # Plot data
         self._plot_aggregate()
@@ -183,14 +191,20 @@ class Plotter():
         self.ax[1, 1].set_title("Game Data")
 
         # Display text
-        self.ax[1, 1].text(0, 0.4,
+        self.ax[1, 1].text(0.10, 0,
                 f"Current Agent {self.agent_num} of {self.num_agents}\n" +
                 f"Current Episode: {self.cur_episode} of {self.num_episodes}\n" +
                 f"Current Generation: {self.gen_num}\n" +
-                f"Current Score: {self.agent_scores[-1]}\n" +
-                f"Top Score: {self.top_score}",
+                f"Current Score: {self.agent_scores[-1]}\n\n" +
+
+                f"(hours:minutes:seconds)\n" +
+                f"Episode Time: {int(self.ep_time_elapsed//3600)}:{int(self.ep_time_elapsed//60 % 60)}:{int(self.ep_time_elapsed % 360)}\n" +
+                f"Agent Time: {int(self.agent_time_elapsed//3600)}:{int(self.agent_time_elapsed//60 % 60)}:{int(self.agent_time_elapsed % 60)}\n" +
+                f"Generation: {int(self.gen_time_elapsed//3600)}:{int(self.gen_time_elapsed//60 % 60)}:{int(self.gen_time_elapsed % 60)}\n" +
+                f"Session Time: {int(self.session_time_elapsed//3600)}:{int(self.session_time_elapsed//60 % 60)}:{int(self.session_time_elapsed % 60)}",
+
                 bbox={"facecolor": "white", "alpha": 0.5, "pad": 10},
-                size=14)
+                size=12)
 
 
     def plot_single_agent(self, scores, mean_scores, cur_ep, num_eps):
@@ -233,7 +247,7 @@ class Plotter():
         if not os_exists(r"./graphs"):
             os_makedirs(r"./graphs")
         if not os_exists(r"./graphs/generation_graphs"):
-            os_makedirs(r"r./graphs/generation_graphs")
+            os_makedirs(r"./graphs/generation_graphs")
         plt_savefig(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num))
 
 

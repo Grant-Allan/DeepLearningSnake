@@ -4,6 +4,7 @@ from helper import Plotter, Direction, Point, TILE_SIZE, WHITE, GRAY, SLATE_GRAY
 
 from os import makedirs as os_makedirs
 from os.path import exists as os_exists
+from time import time as time_time
 
 from random import randint as rand_randint
 from numpy import array_equal as np_array_equal
@@ -1311,34 +1312,40 @@ class RunGame():
         self.all_scores, self.all_mean_scores = [], []
         self.all_episodes = 0
 
+        # Start session timer
+        self.session_time = time_time()
+
         # Run for set number of generations (adjusting to start at gen 1)
-        for cur_gen in range(1, self.max_generations+1):
-            self._run_generation(cur_gen)
+        self._run_generation()
 
         # Save session's graph
         self.plotter.save_session()
 
 
-    def _run_generation(self, cur_gen):
+    def _run_generation(self):
         ''' Process an entire population of agents. '''
-        # Reset generation data
-        self.game.generation = cur_gen
+        for cur_gen in range(1, self.max_generations+1):
+            # Reset generation data
+            self.game.generation = cur_gen
 
-        # Set score aggregate for this generation
-        self.gen_score = 0
+            # Set score aggregate for this generation
+            self.gen_score = 0
 
-        # Reset generation data lists
-        self.gen_scores, self.gen_mean_scores = [], []
-        self.gen_episodes = 0
+            # Reset generation data lists
+            self.gen_scores, self.gen_mean_scores = [], []
+            self.gen_episodes = 0
 
-        # Run for set number of generations
-        self.agents = self._run_agent()
+            # Generation time
+            self.gen_time = time_time()
 
-        # Save generation's graph
-        self.plotter.save_gen(cur_gen)
+            # Run for set number of generations
+            self.agents = self._run_agent()
 
-        # Make new population
-        self.agents = self.genetics.breed_population(self.agents)
+            # Save generation's graph
+            self.plotter.save_gen(cur_gen)
+
+            # Make new population
+            self.agents = self.genetics.breed_population(self.agents)
 
 
     def _run_agent(self):
@@ -1357,8 +1364,14 @@ class RunGame():
             # Set score aggregate for this agent
             self.agent_score = 0
 
+            # Agent time
+            self.agent_time = time_time()
+
             # Run for set number of episodes (adjusting to start at ep 1)
             for cur_episode in range(1, self.max_episodes+1):
+                # Episode time
+                self.ep_time = time_time()
+
                 # Episode variables
                 agent.episode = cur_episode
                 self.game.agent_episode = cur_episode
@@ -1458,4 +1471,8 @@ class RunGame():
                                len(self.agents),
                                self.game.agent_episode,
                                self.max_episodes,
-                               self.game.top_score)
+                               self.game.top_score,
+                               time_time()-self.session_time,
+                               time_time()-self.gen_time,
+                               time_time()-self.agent_time,
+                               time_time()-self.ep_time)
