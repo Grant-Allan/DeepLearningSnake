@@ -11,8 +11,6 @@ class GeneticAlgorithm():
         '''
         # Sort by highest to lowest score
         agents.sort(key=operator.attrgetter("top_score"), reverse=True)
-        print(f"Top: {agents[0].top_score}")
-        print(f"Bottom: {agents[-1].top_score}")
 
         # Get the number of breeding agents
         pop_size = len(agents)
