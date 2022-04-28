@@ -8,6 +8,7 @@ from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
 from pygame import quit as pyg_quit
 from pygame import KEYDOWN as pyg_KEYDOWN
+from pygame import K_ESCAPE as pyg_K_ESCAPE
 from pygame import K_UP as pyg_K_UP
 from pygame import K_LEFT as pyg_K_LEFT
 from pygame import K_DOWN as pyg_K_DOWN
@@ -467,6 +468,7 @@ class SnakeGameHuman():
         self.score = 0
         self.direction = Direction.UP
         self.wait = True
+        self.escape = False
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height + self.margin), pyg_RESIZABLE)
@@ -515,6 +517,9 @@ class SnakeGameHuman():
                     self.direction = Direction.DOWN
                 elif ((event.key == pyg_K_RIGHT) or (event.key == pyg_K_d)) and (self.direction != Direction.LEFT):
                     self.direction = Direction.RIGHT
+                # Check for exiting out of window
+                elif event.key == pyg_K_ESCAPE:
+                    self.escape = True
 
         # Skip if there's no input
         if self.wait:
@@ -527,10 +532,8 @@ class SnakeGameHuman():
         self.snake.insert(0, self.head)
 
         # Check if game over
-        game_over = False
-        if self.is_collision():
-            game_over = True
-            return game_over, self.score
+        if self.is_collision() or self.escape:
+            return True, self.score
 
         # Place new food or just move
         if self.head == self.food:
@@ -544,7 +547,7 @@ class SnakeGameHuman():
         self.clock.tick(self.fps)
 
         # Return values for the agent to process
-        return game_over, self.score
+        return False, self.score
 
 
     def is_collision(self, block=None):

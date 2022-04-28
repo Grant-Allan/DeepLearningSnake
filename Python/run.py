@@ -52,15 +52,6 @@ class RunGame():
         while True:
             # Run game step
             game_over, score = game.play_step()
-            
-            # Check for escape
-            for event in pyg_get():
-                # Check for exiting out of window
-                if event.type == pyg_QUIT:
-                    game_over = True
-                elif event.type == pyg_KEYDOWN:
-                    if event.key == pyg_K_ESCAPE:
-                        game_over = True
 
             # Check for death
             if game_over: break
