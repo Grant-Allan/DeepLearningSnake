@@ -626,7 +626,7 @@ class SnakeGameGA():
 
         # Show the highest score
         text = FONT.render(f"Top Score: {self.top_score}", True, WHITE)
-        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//4)))])
+        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Update the display
         self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
