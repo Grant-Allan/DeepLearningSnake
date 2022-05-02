@@ -199,7 +199,7 @@ class Plotter():
                 f"Current Score: {self.agent_scores[-1]}\n\n" +
 
                 f"(hours:minutes:seconds)\n" +
-                f"Episode Time: {int(self.ep_time_elapsed//3600)}:{int(self.ep_time_elapsed//60 % 60)}:{int(self.ep_time_elapsed % 360)}\n" +
+                f"Episode Time: {int(self.ep_time_elapsed//3600)}:{int(self.ep_time_elapsed//60 % 60)}:{int(self.ep_time_elapsed % 60)}\n" +
                 f"Agent Time: {int(self.agent_time_elapsed//3600)}:{int(self.agent_time_elapsed//60 % 60)}:{int(self.agent_time_elapsed % 60)}\n" +
                 f"Generation: {int(self.gen_time_elapsed//3600)}:{int(self.gen_time_elapsed//60 % 60)}:{int(self.gen_time_elapsed % 60)}\n" +
                 f"Session Time: {int(self.session_time_elapsed//3600)}:{int(self.session_time_elapsed//60 % 60)}:{int(self.session_time_elapsed % 60)}",
