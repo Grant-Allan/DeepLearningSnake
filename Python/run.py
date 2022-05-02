@@ -1,14 +1,13 @@
 from agent import Agent, AgentGA
 from game import SnakeGameHuman, SnakeGameAI, SnakeGameGA
 from genetics import GeneticAlgorithm
-from helper import Plotter
+from helper import Plotter, WIDTH, HEIGHT, MARGIN
 
 from os import makedirs as os_makedirs
 from os.path import exists as os_exists
 from time import time as time_time
 from numpy import round as np_round
 
-from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import display as pyg_display
 from pygame import QUIT as pyg_QUIT
 from pygame import KEYDOWN as pyg_KEYDOWN
@@ -26,11 +25,11 @@ class RunGame():
     for training a single DQN snake, or a population of DQN
     snakes in tandem with a deep genetic algorithm.
     '''
-    def __init__(self, width, height, margin):
+    def __init__(self):
         # Initialize input data
-        self.width = width
-        self.height = height
-        self.margin = margin
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Clock
         self.clock = pyg_Clock()
@@ -54,7 +53,7 @@ class RunGame():
             print("Couldn't find HumanGameSettings.txt (run_human)")
 
         # Create game object
-        game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
+        game = SnakeGameHuman(fps=fps)
 
         # Game loop
         while True:
@@ -91,7 +90,7 @@ class RunGame():
         # Create objects
         agent = Agent()
         plotter = Plotter()
-        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
+        self.game = SnakeGameAI(fps=fps)
 
         # Set colors
         self.game.color1 = agent.color1
@@ -227,7 +226,7 @@ class RunGame():
 
         # Create class objects
         self.agents = AgentGA(self.population_size)
-        self.game = SnakeGameGA(self.width, self.height, self.margin, self.population_size, self.max_generations, fps=fps)
+        self.game = SnakeGameGA(self.population_size, self.max_generations, fps=fps)
         self.genetics = GeneticAlgorithm()
         #self.plotter = Plotter()
 

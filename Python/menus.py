@@ -1,6 +1,6 @@
 from game import BackgroundSnake
 from run import RunGame
-from helper import TILE_SIZE, WHITE, GRAY, BLACK, RED, GREEN2, GREEN3
+from helper import TILE_SIZE, WHITE, GRAY, BLACK, RED, GREEN2, GREEN3, WIDTH, HEIGHT, MARGIN
 
 from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
@@ -37,11 +37,11 @@ class StartMenu():
     A main menu to open the game into, where you can select
     your game mode and change various settings.
     '''
-    def __init__(self, tiles_wide=32, tiles_high=24, tiles_margin=4):
+    def __init__(self):
         # Initialize input data
-        self.width = tiles_wide*TILE_SIZE
-        self.height = tiles_high*TILE_SIZE
-        self.margin = tiles_margin*TILE_SIZE
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
@@ -55,7 +55,7 @@ class StartMenu():
         self.h_scale = th/fh
 
         # Create background snake object
-        self.bg_snake = BackgroundSnake(self.width, self.height, self.margin, self.false_display)
+        self.bg_snake = BackgroundSnake(self.false_display)
 
         # Load menu values
         try:
@@ -64,21 +64,21 @@ class StartMenu():
         except:
             self.HumanGameSettings = ["10"] # FPS
             with open(r"./Resources/HumanGameSettings.txt", "w") as file:
-                file.write('\n'.join(self.HumanGameSettings))
+                file.write(''.join(self.HumanGameSettings))
         try:
             with open(r"./Resources/DQN_Settings.txt", "r") as file:
                 self.DQN_Settings = file.readlines()
         except:
             self.DQN_Settings = ["100", "120"] # FPS, Episodes
             with open(r"./Resources/DQN_Settings.txt", "w") as file:
-                file.write('\n'.join(self.DQN_Settings))
+                file.write(''.join(self.DQN_Settings))
         try:
             with open(r"./Resources/DGA_Settings.txt", "r") as file:
                 self.DGA_Settings = file.readlines()
         except:
             self.DGA_Settings = ["50", "20", "250"] # FPS, Agents, Generations
             with open(r"./Resources/DGA_Settings.txt", "w") as file:
-                file.write('\n'.join(self.DGA_Settings))
+                file.write(''.join(self.DGA_Settings))
 
 
     def main_menu(self):
@@ -208,17 +208,17 @@ class StartMenu():
                 elif event.type == pyg_MOUSEBUTTONDOWN:
                     # Start normal game
                     if NG_x_check and NG_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game = RunGame()
                         run_game.run_human()
                         self.main_menu()
                     # Start game with a single agent
                     elif DQN_x_check and DQN_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game = RunGame()
                         run_game.run_dqn()
                         self.main_menu()
                     # Start game with a population of agents
                     elif DGA_x_check and DGA_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game = RunGame()
                         run_game.run_dga()
                         self.main_menu()
                     # Back to main menu
@@ -292,10 +292,10 @@ class StartMenu():
                         self.human_settings()
                     # Start game with a single agent
                     elif DQN_x_check and DQN_y_check:
-                        self.indiv_settings()
+                        self.DQL_settings()
                     # Start game with a population of agents
                     elif DGA_x_check and DGA_y_check:
-                        self.pop_settings()
+                        self.DGA_settings()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
                         self.main_menu()
@@ -364,7 +364,7 @@ class StartMenu():
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/HumanGameSettings.txt", "w") as file:
                                 self.HumanGameSettings[0] = input_text
-                                file.write('\n'.join(self.HumanGameSettings))
+                                file.write(''.join(self.HumanGameSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -376,8 +376,8 @@ class StartMenu():
                         self.HumanGameSettings[0] = input_text
     
 
-    def indiv_settings(self):
-        ''' Set settings for a single agent session. '''
+    def DQL_settings(self):
+        ''' Set settings for a deep q learning session. '''
         active = "" # typing check
         input_text = "" # box text
 
@@ -442,7 +442,7 @@ class StartMenu():
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/DQN_Settings.txt", "w") as file:
                                 self.DQN_Settings[0] = input_text
-                                file.write('\n'.join(self.DQN_Settings))
+                                file.write(''.join(self.DQN_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -457,7 +457,7 @@ class StartMenu():
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/DQN_Settings.txt", "w") as file:
                                 self.DQN_Settings[1] = input_text
-                                file.write('\n'.join(self.DQN_Settings))
+                                file.write(''.join(self.DQN_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -469,8 +469,8 @@ class StartMenu():
                         self.DQN_Settings[1] = input_text
 
 
-    def pop_settings(self):
-        ''' Set settings for a population of agents session. '''
+    def DGA_settings(self):
+        ''' Set settings for a depp genetic algorithm session. '''
         active = "" # typing check
         input_text = "" # box text
 
@@ -497,8 +497,8 @@ class StartMenu():
 
             # Settings
             FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("DGA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
-            POP_x_check, POP_y_check, POP_box_size = self.draw_option("DGA", "Population Size: ", 2, 65, "POP", active, mouse_pos, input_text)
-            NoG_x_check, NoG_y_check, NoG_box_size = self.draw_option("DGA", "Number of Generations: ", 3, 65, "NoG", active, mouse_pos, input_text)
+            POP_x_check, POP_y_check, POP_box_size = self.draw_option("DGA", "Population Size: ", 1, 65, "POP", active, mouse_pos, input_text)
+            NoG_x_check, NoG_y_check, NoG_box_size = self.draw_option("DGA", "Number of Generations: ", 2, 65, "NoG", active, mouse_pos, input_text)
 
             # BB = Back Button
             BB_text = "Back"
@@ -538,7 +538,7 @@ class StartMenu():
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/DGA_Settings.txt", "w") as file:
                                 self.DGA_Settings[0] = input_text
-                                file.write('\n'.join(self.DGA_Settings))
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -552,8 +552,8 @@ class StartMenu():
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/DGA_Settings.txt", "w") as file:
-                                self.DGA_Settings[2] = input_text
-                                file.write('\n'.join(self.DGA_Settings))
+                                self.DGA_Settings[1] = input_text
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -562,13 +562,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < POP_box_size[0]:
                                 input_text += event.unicode
-                        self.DGA_Settings[2] = input_text
+                        self.DGA_Settings[1] = input_text
                 elif active=="NoG":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
                             with open(r"./Resources/DGA_Settings.txt", "w") as file:
-                                self.DGA_Settings[3] = input_text
-                                file.write('\n'.join(self.DGA_Settings))
+                                self.DGA_Settings[2] = input_text
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -577,7 +577,7 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < NoG_box_size[0]:
                                 input_text += event.unicode
-                        self.DGA_Settings[3] = input_text
+                        self.DGA_Settings[2] = input_text
 
 
     def button_values(self, text, y_start, mouse_pos):
@@ -644,13 +644,11 @@ class StartMenu():
 
             # Get file path
             if active_checker=="FPS":
-                button_text = lines[0]
-            elif active_checker=="EP":
-                button_text = lines[1]
-            elif active_checker=="POP":
-                button_text = lines[2]
+                button_text = lines[0].strip('\n')
+            elif active_checker=="EP" or active_checker=="POP":
+                button_text = lines[1].strip('\n')
             elif active_checker=="NoG":
-                button_text = lines[3]
+                button_text = lines[2].strip('\n')
 
         # Place text
         text = FONT.render(button_text, True, WHITE)

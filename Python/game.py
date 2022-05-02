@@ -1,11 +1,8 @@
 from agent import Agent
-from helper import Direction, Point, TILE_SIZE, WHITE, BLACK, RED, GREEN1, GREEN2
+from helper import Direction, Point, TILE_SIZE, WHITE, BLACK, RED, GREEN1, GREEN2, WIDTH, HEIGHT, MARGIN
 
 from random import randint as rand_randint
 from numpy import array_equal as np_array_equal
-from numpy import sqrt as np_sqrt
-from math import floor as math_floor
-from math import ceil as math_ceil
 
 from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
@@ -47,12 +44,12 @@ except:
 
 class BackgroundSnake():
     ''' The pre-trained snake that runs in the background of the menus. '''
-    def __init__(self, width, height, margin, false_display, fps=15):
+    def __init__(self, false_display, fps=15):
         # Initialize input data
         self.fps = fps
-        self.width = width
-        self.height = height
-        self.margin = margin
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Initialze display
         self.false_display = false_display
@@ -255,14 +252,167 @@ class BackgroundSnake():
 
 
 
-class SnakeGameAI():
-    ''' The logic for having a Deep Q Learning snake run. '''
+class SnakeGameHuman():
+    ''' The logic for playing Snake as a human. '''
     def __init__(self, width, height, margin, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
         self.height = height
         self.margin = margin
+
+        # Initialze display
+        self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
+        self.false_display = self.true_display.copy()
+        pyg_display.set_caption("Snake")
+        self.clock = pyg_Clock()
+
+        # Initialize internal values
+        self.score = 0
+        self.direction = Direction.UP
+        self.wait = True
+        self.escape = False
+
+        # Set head, then add it to the snake, along with two
+        # other body blocks
+        self.head = Point(self.width//2, self.height//2)
+        self.snake = [self.head,
+                      Point(self.head.x, self.head.y+TILE_SIZE),
+                      Point(self.head.x, self.head.y+(2*TILE_SIZE))]
+
+        # Generate first food block
+        self._food_gen()
+
+
+    def _food_gen(self):
+        ''' Randomly place food on the map. '''
+        x = rand_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        y = rand_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
+        self.food = Point(x, y)
+
+        # Check for conflicting values
+        if self.food in self.snake:
+            self._food_gen()
+
+
+    def play_step(self):
+        ''' Run a frame of the game. '''
+        # Get player input
+        for event in pyg_get():
+            if event.type == pyg_QUIT:
+                pyg_quit()
+                quit()
+            if event.type == pyg_KEYDOWN:
+                self.wait = False
+                # Can use arrow keys or WASD
+                # Prevents a person from turning the opposite direction right into the snake body
+                if ((event.key == pyg_K_UP) or (event.key == pyg_K_w)) and (self.direction != Direction.DOWN):
+                    self.direction = Direction.UP
+                elif ((event.key == pyg_K_LEFT) or (event.key == pyg_K_a)) and (self.direction != Direction.RIGHT):
+                    self.direction = Direction.LEFT
+                elif ((event.key == pyg_K_DOWN) or (event.key == pyg_K_s)) and (self.direction != Direction.UP):
+                    self.direction = Direction.DOWN
+                elif ((event.key == pyg_K_RIGHT) or (event.key == pyg_K_d)) and (self.direction != Direction.LEFT):
+                    self.direction = Direction.RIGHT
+                # Check for exiting out of window
+                elif event.key == pyg_K_ESCAPE:
+                    self.escape = True
+
+        # Skip if there's no input
+        if self.wait:
+            self._update_ui()
+            self.clock.tick(self.fps)
+            return False, 0
+
+        # Move
+        self._move() # Update the head
+        self.snake.insert(0, self.head)
+
+        # Check if game over
+        if self.is_collision() or self.escape:
+            return True, self.score
+
+        # Place new food or just move
+        if self.head == self.food:
+            self.score += 1
+            self._food_gen()
+        else:
+            self.snake.pop()
+
+        # Update ui and clock
+        self._update_ui()
+        self.clock.tick(self.fps)
+
+        # Return values for the agent to process
+        return False, self.score
+
+
+    def is_collision(self, block=None):
+        ''' Check for collision against a wall or the snake's body. '''
+        if block is None:
+            block = self.head
+        # Hits boundary
+        if block.x > self.width - TILE_SIZE or block.x < 0 or block.y > self.height - TILE_SIZE or block.y < 0:
+            return True
+        # Hits itself
+        if block in self.snake[1:]:
+            return True
+        return False
+
+
+    def _update_ui(self):
+        ''' Update the game screen. '''
+        self.false_display.fill(BLACK)
+
+        # Draw out the snake block by block
+        #x, y = self.snake[0]
+        #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
+        #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
+        #for x, y in self.snake[1:]:
+        for x, y in self.snake:
+            pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
+
+        # Draw the food block
+        pyg_rect(self.false_display, RED, [self.food.x, self.food.y, TILE_SIZE, TILE_SIZE])
+
+        # Draw a line for the margin
+        pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
+
+        # Show the current score
+        t_x, _ = FONT.size(f"Score: {self.score}")
+        text = FONT.render(f"Score: {self.score}", True, WHITE)
+        self.false_display.blit(text, [self.width//2 - t_x//2, int(self.height+(TILE_SIZE//4)) + TILE_SIZE])
+
+        # Update the display
+        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
+        pyg_display.flip()
+
+
+    def _move(self):
+        ''' Set new direction (or continue with the current one). '''
+        x = self.head.x
+        y = self.head.y
+        if self.direction == Direction.RIGHT:
+            x += TILE_SIZE
+        elif self.direction == Direction.LEFT:
+            x -= TILE_SIZE
+        elif self.direction == Direction.DOWN:
+            y += TILE_SIZE
+        elif self.direction == Direction.UP:
+            y -= TILE_SIZE
+        self.head = Point(x, y)
+
+
+
+class SnakeGameAI():
+    ''' The logic for having a Deep Q Learning snake run. '''
+    def __init__(self, fps=100):
+        # Initialize input data
+        self.fps = fps
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
@@ -461,12 +611,12 @@ class SnakeGameAI():
 
 class SnakeGameGA():
     ''' The logic for having a Deep Q Learning snake run. '''
-    def __init__(self, width, height, margin, population_size, num_gens, fps=100):
+    def __init__(self, population_size, num_gens, fps=100):
         # Initialize input data
         self.fps = fps
-        self.width = width
-        self.height = height
-        self.margin = margin
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
         self.population_size = population_size
         self.num_gens = num_gens
 
@@ -516,14 +666,14 @@ class SnakeGameGA():
             self.agents_data.append([self.direction, self.head, self.snake, self.food, self.frame_iteration, False, (color1, color2)])
 
 
-    def _food_gen(self):
+    def _food_gen(self, snake=[]):
         ''' Randomly place food on the map. '''
         x = rand_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
         y = rand_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
         self.food = Point(x, y)
 
         # Check for conflicting values
-        if self.food in self.snake:
+        if self.food in snake:
             self._food_gen()
 
 
@@ -558,17 +708,17 @@ class SnakeGameGA():
             # Place new food or just move
             if agent[1] == agent[3]:
                 agents.agents[i][1] += 1
-                self._food_gen()
+                self._food_gen(snake=agent[2])
             else:
                 agent[2].pop()
 
-            # Check for updating overall top score
-            if agents.agents[i][1] > self.top_score:
-                self.top_score = agents.agents[i][1]
-            
             # Check for updating top score for this generation
             if agents.agents[i][1] > self.top_gen_score:
                 self.top_gen_score = agents.agents[i][1]
+
+            # Check for updating overall top score
+            if self.top_gen_score > self.top_score:
+                self.top_score = self.top_gen_score
 
         # Update ui and clock
         self._update_ui()
@@ -621,7 +771,7 @@ class SnakeGameGA():
         self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the highest score
-        text = FONT.render(f"Top Gen Score: {self.top_score}", True, WHITE)
+        text = FONT.render(f"Top Gen Score: {self.top_gen_score}", True, WHITE)
         self.false_display.blit(text, [TILE_SIZE*20, int(self.height+(TILE_SIZE//4))])
 
         # Show the highest score
@@ -673,157 +823,3 @@ class SnakeGameGA():
             y -= TILE_SIZE
         agent_head = Point(x, y)
         return agent_direction, agent_head
-
-
-
-class SnakeGameHuman():
-    ''' The logic for playing Snake as a human. '''
-    def __init__(self, width, height, margin, fps=100):
-        # Initialize input data
-        self.fps = fps
-        self.width = width
-        self.height = height
-        self.margin = margin
-
-        # Initialze display
-        self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
-        self.false_display = self.true_display.copy()
-        pyg_display.set_caption("Snake")
-        self.clock = pyg_Clock()
-
-        # Initialize internal values
-        self.score = 0
-        self.direction = Direction.UP
-        self.wait = True
-        self.escape = False
-
-        # Set head, then add it to the snake, along with two
-        # other body blocks
-        self.head = Point(self.width//2, self.height//2)
-        self.snake = [self.head,
-                      Point(self.head.x, self.head.y+TILE_SIZE),
-                      Point(self.head.x, self.head.y+(2*TILE_SIZE))]
-
-        # Generate first food block
-        self._food_gen()
-
-
-    def _food_gen(self):
-        ''' Randomly place food on the map. '''
-        x = rand_randint(0, (self.width-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
-        y = rand_randint(0, (self.height-TILE_SIZE) // TILE_SIZE) * TILE_SIZE
-        self.food = Point(x, y)
-
-        # Check for conflicting values
-        if self.food in self.snake:
-            self._food_gen()
-
-
-    def play_step(self):
-        ''' Run a frame of the game. '''
-        # Get player input
-        for event in pyg_get():
-            if event.type == pyg_QUIT:
-                pyg_quit()
-                quit()
-            if event.type == pyg_KEYDOWN:
-                self.wait = False
-                # Can use arrow keys or WASD
-                # Prevents a person from turning the opposite direction right into the snake body
-                if ((event.key == pyg_K_UP) or (event.key == pyg_K_w)) and (self.direction != Direction.DOWN):
-                    self.direction = Direction.UP
-                elif ((event.key == pyg_K_LEFT) or (event.key == pyg_K_a)) and (self.direction != Direction.RIGHT):
-                    self.direction = Direction.LEFT
-                elif ((event.key == pyg_K_DOWN) or (event.key == pyg_K_s)) and (self.direction != Direction.UP):
-                    self.direction = Direction.DOWN
-                elif ((event.key == pyg_K_RIGHT) or (event.key == pyg_K_d)) and (self.direction != Direction.LEFT):
-                    self.direction = Direction.RIGHT
-                # Check for exiting out of window
-                elif event.key == pyg_K_ESCAPE:
-                    self.escape = True
-
-        # Skip if there's no input
-        if self.wait:
-            self._update_ui()
-            self.clock.tick(self.fps)
-            return False, 0
-
-        # Move
-        self._move() # Update the head
-        self.snake.insert(0, self.head)
-
-        # Check if game over
-        if self.is_collision() or self.escape:
-            return True, self.score
-
-        # Place new food or just move
-        if self.head == self.food:
-            self.score += 1
-            self._food_gen()
-        else:
-            self.snake.pop()
-
-        # Update ui and clock
-        self._update_ui()
-        self.clock.tick(self.fps)
-
-        # Return values for the agent to process
-        return False, self.score
-
-
-    def is_collision(self, block=None):
-        ''' Check for collision against a wall or the snake's body. '''
-        if block is None:
-            block = self.head
-        # Hits boundary
-        if block.x > self.width - TILE_SIZE or block.x < 0 or block.y > self.height - TILE_SIZE or block.y < 0:
-            return True
-        # Hits itself
-        if block in self.snake[1:]:
-            return True
-        return False
-
-
-    def _update_ui(self):
-        ''' Update the game screen. '''
-        self.false_display.fill(BLACK)
-
-        # Draw out the snake block by block
-        #x, y = self.snake[0]
-        #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
-        #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-        #for x, y in self.snake[1:]:
-        for x, y in self.snake:
-            pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
-            pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
-
-        # Draw the food block
-        pyg_rect(self.false_display, RED, [self.food.x, self.food.y, TILE_SIZE, TILE_SIZE])
-
-        # Draw a line for the margin
-        pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
-
-        # Show the current score
-        t_x, _ = FONT.size(f"Score: {self.score}")
-        text = FONT.render(f"Score: {self.score}", True, WHITE)
-        self.false_display.blit(text, [self.width//2 - t_x//2, int(self.height+(TILE_SIZE//4)) + TILE_SIZE])
-
-        # Update the display
-        self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))
-        pyg_display.flip()
-
-
-    def _move(self):
-        ''' Set new direction (or continue with the current one). '''
-        x = self.head.x
-        y = self.head.y
-        if self.direction == Direction.RIGHT:
-            x += TILE_SIZE
-        elif self.direction == Direction.LEFT:
-            x -= TILE_SIZE
-        elif self.direction == Direction.DOWN:
-            y += TILE_SIZE
-        elif self.direction == Direction.UP:
-            y -= TILE_SIZE
-        self.head = Point(x, y)
-

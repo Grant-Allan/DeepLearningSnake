@@ -29,6 +29,9 @@ Point = namedtuple("Point", ["x", "y"])
 
 # Game values
 TILE_SIZE = 20
+WIDTH = TILE_SIZE*38
+HEIGHT = TILE_SIZE*24
+MARGIN = TILE_SIZE*4
 
 # Agent values
 MAX_MEMORY = 100_000
