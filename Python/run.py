@@ -1,5 +1,5 @@
-from agent import Agent
-from game import SnakeGameHuman, SnakeGameAI
+from agent import Agent, AgentGA
+from game import SnakeGameHuman, SnakeGameAI, SnakeGameGA
 from genetics import GeneticAlgorithm
 from helper import Plotter
 
@@ -14,6 +14,7 @@ from pygame import QUIT as pyg_QUIT
 from pygame import KEYDOWN as pyg_KEYDOWN
 from pygame import K_ESCAPE as pyg_K_ESCAPE
 from pygame.event import get as pyg_get
+from pygame.time import Clock as pyg_Clock
 
 # Initialize the display
 pyg_display.init()
@@ -30,6 +31,9 @@ class RunGame():
         self.width = width
         self.height = height
         self.margin = margin
+
+        # Clock
+        self.clock = pyg_Clock()
 
         # To escape a game/session early
         self.quit = False
@@ -86,7 +90,7 @@ class RunGame():
 
         # Create objects
         agent = Agent()
-        plotter = Plotter(single_agent=True)
+        plotter = Plotter()
         self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
 
         # Set colors
@@ -106,7 +110,7 @@ class RunGame():
             self.game.agent_episode = cur_episode
 
             # Episode loop
-            agent = self._run_episode(agent, single_agent=True)
+            agent = self._run_episode(agent)
 
             # Check for escape
             for event in pyg_get():
@@ -139,17 +143,12 @@ class RunGame():
                     fps = 100
                     print("Couldn't load fps (run_grl)")
                 try:
-                    max_episodes = int(lines[1])
-                except:
-                    max_episodes = 10
-                    print("Couldn't load max_episodes (run_grl)")
-                try:
-                    population_size = int(lines[2])
+                    population_size = int(lines[1])
                 except:
                     population_size = 20
                     print("Couldn't load population_size (run_grl)")
                 try:
-                    max_generations = int(lines[3])
+                    max_generations = int(lines[2])
                 except:
                     max_generations = 25
                     print("Couldn't load max_generations (run_grl)")
@@ -158,47 +157,37 @@ class RunGame():
 
         # Set internal variables
         self.population_size = population_size
-        self.max_episodes = max_episodes
         self.max_generations = max_generations
+        self.simultaneous_agents = True
 
         # Create class objects
-        self.agents = [Agent() for i in range(self.population_size)]
-        self.game = SnakeGameAI(self.width, self.height, self.margin, fps=fps)
+        self.agents = AgentGA(self.population_size)
+        self.game = SnakeGameGA(self.width, self.height, self.margin, self.population_size, fps=fps)
         self.genetics = GeneticAlgorithm()
         self.plotter = Plotter()
-
-        # Set aggregate data lists
-        self.all_scores, self.all_mean_scores = [], []
-        self.all_episodes = 0
 
         # Start session timer
         self.session_time = time_time()
 
         # Run for set number of generations (adjusting to start at gen 1)
-        self._run_generation()
+        self._run_genetic_algorithm()
 
         # Save session's graph
         self.plotter.save_session()
 
 
-    def _run_generation(self):
+    def _run_genetic_algorithm(self):
         ''' Process an entire population of agents. '''
         for cur_gen in range(1, self.max_generations+1):
+            print(f"running {cur_gen}")
             # Reset generation data
             self.game.generation = cur_gen
-
-            # Set score aggregate for this generation
-            self.gen_score = 0
-
-            # Reset generation data lists
-            self.gen_scores, self.gen_mean_scores = [], []
-            self.gen_episodes = 0
 
             # Generation time
             self.gen_time = time_time()
 
             # Run for set number of generations
-            self._run_agent()
+            self.game.play_step(self.agents)
 
             # Check for escape
             for event in pyg_get():
@@ -217,74 +206,11 @@ class RunGame():
             self.agents = self.genetics.breed_population(self.agents)
 
 
-    def _run_agent(self):
-        ''' Run an agent, whether on it's own or as part of a population. '''
-        for agent_num, agent in enumerate(self.agents):
-            # Set colors
-            self.game.color1 = agent.color1
-            self.game.color2 = agent.color2
-
-            # Set agent number
-            self.game.agent_num = agent_num+1
-
-            # Reset agent data lists
-            self.agent_scores, self.agent_mean_scores = [], []
-
-            # Set score aggregate for this agent
-            self.agent_score = 0
-
-            # Agent time
-            self.agent_time = time_time()
-
-            # Run for set number of episodes (adjusting to start at ep 1)
-            for cur_episode in range(1, self.max_episodes+1):
-                # Episode time
-                self.ep_time = time_time()
-
-                # Episode variables
-                agent.episode = cur_episode
-                self.game.agent_episode = cur_episode
-                self.all_episodes += 1
-                self.gen_episodes += 1
-
-                # Episode loop
-                agent = self._run_episode(agent)
-
-                # Check for escape
-                for event in pyg_get():
-                    # Check for exiting out of window
-                    if event.type == pyg_QUIT:
-                        self.quit = True
-                    elif event.type == pyg_KEYDOWN:
-                        if event.key == pyg_K_ESCAPE:
-                            self.quit = True
-                if self.quit: break
-
-                # Record data
-                self._record_data()
-
-            # Update the agent in the population
-            self.agents[agent_num] = agent
-
-            # Check for esapce
-            for event in pyg_get():
-                # Check for exiting out of window
-                if event.type == pyg_QUIT:
-                    self.quit = True
-                elif event.type == pyg_KEYDOWN:
-                    if event.key == pyg_K_ESCAPE:
-                        self.quit = True
-            if self.quit: break
-
-        # Save agent's graph
-        self.plotter.save_agent(self.game.generation, agent_num)
-
-
-    def _run_episode(self, agent, single_agent=False):
+    def _run_episode(self, agent):
         ''' Run an episode of the game. '''
         run = True
         while run:
-            # Check for esapce
+            # Check for escape
             for event in pyg_get():
                 # Check for exiting out of window
                 if event.type == pyg_QUIT:
@@ -322,42 +248,20 @@ class RunGame():
                 if score > agent.top_score:
                     agent.top_score = score
 
+                # Update top score if needed
                 if score > self.game.top_score:
                     self.game.top_score = score
-
-                if not single_agent:
-                    # Save model if it's the best (and update top score)
-                    if score > self.game.top_score:
-                        if not os_exists(r"./models"):
-                            os_makedirs(r"./models")
-                        if not os_exists(r"./models/pop{}-eps{}-gens{}".format(self.population_size, self.max_episodes, self.max_generations)):
-                            agent.model.save(r"./models/pop{}-eps{}-gens{}".format(self.population_size, self.max_episodes, self.max_generations))
-
-                        if not os_exists(r"./models/model_gen{}_({}-{}-{}).h5".format(self.game.generation, self.population_size, self.max_episodes, self.max_generations)):
-                            agent.model.save(r"./models/model_gen{}_({}-{}-{}).h5".format(self.game.generation, self.population_size, self.max_episodes, self.max_generations))
-
-                    # Update aggregate data
-                    self.game.total_score += score
-                    self.game.mean_score = np_round((self.game.total_score / self.all_episodes), 3)
-                    self.all_scores.append(score)
-                    self.all_mean_scores.append(self.game.mean_score)
-
-                    # Updte generation data
-                    self.gen_score += score
-                    gen_mean = np_round((self.gen_score / self.gen_episodes), 3)
-                    self.gen_scores.append(score)
-                    self.gen_mean_scores.append(gen_mean)
-
-                # Update agent data
-                self.agent_score += score
-                agent_mean = np_round((self.agent_score / self.game.agent_episode), 3)
-                self.agent_scores.append(score)
-                self.agent_mean_scores.append(agent_mean)
         return agent
 
 
     def _record_data(self):
         ''' Record the session data as it currently stands. '''
+        self.all_scores = 0
+        self.all_mean_scores = 0
+        self.gen_scores = 0
+        self.gen_mean_scores = 0
+        self.agent_time = 0
+        self.ep_time = 0
         self.plotter.plot_data(self.all_scores,
                                self.all_mean_scores,
                                self.gen_scores,

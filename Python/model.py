@@ -1,6 +1,7 @@
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import RootMeanSquaredError
@@ -21,7 +22,7 @@ class QNet():
         # If you want to build a new model
         else:
             model = Sequential()
-            model.add(Dense(units=input_size, activation="relu"))
+            model.add(Input(shape=(input_size,)))
             for layer_size in hidden_sizes:
                 model.add(Dense(units=layer_size, activation="relu"))
             model.add(Dense(units=output_size))
