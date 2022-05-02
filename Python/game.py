@@ -461,18 +461,19 @@ class SnakeGameAI():
 
 class SnakeGameGA():
     ''' The logic for having a Deep Q Learning snake run. '''
-    def __init__(self, width, height, margin, population_size, fps=100):
+    def __init__(self, width, height, margin, population_size, num_gens, fps=100):
         # Initialize input data
         self.fps = fps
         self.width = width
         self.height = height
         self.margin = margin
         self.population_size = population_size
+        self.num_gens = num_gens
 
         # Get x and y ratios for displaying each snake in subsections of the display
-        ratio = np_sqrt(population_size)
-        self.x_ratio = self.width / math_ceil(ratio)
-        self.y_ratio = self.height / math_floor(ratio)
+        #ratio = np_sqrt(population_size)
+        #self.x_ratio = self.width / math_ceil(ratio)
+        #self.y_ratio = self.height / math_floor(ratio)
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
@@ -488,6 +489,7 @@ class SnakeGameGA():
 
     def reset(self):
         ''' Reset/Initialize base game state. '''
+        self.top_gen_score = 0
         self.agents_data = []
         for i in range(self.population_size):
             # Default starting direction
@@ -500,8 +502,8 @@ class SnakeGameGA():
                         Point(self.head.x, self.head.y+TILE_SIZE),
                         Point(self.head.x, self.head.y+(2*TILE_SIZE))]
 
-            # Initialize score and food
-            self.score = 0
+            # Initialize internals
+            self.remaining_agents = self.population_size
             self._food_gen()
             self.frame_iteration = 0
 
@@ -510,8 +512,8 @@ class SnakeGameGA():
             color2 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
 
             # Store agent's data
-            # direction = 0, head = 1, snake = 2, score = 3, food = 4, frame = 5, game_over = 6, color tuple = 7
-            self.agents_data.append([self.direction, self.head, self.snake, self.score, self.food, self.frame_iteration, False, (color1, color2)])
+            # direction = 0, head = 1, snake = 2, food = 3, frame = 4, game_over = 5, color tuple = 6, score = 7
+            self.agents_data.append([self.direction, self.head, self.snake, self.food, self.frame_iteration, False, (color1, color2), 0])
 
 
     def _food_gen(self):
@@ -527,43 +529,54 @@ class SnakeGameGA():
 
     def play_step(self, agents):
         ''' Run a frame of the game. '''
-        for i in range(self.population_size):
+        for i, agent in enumerate(self.agents_data):
             # Check for if the game has been closed
             for event in pyg_get():
                 if event.type == pyg_QUIT:
                     pyg_quit()
                     quit()
+
+            # If this agent is dead, skip
+            if agent[5]: continue
             
             # Increase frame count
-            self.agents_data[i][5] += 1
+            agent[4] += 1
 
             # Have each agent take their action
             action = agents.get_action(agents.agents[i][0], self)
 
             # Move
-            self.agents_data[i][0], self.agents_data[i][1] = self._move(action, self.agents_data[i][0], self.agents_data[i][1]) # Update the head
-            self.agents_data[i][2].insert(0, self.agents_data[i][1])
+            agent[0], agent[1] = self._move(action, agent[0], agent[1]) # Update the head
+            agent[2].insert(0, agent[1])
 
             # Check if game over
             # If the snake hasn't made enough progress, it's executed
-            self.agents_data[i][6] = False
-            if self.is_collision() or (self.agents_data[i][5] > 125*len(self.agents_data[i][2])):
-                self.agents_data[i][6] = True
-                return self.agents_data[i][6], self.agents_data[i][3]
+            if self.is_collision(block=agent[1]) or (agent[4] > 125*len(agent[2])):
+                agent[5] = True
+                self.remaining_agents -= 1
 
             # Place new food or just move
-            if self.agents_data[i][1] == self.agents_data[i][1]:
-                self.agents_data[i][3] += 1
+            if agent[1] == agent[3]:
+                agents.agents[i][1] += 1
                 self._food_gen()
             else:
-                self.agents_data[i][2].pop()
+                agent[2].pop()
+
+            # Check for updating overall top score
+            if agent[7] > self.top_score:
+                self.top_score = agent[7]
+            
+            # Check for updating top score for this generation
+            if agent[7] > self.top_gen_score:
+                self.top_gen_score = agent[7]
 
         # Update ui and clock
         self._update_ui()
         self.clock.tick(self.fps)
-
-        # Return values for the agent to process
-        return self.agents_data[i][6], self.score
+        
+        # Check for game over
+        if self.remaining_agents: return False, agents
+        else: return True, agents
 
 
     def is_collision(self, block=None):
@@ -584,24 +597,36 @@ class SnakeGameGA():
         self.false_display.fill(BLACK)
 
         for agent in self.agents_data:
-            # Draw out the snake block by block
-            #x, y = self.snake[0]
-            #pyg_rect(self.false_display, self.color2, [x, y, TILE_SIZE, TILE_SIZE])
-            #pyg_rect(self.false_display, self.color1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-            #for x, y in self.snake[1:]:
-            for x, y in agent[2]:
-                pyg_rect(self.false_display, agent[7][0], [x*self.x_ratio, y*self.y_ratio, TILE_SIZE*self.x_ratio, TILE_SIZE*self.y_ratio])
-                pyg_rect(self.false_display, agent[7][1], [x*self.x_ratio, y*self.y_ratio, TILE_SIZE*self.x_ratio, TILE_SIZE*self.y_ratio], 1)
+            # Check for if the snake is dead
+            if agent[5]: continue
 
-            # Draw the food block
-            pyg_rect(self.false_display, RED, [agent[4].x*self.x_ratio, agent[4].y*self.y_ratio, TILE_SIZE*self.x_ratio, TILE_SIZE*self.y_ratio])
+            # Draw the snake itself
+            for x, y in agent[2]:
+                pyg_rect(self.false_display, agent[6][0], [x, y, TILE_SIZE, TILE_SIZE])
+                pyg_rect(self.false_display, agent[6][1], [x, y, TILE_SIZE, TILE_SIZE], 1)
+
+            # Draw the food block (outline it to try and make it easier to tell which goes to which snake)
+            pyg_rect(self.false_display, RED, [agent[3].x, agent[3].y, TILE_SIZE, TILE_SIZE])
+            pyg_rect(self.false_display, agent[6][1], [agent[3].x, agent[3].y, TILE_SIZE, TILE_SIZE], 1)
 
         # Draw a line for the margin
         pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
 
+        # Show how many agents are still alive
+        text = FONT.render(f"Remaining Agents: {self.remaining_agents} of {self.population_size}", True, WHITE)
+        self.false_display.blit(text, [0, int(self.height+(TILE_SIZE//4))])
+
         # Show the current generation
-        text = FONT.render(f"Generation: {self.generation}", True, WHITE)
+        text = FONT.render(f"Generation: {self.generation} of {self.num_gens}", True, WHITE)
+        self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
+
+        # Show the highest score
+        text = FONT.render(f"Top Gen Score: {self.top_score}", True, WHITE)
         self.false_display.blit(text, [TILE_SIZE*20, int(self.height+(TILE_SIZE//4))])
+
+        # Show the highest score
+        text = FONT.render(f"Top Score: {self.top_score}", True, WHITE)
+        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//4)))])
 
         # Update the display
         self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))

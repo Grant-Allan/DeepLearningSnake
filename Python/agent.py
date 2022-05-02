@@ -152,10 +152,10 @@ class AgentGA():
             else:
                 model = tf_load_model(model_path)
 
-            # (model, fitness)
+            # [model, score/fitness]
             self.agents.append([model, 0])
 
-        # Internal score for fitness testing
+        # Overall top score
         self.top_score = 0
 
         # Internal mean for graphing
@@ -188,9 +188,8 @@ class AgentGA():
 
     
 
-    def get_state(self, game):
+    def _get_state(self, game):
         ''' Update the agent's state. '''
-        print("Getting state")
         head = game.snake[0]
         point_l = Point(head.x - TILE_SIZE, head.y)
         point_r = Point(head.x + TILE_SIZE, head.y)
@@ -242,7 +241,7 @@ class AgentGA():
         Get the current action of the model.=
         '''
         final_move = [0, 0, 0]
-        prediction = model(np_expand_dims(self.get_state(game), 0))
+        prediction = model(np_expand_dims(self._get_state(game), 0))
         move = np_argmax(prediction).item()
         final_move[move] = 1
         return final_move

@@ -43,7 +43,7 @@ class RunGame():
         ''' Run the snake game in a way that a human can play. '''
         # Get data
         try:
-            with open(r"./Resources/StandardGameSettings.txt") as file:
+            with open(r"./Resources/HumanGameSettings.txt") as file:
                 lines = file.readlines()
                 try:
                     fps = int(lines[0])
@@ -51,7 +51,7 @@ class RunGame():
                     fps = 10
                     print("Couldn't load fps (run_human)")
         except:
-            print("Couldn't find StandardGameSettings.txt (run_dqn)")
+            print("Couldn't find HumanGameSettings.txt (run_human)")
 
         # Create game object
         game = SnakeGameHuman(self.width, self.height, self.margin, fps=fps)
@@ -70,7 +70,7 @@ class RunGame():
         ''' Run a single deep Q learning snake. '''
         # Get data
         try:
-            with open(r"./Resources/SingleAgentSettings.txt") as file:
+            with open(r"./Resources/DQN_Settings.txt") as file:
                 lines = file.readlines()
                 try:
                     fps = int(lines[0])
@@ -83,7 +83,7 @@ class RunGame():
                     max_episodes = 120
                     print("Couldn't load max_episodes (run_dqn)")
         except:
-            print("Couldn't find SingleAgentSettings.txt (run_dqn)")
+            print("Couldn't find DQN_Settings.txt (run_dqn)")
 
         # Set internal variables
         self.max_episodes = max_episodes
@@ -103,8 +103,14 @@ class RunGame():
         # Set score aggregate for this agent
         self.agent_score = 0
 
+        # Start session timer
+        self.session_time = time_time()
+
         # Run for set number of episodes (adjusting to start at ep 1)
         for cur_episode in range(1, self.max_episodes+1):
+            # Start episode timer
+            self.episode_time = time_time()
+
             # Episode variables
             agent.episode = cur_episode
             self.game.agent_episode = cur_episode
@@ -123,87 +129,18 @@ class RunGame():
             if self.quit: break
 
             # Plot data
-            plotter.plot_single_agent(self.agent_scores, self.agent_mean_scores, cur_episode, self.max_episodes)
+            plotter.plot_DQN(self.agent_scores,
+                             self.game.top_score,
+                             self.agent_mean_scores,
+                             cur_episode,
+                             self.max_episodes,
+                             time_time()-self.session_time,
+                             time_time()-self.episode_time)
 
         if not os_exists(r"./models"):
             os_makedirs(r"./models")
-        if not os_exists(r"./models/single_model_({}).h5".format(self.max_episodes)):
-            agent.model.save(r"./models/single_model_({}).h5".format(self.max_episodes))
-
-
-    def run_grl(self):
-        ''' Run a session of genetic reinforcement learning. '''
-        # Get data
-        try:
-            with open(r"./Resources/ManyAgentsSettings.txt") as file:
-                lines = file.readlines()
-                try:
-                    fps = int(lines[0])
-                except:
-                    fps = 100
-                    print("Couldn't load fps (run_grl)")
-                try:
-                    population_size = int(lines[1])
-                except:
-                    population_size = 20
-                    print("Couldn't load population_size (run_grl)")
-                try:
-                    max_generations = int(lines[2])
-                except:
-                    max_generations = 25
-                    print("Couldn't load max_generations (run_grl)")
-        except:
-            print("Couldn't find ManyAgentsSettings.txt (run_grl)")
-
-        # Set internal variables
-        self.population_size = population_size
-        self.max_generations = max_generations
-        self.simultaneous_agents = True
-
-        # Create class objects
-        self.agents = AgentGA(self.population_size)
-        self.game = SnakeGameGA(self.width, self.height, self.margin, self.population_size, fps=fps)
-        self.genetics = GeneticAlgorithm()
-        self.plotter = Plotter()
-
-        # Start session timer
-        self.session_time = time_time()
-
-        # Run for set number of generations (adjusting to start at gen 1)
-        self._run_genetic_algorithm()
-
-        # Save session's graph
-        self.plotter.save_session()
-
-
-    def _run_genetic_algorithm(self):
-        ''' Process an entire population of agents. '''
-        for cur_gen in range(1, self.max_generations+1):
-            print(f"running {cur_gen}")
-            # Reset generation data
-            self.game.generation = cur_gen
-
-            # Generation time
-            self.gen_time = time_time()
-
-            # Run for set number of generations
-            self.game.play_step(self.agents)
-
-            # Check for escape
-            for event in pyg_get():
-                # Check for exiting out of window
-                if event.type == pyg_QUIT:
-                    self.quit = True
-                elif event.type == pyg_KEYDOWN:
-                    if event.key == pyg_K_ESCAPE:
-                        self.quit = True
-            if self.quit: break
-
-            # Save generation's graph
-            self.plotter.save_gen(cur_gen)
-
-            # Make new population
-            self.agents = self.genetics.breed_population(self.agents)
+        if not os_exists(r"./models/DQN_model_({}).h5".format(self.max_episodes)):
+            agent.model.save(r"./models/DQN_model_({}).h5".format(self.max_episodes))
 
 
     def _run_episode(self, agent):
@@ -248,35 +185,93 @@ class RunGame():
                 if score > agent.top_score:
                     agent.top_score = score
 
-                # Update top score if needed
+                # Update absolute top score if needed
                 if score > self.game.top_score:
                     self.game.top_score = score
+                
+                # Update aggregate score lists
+                self.agent_scores.append(score)
+                self.game.total_score += score
+                self.game.mean_score = np_round((self.game.total_score / len(self.agent_scores)), 3)
+                self.agent_mean_scores.append(self.game.mean_score)
         return agent
 
 
-    def _record_data(self):
-        ''' Record the session data as it currently stands. '''
-        self.all_scores = 0
-        self.all_mean_scores = 0
-        self.gen_scores = 0
-        self.gen_mean_scores = 0
-        self.agent_time = 0
-        self.ep_time = 0
-        self.plotter.plot_data(self.all_scores,
-                               self.all_mean_scores,
-                               self.gen_scores,
-                               self.gen_mean_scores,
-                               self.game.generation,
-                               self.agent_scores,
-                               self.agent_mean_scores,
-                               self.game.agent_num,
-                               self.max_generations,
-                               len(self.agents),
-                               self.game.agent_episode,
-                               self.max_episodes,
-                               self.game.top_score,
-                               time_time()-self.session_time,
-                               time_time()-self.gen_time,
-                               time_time()-self.agent_time,
-                               time_time()-self.ep_time)
+    def run_dga(self):
+        ''' Run a deep genetic algorithm session. '''
+        # Get data
+        try:
+            with open(r"./Resources/DGA_Settings.txt") as file:
+                lines = file.readlines()
+                try:
+                    fps = int(lines[0])
+                except:
+                    fps = 50
+                    print("Couldn't load fps (run_grl)")
+                try:
+                    population_size = int(lines[1])
+                except:
+                    population_size = 20
+                    print("Couldn't load population_size (run_grl)")
+                try:
+                    max_generations = int(lines[2])
+                except:
+                    max_generations = 25
+                    print("Couldn't load max_generations (run_grl)")
+        except:
+            print("Couldn't find DGA_Settings.txt (run_grl)")
 
+        # Set internal variables
+        self.population_size = population_size
+        self.max_generations = max_generations
+
+        # Create class objects
+        self.agents = AgentGA(self.population_size)
+        self.game = SnakeGameGA(self.width, self.height, self.margin, self.population_size, self.max_generations, fps=fps)
+        self.genetics = GeneticAlgorithm()
+        #self.plotter = Plotter()
+
+        # Start session timer
+        self.session_time = time_time()
+
+        # Run for set number of generations (adjusting to start at gen 1)
+        self._run_genetic_algorithm()
+
+        # Save session's graph
+        #self.plotter.save_session()
+
+
+    def _run_genetic_algorithm(self):
+        ''' Process an entire population of agents. '''
+        for cur_gen in range(1, self.max_generations+1):
+            # Reset generation data
+            self.game.generation = cur_gen
+
+            # Generation time
+            self.gen_time = time_time()
+
+            # Generation run loop
+            game_over = False
+            while not game_over:
+                # Run for set number of generations
+                game_over, self.agents = self.game.play_step(self.agents)
+
+                # Check for escape
+                for event in pyg_get():
+                    # Check for exiting out of window
+                    if event.type == pyg_QUIT:
+                        self.quit = True
+                    elif event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_ESCAPE:
+                            self.quit = True
+                if self.quit: break
+            if self.quit: break
+
+            # Save generation's graph
+            #self.plotter.save_gen(cur_gen)
+
+            # Reset the internal data in preparation for the next generation
+            self.game.reset()
+
+            # Make new population
+            self.agents = self.genetics.breed_population(self.agents)
