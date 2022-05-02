@@ -512,8 +512,8 @@ class SnakeGameGA():
             color2 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
 
             # Store agent's data
-            # direction = 0, head = 1, snake = 2, food = 3, frame = 4, game_over = 5, color tuple = 6, score = 7
-            self.agents_data.append([self.direction, self.head, self.snake, self.food, self.frame_iteration, False, (color1, color2), 0])
+            # direction = 0, head = 1, snake = 2, food = 3, frame = 4, game_over = 5, color tuple = 6
+            self.agents_data.append([self.direction, self.head, self.snake, self.food, self.frame_iteration, False, (color1, color2)])
 
 
     def _food_gen(self):
@@ -563,12 +563,12 @@ class SnakeGameGA():
                 agent[2].pop()
 
             # Check for updating overall top score
-            if agent[7] > self.top_score:
-                self.top_score = agent[7]
+            if agents.agents[i][1] > self.top_score:
+                self.top_score = agents.agents[i][1]
             
             # Check for updating top score for this generation
-            if agent[7] > self.top_gen_score:
-                self.top_gen_score = agent[7]
+            if agents.agents[i][1] > self.top_gen_score:
+                self.top_gen_score = agents.agents[i][1]
 
         # Update ui and clock
         self._update_ui()
