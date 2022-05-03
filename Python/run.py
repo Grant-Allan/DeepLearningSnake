@@ -1,4 +1,4 @@
-from agent import Agent, AgentGA
+from agent import AgentDQN, AgentGA
 from game import SnakeGameHuman, SnakeGameAI, SnakeGameGA
 from genetics import GeneticAlgorithm
 from helper import Plotter, WIDTH, HEIGHT, MARGIN
@@ -88,7 +88,7 @@ class RunGame():
         self.max_episodes = max_episodes
 
         # Create objects
-        agent = Agent()
+        agent = AgentDQN()
         plotter = Plotter()
         self.game = SnakeGameAI(fps=fps)
 

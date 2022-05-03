@@ -10,7 +10,7 @@ from numpy import array as np_array
 from numpy import argmax as np_argmax
 
 
-class Agent():
+class AgentDQN():
     ''' The snake agent- not the model itself. '''
     def __init__(self, model_path=None):
         # Current episode
@@ -41,11 +41,10 @@ class Agent():
 
     def get_state(self, game):
         ''' Update the agent's state. '''
-        head = game.snake[0]
-        point_l = Point(head.x - TILE_SIZE, head.y)
-        point_r = Point(head.x + TILE_SIZE, head.y)
-        point_u = Point(head.x, head.y - TILE_SIZE)
-        point_d = Point(head.x, head.y + TILE_SIZE)
+        point_l = Point(game.head.x - TILE_SIZE, game.head.y)
+        point_r = Point(game.head.x + TILE_SIZE, game.head.y)
+        point_u = Point(game.head.x, game.head.y - TILE_SIZE)
+        point_d = Point(game.head.x, game.head.y + TILE_SIZE)
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -152,7 +151,7 @@ class AgentGA():
             else:
                 model = tf_load_model(model_path)
 
-            # [model, score/fitness]
+            # [model, fitness]
             self.agents.append([model, 0])
 
         # Overall top score
@@ -171,10 +170,9 @@ class AgentGA():
         # Sort agents by fitness (highest to lowest)
         self.agents.sort(key=lambda a: a[1], reverse=True)
 
-        # Get models
-        models = [agent[0] for agent in self.agents]
-
         # Get the number of breeding agents
+        # If it's less than 1, the threshold is treated as a percent
+        # Otherwise, it's treated as a set number of parents
         if fitness_threshold <= 1:
             cutoff = (int)(fitness_threshold * self.population_size)
             if not cutoff % 2: cutoff -= 1
@@ -182,19 +180,24 @@ class AgentGA():
         else:
             cutoff = fitness_threshold
 
-        # Get number of times each parent pair needs to breed
+        '''for p in self.agents[:cutoff]:
+            print(f"Fitness of: {p[1]}")
+        print("")'''
+        
+        # Get models and number of times each parent pair needs to breed
+        models = [agent[0] for agent in self.agents]
         num_children = self.population_size // cutoff
+
         return models[:cutoff], num_children
 
     
 
     def _get_state(self, game):
         ''' Update the agent's state. '''
-        head = game.snake[0]
-        point_l = Point(head.x - TILE_SIZE, head.y)
-        point_r = Point(head.x + TILE_SIZE, head.y)
-        point_u = Point(head.x, head.y - TILE_SIZE)
-        point_d = Point(head.x, head.y + TILE_SIZE)
+        point_l = Point(game.head.x - TILE_SIZE, game.head.y)
+        point_r = Point(game.head.x + TILE_SIZE, game.head.y)
+        point_u = Point(game.head.x, game.head.y - TILE_SIZE)
+        point_d = Point(game.head.x, game.head.y + TILE_SIZE)
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT

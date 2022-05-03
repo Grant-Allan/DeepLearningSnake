@@ -8,16 +8,22 @@ class GeneticAlgorithm():
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
         '''
-        # Get the parent models and
+        # Get the parent models and number of children each pair needs to have
         parents, num_children = population.get_parents(fitness_threshold=fitness_threshold)
 
         # Initialize children
         children = AgentGA(population.population_size)
 
         # Breed population
+        '''
+        i = 0
+        c = 0
+        children.agents[i*c][0] = self.crossover(children.agents[i*c][0], parents[i], parents[i+1], crossover_rate, mutation_rate, mutation_degree, mutate)
+        '''
         for i in range(0, len(parents), 2):
             for c in range(num_children):
                 children.agents[i*c][0] = self.crossover(children.agents[i*c][0], parents[i], parents[i+1], crossover_rate, mutation_rate, mutation_degree, mutate)
+
         return children
 
 
@@ -36,28 +42,46 @@ class GeneticAlgorithm():
             else:
                 child_weights = p2_weights
                 parent1 = False
-
-            # Check to see if crossover should occur in the weights and biases
-            for x, w_or_b in enumerate(child_weights):
-                for y in range(len(w_or_b)):
+            
+            # Handle the weights
+            for x in range(child_weights[0].shape[0]):
+                for y in range(child_weights[0].shape[1]):
+                    # Check for crossover
                     if (random() < crossover_rate):
                         # If p1 is the base...
                         if parent1:
-                            # Crossover
-                            child_weights[x][y] = p2_weights[x][y]
+                            child_weights[0][x][y] = p2_weights[0][x][y]
                         # If p2 is the base...
                         else:
-                            # Crossover
-                            child_weights[x][y] = p1_weights[x][y]
-                
+                            child_weights[0][x][y] = p1_weights[0][x][y]
+                        
                     # Check to see if/where mutations should occur
                     if mutate:
                         if (random() < mutation_rate):
                             if (random() > 0.50):
-                                p1_weights[x][y] += p1_weights[x][y] * mutation_degree
+                                child_weights[0][x][y] += child_weights[0][x][y] * mutation_degree
                             else:
-                                p1_weights[x][y] -= p1_weights[x][y] * mutation_degree
-            
+                                child_weights[0][x][y] -= child_weights[0][x][y] * mutation_degree
+
+            # Handle the biases
+            for x in range(child_weights[1].shape[0]):
+                # Check for crossover
+                if (random() < crossover_rate):
+                    # If p1 is the base...
+                    if parent1:
+                        child_weights[1][x] = p2_weights[1][x]
+                    # If p2 is the base...
+                    else:
+                        child_weights[1][x] = p1_weights[1][x]
+                
+                # Check to see if/where mutations should occur
+                if mutate:
+                    if (random() < mutation_rate):
+                        if (random() > 0.50):
+                            child_weights[1][x] += child_weights[1][x] * mutation_degree
+                        else:
+                            child_weights[1][x] -= child_weights[1][x] * mutation_degree
+
             # Set weights and biases in child
             child.layers[i].build(input_shape=child_weights[0].shape[0])
             child.layers[i].set_weights(child_weights)
