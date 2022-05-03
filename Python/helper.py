@@ -128,7 +128,6 @@ class Plotter():
                 f"Current Mean: {cur_mean}\n" +
                 f"Current Top Score: {top_score}\n\n" +
 
-                f"(hours:minutes:seconds)\n" +
                 f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
                 f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
 
