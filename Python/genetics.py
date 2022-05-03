@@ -21,6 +21,11 @@ class GeneticAlgorithm():
         if self.legacy_pool == None:
             self.legacy_pool = new_generation
             changed = True
+            for i, agent in enumerate(self.legacy_pool):
+                print(f"\nAgent {i} Fitness: {agent[1]}")
+                for j, layer in enumerate(agent[0].layers):
+                    print(f"Layer {j}: {layer.get_weights()[0].shape}")
+            print("\n\n")
         # For every other generation, we actually check for improvements
         else:
             # Reverse the lists to increase accuracy
