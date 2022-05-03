@@ -125,8 +125,8 @@ class Plotter():
         self.ax[1].text(0.50, 0.50,
                 f"Current Episode: {cur_ep} of {num_eps}\n" +
                 f"Current Score: {cur_score}\n" +
-                f"Current Mean: {cur_mean}\n" +
-                f"Current Top Score: {top_score}\n\n" +
+                f"Current Top Score: {top_score}\n" +
+                f"Current Mean: {cur_mean}\n\n" +
 
                 f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
                 f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
