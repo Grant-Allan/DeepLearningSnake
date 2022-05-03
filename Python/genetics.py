@@ -28,6 +28,7 @@ class GeneticAlgorithm():
             print("\n\n")
         # For every other generation, we actually check for improvements
         else:
+            print("\n\nImprovement Check!")
             # Reverse the lists to increase accuracy
             new_generation.reverse()
             self.legacy_pool.reverse()
@@ -90,7 +91,7 @@ class GeneticAlgorithm():
             min_layers = len(parent_one.layers)
 
         # Crossover and mutate each layer for the first child
-        for i in range(max_layers):
+        for i in range(0, max_layers, max_layers//min_layers):
             if i > min_layers: break
 
             # Get weights and biases of the parents
@@ -103,10 +104,10 @@ class GeneticAlgorithm():
             Y = child1_data[0].shape[1] if child1_data[0].shape[1] > p2_data[0].shape[1] else p2_data[0].shape[1]
             
             # Handle the weights
-            for x in range(X):
-                for y in range(Y):
+            for x in range(child1_data[0].shape[0]):
+                for y in range(child1_data[0].shape[1]):
                     # Check to see if crossover should occur
-                    if (random() < self.crossover_rate):
+                    if (random() < self.crossover_rate) and not (x > X or y > Y):
                         child1_data[0][x][y] = p2_data[0][x][y]
                         
                     # Check to see if mutation should occur
@@ -114,9 +115,9 @@ class GeneticAlgorithm():
                         child1_data[0][x][y] += child1_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
 
             # Handle the biases
-            for x in range(X):
+            for x in range(child1_data[0].shape[1]):
                 # Check to see if crossover should occur
-                if (random() < self.crossover_rate):
+                if (random() < self.crossover_rate) and not (x > X):
                     child1_data[1][x] = p2_data[1][x]
                 
                 # Check to see if mutation should occur
@@ -129,7 +130,7 @@ class GeneticAlgorithm():
             parent_one[i].set_weights(child1_data)
 
         # Crossover and mutate each layer for the second child
-        for i in range(min_layers):
+        for i in range(0, min_layers, min_layers//max_layers):
             if i > max_layers: break
 
             # Get weights and biases of the parents
