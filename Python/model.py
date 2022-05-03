@@ -13,7 +13,7 @@ class QNet():
         '''
         Build the model, given an input size, list of hidden layer sizes,
         output size, and learning rate.
-        
+
         Either load a trained model or create a new one.
         '''
         # If you want to load a trained model...
@@ -27,7 +27,7 @@ class QNet():
 
             # Get the number and size of hidden layers
             for i in range(randrange(1, 5)):
-                model.add(Dense(units=randrange(10, 256), activation="relu"))
+                model.add(Dense(units=randrange(1, 20), activation="relu"))
 
             model.add(Dense(units=output_size))
             model.compile(optimizer=Adam(learning_rate=learning_rate), loss="mean_squared_error", metrics=[RootMeanSquaredError()])
@@ -63,7 +63,7 @@ class QTrainer():
         # Predicted Q values with current state
         pred = self.model(state)
 
-        target = array(pred, copy=True)  
+        target = array(pred, copy=True)
         for i in range(len(done)):
             # Reshape reward, if needed
             if len(reward[i].shape) == 1:

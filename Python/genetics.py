@@ -3,16 +3,19 @@ from random import random, uniform, shuffle
 
 
 class GeneticAlgorithm():
+    ''' The logic for getting the new generation of agents. '''
+
+    ''' Try NEAT algorithm? neat-python '''
     def __init__(self):
         #self.fitness_threshold = 0.10
         self.fitness_threshold = 2
         self.crossover_rate = 0.05
-        self.mutation_rate = 0.10
+        self.mutation_rate = 0.01
         self.mutation_degree = 0.50
 
         # Pool of previous parents so we can use the fittest of all time
         self.legacy_pool = None
-    
+
 
     def _improvement_check(self, new_generation):
         ''' Only allow the parents to be the absolute fittest of all generations. '''
@@ -41,7 +44,7 @@ class GeneticAlgorithm():
                         changed = True
                         print(f"New Value: {self.legacy_pool[j][1]}")
                         break # so we only add a new agent once
-            
+
             # Resort the legacy pool (if needed)
             if changed: self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
             #[print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
@@ -59,11 +62,11 @@ class GeneticAlgorithm():
         '''
         # Get the new generation and the number of children each pair needs to have
         new_generation, num_children = population.get_parents(self.fitness_threshold)
-        
+
         # Update the legacy pool of agents to include any members of the new generation
         # that are better than the old generations
         self._improvement_check(new_generation)
-        
+
         # # Get the parent models
         parents = [agent[0] for agent in self.legacy_pool]
         #shuffle(parents) # Shuffle the parents into a random order
@@ -102,14 +105,14 @@ class GeneticAlgorithm():
             # Find which of the two layers is bigger
             X = child1_data[0].shape[0] if child1_data[0].shape[0] > p2_data[0].shape[0] else p2_data[0].shape[0]
             Y = child1_data[0].shape[1] if child1_data[0].shape[1] > p2_data[0].shape[1] else p2_data[0].shape[1]
-            
+
             # Handle the weights
             for x in range(child1_data[0].shape[0]):
                 for y in range(child1_data[0].shape[1]):
                     # Check to see if crossover should occur
                     if (random() < self.crossover_rate) and not (x > X or y > Y):
                         child1_data[0][x][y] = p2_data[0][x][y]
-                        
+
                     # Check to see if mutation should occur
                     if (random() < self.mutation_rate):
                         child1_data[0][x][y] += child1_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
@@ -119,7 +122,7 @@ class GeneticAlgorithm():
                 # Check to see if crossover should occur
                 if (random() < self.crossover_rate) and not (x > X):
                     child1_data[1][x] = p2_data[1][x]
-                
+
                 # Check to see if mutation should occur
                 if (random() < self.mutation_rate):
                     child1_data[1][x] += child1_data[1][x] * uniform(-self.mutation_degree, self.mutation_degree)
@@ -141,14 +144,14 @@ class GeneticAlgorithm():
             # Find which of the two layers is bigger
             X = child2_data[0].shape[0] if child2_data[0].shape[0] > p1_data[0].shape[0] else p1_data[0].shape[0]
             Y = child2_data[0].shape[1] if child2_data[0].shape[1] > p1_data[0].shape[1] else p1_data[0].shape[1]
-            
+
             # Handle the weights
             for x in range(X):
                 for y in range(Y):
                     # Check to see if crossover should occur
                     if (random() < self.crossover_rate):
                         child2_data[0][x][y] = p1_data[0][x][y]
-                        
+
                     # Check to see if mutation should occur
                     if (random() < self.mutation_rate):
                         child2_data[0][x][y] += child2_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
@@ -158,7 +161,7 @@ class GeneticAlgorithm():
                 # Check to see if crossover should occur
                 if (random() < self.crossover_rate):
                     child2_data[1][x] = p1_data[1][x]
-                
+
                 # Check to see if mutation should occur
                 if (random() < self.mutation_rate):
                     child2_data[1][x] += child2_data[1][x] * uniform(-self.mutation_degree, self.mutation_degree)
