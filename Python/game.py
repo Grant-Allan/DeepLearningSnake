@@ -682,6 +682,7 @@ class SnakeGameGA():
             # Set internals for use in get_action
             self.direction = agent[0]
             self.head = agent[1]
+            self.body = agent[2]
             self.food = agent[3]
 
             # Have each agent take their action
@@ -692,7 +693,7 @@ class SnakeGameGA():
             agent[2].insert(0, agent[1])
 
             # Check if the snake is dead or too stupid to live
-            if self.is_collision(block=agent[1]) or (self.frame_count > 125*len(agent[2])):
+            if self.is_collision(agent[1], agent[2]) or (self.frame_count > 125*len(agent[2])):
                 agent[4] = True
                 self.remaining_agents -= 1
             else:
@@ -732,15 +733,13 @@ class SnakeGameGA():
         else: return True, agents
 
 
-    def is_collision(self, block=None):
+    def is_collision(self, head, body):
         ''' Check for collision against a wall or the snake's body. '''
-        if block is None:
-            block = self.head
         # Hits boundary
-        if block.x > self.width - TILE_SIZE or block.x < 0 or block.y > self.height - TILE_SIZE or block.y < 0:
+        if head.x > self.width - TILE_SIZE or head.x < 0 or head.y > self.height - TILE_SIZE or head.y < 0:
             return True
         # Hits itself
-        if block in self.snake[1:]:
+        if head in body[1:]:
             return True
         return False
 

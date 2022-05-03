@@ -20,7 +20,7 @@ class AgentDQN():
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        
+
         if model_path == None:
             self.model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
         else:
@@ -159,7 +159,7 @@ class AgentGA():
 
         # Internal mean for graphing
         self.mean = 0
-    
+
 
     def get_parents(self, fitness_threshold):
         '''
@@ -179,13 +179,13 @@ class AgentGA():
             if cutoff < 2: cutoff = 2
         else:
             cutoff = fitness_threshold
-        
+
         # Get number of times each parent pair needs to breed
         num_children = self.population_size // cutoff
 
         return self.agents[:cutoff], num_children
 
-    
+
 
     def _get_state(self, game):
         ''' Update the agent's state. '''
@@ -202,22 +202,22 @@ class AgentGA():
         # List of states, using binary checks to fill values
         state = [
             # Danger straight
-            (dir_r and game.is_collision(point_r)) or
-            (dir_l and game.is_collision(point_l)) or
-            (dir_u and game.is_collision(point_u)) or
-            (dir_d and game.is_collision(point_d)),
+            (dir_r and game.is_collision(point_r, game.body)) or
+            (dir_l and game.is_collision(point_l, game.body)) or
+            (dir_u and game.is_collision(point_u, game.body)) or
+            (dir_d and game.is_collision(point_d, game.body)),
 
             # Danger right
-            (dir_u and game.is_collision(point_r)) or
-            (dir_d and game.is_collision(point_l)) or
-            (dir_l and game.is_collision(point_u)) or
-            (dir_r and game.is_collision(point_d)),
+            (dir_u and game.is_collision(point_r, game.body)) or
+            (dir_d and game.is_collision(point_l, game.body)) or
+            (dir_l and game.is_collision(point_u, game.body)) or
+            (dir_r and game.is_collision(point_d, game.body)),
 
             # Danger left
-            (dir_d and game.is_collision(point_r)) or
-            (dir_u and game.is_collision(point_l)) or
-            (dir_r and game.is_collision(point_u)) or
-            (dir_l and game.is_collision(point_d)),
+            (dir_d and game.is_collision(point_r, game.body)) or
+            (dir_u and game.is_collision(point_l, game.body)) or
+            (dir_r and game.is_collision(point_u, game.body)) or
+            (dir_l and game.is_collision(point_d, game.body)),
 
             # Move direction
             dir_l,
@@ -243,4 +243,3 @@ class AgentGA():
         move = np_argmax(prediction).item()
         final_move[move] = 1
         return final_move
-
