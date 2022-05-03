@@ -251,12 +251,12 @@ class BackgroundSnake():
 
 class SnakeGameHuman():
     ''' The logic for playing Snake as a human. '''
-    def __init__(self, width, height, margin, fps=100):
+    def __init__(self, fps=100):
         # Initialize input data
         self.fps = fps
-        self.width = width
-        self.height = height
-        self.margin = margin
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
@@ -530,7 +530,7 @@ class SnakeGameAI():
 
         # Draw a line for the margin
         pyg_line(self.false_display, WHITE, (0, self.height), (self.width, self.height), width=2)
-        
+
         # Show the current agent
         text = FONT.render(f"Agent {self.agent_num}", True, WHITE)
         self.false_display.blit(text, [0, int(self.height+(TILE_SIZE//4))])
@@ -635,7 +635,7 @@ class SnakeGameGA():
 
         # Generate food (everyone starts with it at the same spot)
         self._food_gen()
-        
+
         for i in range(self.population_size):
             # Set head, then add it to the snake, along with two
             # other body blocks
@@ -726,7 +726,7 @@ class SnakeGameGA():
         # Update ui and clock
         self._update_ui()
         self.clock.tick(self.fps)
-        
+
         # Check for game over
         if self.remaining_agents: return False, agents
         else: return True, agents

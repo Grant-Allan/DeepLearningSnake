@@ -134,7 +134,8 @@ class RunGame():
                              cur_episode,
                              self.max_episodes,
                              time_time()-self.session_time,
-                             time_time()-self.episode_time)
+                             time_time()-self.episode_time,
+                             agent.model.layers)
 
         if not os_exists(r"./models"):
             os_makedirs(r"./models")
@@ -187,7 +188,7 @@ class RunGame():
                 # Update absolute top score if needed
                 if score > self.game.top_score:
                     self.game.top_score = score
-                
+
                 # Update aggregate score lists
                 self.agent_scores.append(score)
                 self.game.total_score += score

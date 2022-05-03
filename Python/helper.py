@@ -55,9 +55,9 @@ class Plotter():
     def __init__(self):
         plt_ion() # turn on interactable plots
 
-        fig, self.ax = plt_subplots(2) # initialize 2x2 graphs
+        fig, self.ax = plt_subplots(1, 2) # initialize 2x2 graphs
         self.ax[1].axis("off") # turn axes off for the right graph
-        #fig.set_size_inches(8, 6) # set figure size
+        fig.set_size_inches(10, 5) # set figure size
 
         # set the spacing between subplots
         plt_subplots_adjust(left=0.1,
@@ -66,20 +66,22 @@ class Plotter():
                             top=0.9,
                             wspace=0.4,
                             hspace=0.7)
-    
 
-    def plot_DQN(self, scores, top_score, mean_scores, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed):
+
+    def plot_DQN(self, scores, top_score, mean_scores, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed, layers):
         ''' Plot the data when running a sessions with just one agent. '''
-        
+
         # Update data
         self._plot_data_DQN(scores, mean_scores, cur_ep, num_eps)
-        self._show_data_DQN(scores[-1], top_score, mean_scores[-1], cur_ep, num_eps, session_time_elapsed, episode_time_elapsed)
+        self._show_data_DQN(scores[-1], top_score, mean_scores[-1], cur_ep, num_eps,
+                            session_time_elapsed, episode_time_elapsed,
+                            layers)
 
         # Show data
         plt_show(block=False)
         plt_pause(0.001)
 
-    
+
     def _plot_data_DQN(self, scores, mean_scores, cur_ep, num_eps):
         # Clear previous display
         self.ax[0].cla()
@@ -103,7 +105,9 @@ class Plotter():
         self.ax[0].set_ylim(ymin=0)
 
 
-    def _show_data_DQN(self, cur_score, top_score, cur_mean, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed):
+    def _show_data_DQN(self, cur_score, top_score, cur_mean, cur_ep, num_eps,
+                       session_time_elapsed, episode_time_elapsed,
+                       layers):
         ''' Show the data. '''
         # Clear previous display
         self.ax[1].cla()
@@ -114,8 +118,11 @@ class Plotter():
         # Set title
         self.ax[1].set_title("Session Data")
 
+        # Get model data
+        shapes = [f"Layer: {str(layer.get_weights()[0].shape)}" for layer in layers]
+
         # Display text
-        self.ax[1].text(0.50, 0.40,
+        self.ax[1].text(0.50, 0.50,
                 f"Current Episode: {cur_ep} of {num_eps}\n" +
                 f"Current Score: {cur_score}\n" +
                 f"Current Mean: {cur_mean}\n" +
@@ -123,7 +130,10 @@ class Plotter():
 
                 f"(hours:minutes:seconds)\n" +
                 f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
-                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}",
+                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
+
+                f"Model:\n" +
+                '\n'.join(shapes),
 
                 bbox={"facecolor": "white", "alpha": 1, "pad": 10},
                 ha="center",
@@ -135,5 +145,5 @@ class Plotter():
         ''' Save the data for the entire session. '''
         if not os_exists(r"./graphs"):
             os_makedirs(r"./graphs")
-        if not os_exists(r"./graphs/session_graph.jpg"):
-            plt_savefig(r"./graphs/session_graph.jpg")
+        if not os_exists(r"./graphs/DQN_session_graph.jpg"):
+            plt_savefig(r"./graphs/DQN_session_graph.jpg")
