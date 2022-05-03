@@ -632,6 +632,10 @@ class SnakeGameGA():
         self.frame_count = 0
         self.top_gen_score = 0
         self.agents_data = []
+
+        # Generate food (everyone starts with it at the same spot)
+        self._food_gen()
+        
         for i in range(self.population_size):
             # Set head, then add it to the snake, along with two
             # other body blocks
@@ -639,9 +643,6 @@ class SnakeGameGA():
             self.snake = [self.head,
                         Point(self.head.x, self.head.y+TILE_SIZE),
                         Point(self.head.x, self.head.y+(2*TILE_SIZE))]
-
-            # Generate food
-            self._food_gen()
 
             # Colors
             color1 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))

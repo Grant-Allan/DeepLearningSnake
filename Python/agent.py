@@ -22,7 +22,7 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
         
         if model_path == None:
-            self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
+            self.model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
         else:
             self.model = tf_load_model(model_path)
 
@@ -147,7 +147,7 @@ class AgentGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
+                model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
             else:
                 model = tf_load_model(model_path)
 
@@ -161,7 +161,7 @@ class AgentGA():
         self.mean = 0
     
 
-    def get_parents(self, fitness_threshold=2):
+    def get_parents(self, fitness_threshold):
         '''
         Sort agents by fitness.
         If fittness_threshold is > 1, use it as the number of agents.
@@ -179,16 +179,11 @@ class AgentGA():
             if cutoff < 2: cutoff = 2
         else:
             cutoff = fitness_threshold
-
-        '''for p in self.agents[:cutoff]:
-            print(f"Fitness of: {p[1]}")
-        print("")'''
         
-        # Get models and number of times each parent pair needs to breed
-        models = [agent[0] for agent in self.agents]
+        # Get number of times each parent pair needs to breed
         num_children = self.population_size // cutoff
 
-        return models[:cutoff], num_children
+        return self.agents[:cutoff], num_children
 
     
 
