@@ -402,7 +402,7 @@ class SnakeGameHuman():
 
 
 
-class SnakeGameAI():
+class SnakeGameDQN():
     ''' The logic for having a Deep Q Learning snake run. '''
     def __init__(self, fps=100):
         # Initialize input data

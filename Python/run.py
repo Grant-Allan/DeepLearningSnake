@@ -1,5 +1,5 @@
 from agent import AgentDQN, AgentGA
-from game import SnakeGameHuman, SnakeGameAI, SnakeGameGA
+from game import SnakeGameHuman, SnakeGameDQN, SnakeGameGA
 from genetics import GeneticAlgorithm
 from helper import Plotter, WIDTH, HEIGHT, MARGIN
 
@@ -90,7 +90,7 @@ class RunGame():
         # Create objects
         agent = AgentDQN()
         plotter = Plotter()
-        self.game = SnakeGameAI(fps=fps)
+        self.game = SnakeGameDQN(fps=fps)
 
         # Set colors
         self.game.color1 = agent.color1
