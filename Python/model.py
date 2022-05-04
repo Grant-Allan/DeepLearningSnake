@@ -9,7 +9,7 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 
 
 class QNet():
-    def linear_QNet(model_path="", input_size=11, output_size=3, learning_rate=0.001):
+    def linear_QNet(input_size, output_size, learning_rate=0.001, model_path=""):
         '''
         Build the model, given an input size, list of hidden layer sizes,
         output size, and learning rate.

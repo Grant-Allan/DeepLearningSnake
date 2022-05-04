@@ -139,8 +139,13 @@ class RunGame():
 
         if not os_exists(r"./models"):
             os_makedirs(r"./models")
-        if not os_exists(r"./models/DQN_model_({}).h5".format(self.max_episodes)):
-            agent.model.save(r"./models/DQN_model_({}).h5".format(self.max_episodes))
+
+        shapes = [f"-({layer.get_weights()[0].shape})" if i != len(layers)-1 else\
+                  f"-({layer.get_weights()[0].shape})" for i, layer in enumerate(agent.model.layers)]
+        shapes.insert(0, f"({layers[0].get_weights()[0].shape[0]},)-")
+
+        if not os_exists(r"./models/DQN_model_({})_[{}].h5".format(self.max_episodes, shapes)):
+            agent.model.save(r"./models/DQN_model_({})_[{}].h5".format(self.max_episodes, shapes))
 
 
     def _run_episode(self, agent):
