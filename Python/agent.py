@@ -23,7 +23,7 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
 
         if model_path == None:
-            self.model = QNet.linear_QNet(13, 3, learning_rate=LR)
+            self.model = QNet.linear_QNet(17, 3, learning_rate=LR)
         else:
             self.model = tf_load_model(model_path)
 
@@ -78,11 +78,19 @@ class AgentDQN():
             dir_u,
             dir_d,
 
-            # Food location
+            # Position relative to food
             game.food.x < game.head.x,  # food left
             game.food.x > game.head.x,  # food right
             game.food.y < game.head.y,  # food up
-            game.food.y > game.head.y,   # food down
+            game.food.y > game.head.y,  # food down
+
+            # Current head position
+            game.head.x / WIDTH,  # x position
+            game.head.y / HEIGHT, # y position
+
+            # Current food position
+            game.food.x / WIDTH,  # x position
+            game.food.y / HEIGHT, # y position
 
             # Food distances (Values are scaled to be 0-1)
             # Previous distance

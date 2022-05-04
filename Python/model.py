@@ -26,8 +26,8 @@ class QNet():
             model.add(Input(shape=(input_size,)))
 
             # Get the number and size of hidden layers
-            for i in range(randrange(1, 5)):
-                model.add(Dense(units=randrange(5, 25), activation="relu"))
+            for i in range(randrange(2, 4)):
+                model.add(Dense(units=randrange(8, 64), activation="relu"))
 
             model.add(Dense(units=output_size))
             model.compile(optimizer=Adam(learning_rate=learning_rate), loss="mean_squared_error", metrics=[RootMeanSquaredError()])
