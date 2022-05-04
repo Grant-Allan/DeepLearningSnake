@@ -1,6 +1,6 @@
 from game import BackgroundSnake
 from run import RunGame
-from helper import TILE_SIZE, WHITE, GRAY, BLACK, RED, GREEN2, GREEN3
+from helper import TILE_SIZE, WHITE, GRAY, BLACK, RED, GREEN2, GREEN3, WIDTH, HEIGHT, MARGIN
 
 from pygame import RESIZABLE as pyg_RESIZABLE
 from pygame import QUIT as pyg_QUIT
@@ -37,11 +37,11 @@ class StartMenu():
     A main menu to open the game into, where you can select
     your game mode and change various settings.
     '''
-    def __init__(self, tiles_wide=32, tiles_high=24, tiles_margin=4):
+    def __init__(self):
         # Initialize input data
-        self.width = tiles_wide*TILE_SIZE
-        self.height = tiles_high*TILE_SIZE
-        self.margin = tiles_margin*TILE_SIZE
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.margin = MARGIN
 
         # Initialze display
         self.true_display = pyg_display.set_mode((self.width, self.height+self.margin), pyg_RESIZABLE)
@@ -55,30 +55,30 @@ class StartMenu():
         self.h_scale = th/fh
 
         # Create background snake object
-        self.bg_snake = BackgroundSnake(self.width, self.height, self.margin, self.false_display)
+        self.bg_snake = BackgroundSnake(self.false_display)
 
         # Load menu values
         try:
-            with open(r"./Resources/StandardGameSettings.txt", "r") as file:
-                self.StandardGameSettings = file.readlines()
+            with open(r"./Resources/HumanGameSettings.txt", "r") as file:
+                self.HumanGameSettings = file.readlines()
         except:
-            self.StandardGameSettings = ["10"] # FPS
-            with open(r"./Resources/StandardGameSettings.txt", "w") as file:
-                file.write('\n'.join(self.StandardGameSettings))
+            self.HumanGameSettings = ["10"] # FPS
+            with open(r"./Resources/HumanGameSettings.txt", "w") as file:
+                file.write(''.join(self.HumanGameSettings))
         try:
-            with open(r"./Resources/SingleAgentSettings.txt", "r") as file:
-                self.SingleAgentSettings = file.readlines()
+            with open(r"./Resources/DQN_Settings.txt", "r") as file:
+                self.DQN_Settings = file.readlines()
         except:
-            self.SingleAgentSettings = ["100", "120"] # FPS, Episodes
-            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
-                file.write('\n'.join(self.SingleAgentSettings))
+            self.DQN_Settings = ["100", "120"] # FPS, Episodes
+            with open(r"./Resources/DQN_Settings.txt", "w") as file:
+                file.write(''.join(self.DQN_Settings))
         try:
-            with open(r"./Resources/ManyAgentsSettings.txt", "r") as file:
-                self.ManyAgentsSettings = file.readlines()
+            with open(r"./Resources/DGA_Settings.txt", "r") as file:
+                self.DGA_Settings = file.readlines()
         except:
-            self.ManyAgentsSettings = ["100", "10", "20", "20"] # FPS, Episodes, Agents, Generations
-            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
-                file.write('\n'.join(self.ManyAgentsSettings))
+            self.DGA_Settings = ["50", "20", "250"] # FPS, Agents, Generations
+            with open(r"./Resources/DGA_Settings.txt", "w") as file:
+                file.write(''.join(self.DGA_Settings))
 
 
     def main_menu(self):
@@ -165,17 +165,17 @@ class StartMenu():
             NG_text = "Normal Game"
             NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
 
-            # SA = Single Agent
-            SA_text = "Single Agent"
-            SA_x_check, SA_y_check, SA_pos, SA_size = self.button_values(SA_text, NG_pos[1], mouse_pos)
+            # DQN = Deep Q Learning
+            DQN_text = "Deep Q Learning"
+            DQN_x_check, DQN_y_check, DQN_pos, DQN_size = self.button_values(DQN_text, NG_pos[1], mouse_pos)
 
-            # PoA = Population of Agents
-            PoA_text = "Multiple Agents"
-            PoA_x_check, PoA_y_check, PoA_pos, PoA_size = self.button_values(PoA_text, SA_pos[1], mouse_pos)
+            # DGA = Deep Genetic Algorithm
+            DGA_text = "Deep Genetic Algorithm"
+            DGA_x_check, DGA_y_check, DGA_pos, DGA_size = self.button_values(DGA_text, DQN_pos[1], mouse_pos)
 
             # BB = Back Button
             BB_text = "Back"
-            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, PoA_pos[1], mouse_pos)
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, DGA_pos[1], mouse_pos)
 
             # Black out previous display
             self.false_display.fill(BLACK)
@@ -190,8 +190,8 @@ class StartMenu():
 
             # Draw buttons
             self.draw_button(NG_text, NG_x_check, NG_y_check, NG_pos, NG_size)
-            self.draw_button(SA_text, SA_x_check, SA_y_check, SA_pos, SA_size)
-            self.draw_button(PoA_text, PoA_x_check, PoA_y_check, PoA_pos, PoA_size)
+            self.draw_button(DQN_text, DQN_x_check, DQN_y_check, DQN_pos, DQN_size)
+            self.draw_button(DGA_text, DGA_x_check, DGA_y_check, DGA_pos, DGA_size)
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
@@ -208,18 +208,18 @@ class StartMenu():
                 elif event.type == pyg_MOUSEBUTTONDOWN:
                     # Start normal game
                     if NG_x_check and NG_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
+                        run_game = RunGame()
                         run_game.run_human()
                         self.main_menu()
                     # Start game with a single agent
-                    elif SA_x_check and SA_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
+                    elif DQN_x_check and DQN_y_check:
+                        run_game = RunGame()
                         run_game.run_dqn()
                         self.main_menu()
                     # Start game with a population of agents
-                    elif PoA_x_check and PoA_y_check:
-                        run_game = RunGame(self.width, self.height, self.margin)
-                        run_game.run_grl()
+                    elif DGA_x_check and DGA_y_check:
+                        run_game = RunGame()
+                        run_game.run_dga()
                         self.main_menu()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
@@ -243,20 +243,20 @@ class StartMenu():
 
             # Set placement values
             # NG = Normal Game
-            NG_text = "Normal Game Settings"
+            NG_text = "Human Game Settings"
             NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
 
-            # SA = Single Agent
-            SA_text = "Single Agent Settings"
-            SA_x_check, SA_y_check, SA_pos, SA_size = self.button_values(SA_text, NG_pos[1], mouse_pos)
+            # DQN = Deep Q Learning
+            DQN_text = "Deep Q Learning Settings"
+            DQN_x_check, DQN_y_check, DQN_pos, DQN_size = self.button_values(DQN_text, NG_pos[1], mouse_pos)
 
-            # PoA = Population of Agents
-            PoA_text = "Multiple Agents Settings"
-            PoA_x_check, PoA_y_check, PoA_pos, PoA_size = self.button_values(PoA_text, SA_pos[1], mouse_pos)
+            # DGA = Population of Agents
+            DGA_text = "Deep Genetic Algorithm Settings"
+            DGA_x_check, DGA_y_check, DGA_pos, DGA_size = self.button_values(DGA_text, DQN_pos[1], mouse_pos)
 
             # BB = Back Button
             BB_text = "Back"
-            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, PoA_pos[1], mouse_pos)
+            BB_x_check, BB_y_check, BB_pos, BB_size = self.button_values(BB_text, DGA_pos[1], mouse_pos)
 
             # Black out previous display
             self.false_display.fill(BLACK)
@@ -271,8 +271,8 @@ class StartMenu():
 
             # Draw buttons
             self.draw_button(NG_text, NG_x_check, NG_y_check, NG_pos, NG_size)
-            self.draw_button(SA_text, SA_x_check, SA_y_check, SA_pos, SA_size)
-            self.draw_button(PoA_text, PoA_x_check, PoA_y_check, PoA_pos, PoA_size)
+            self.draw_button(DQN_text, DQN_x_check, DQN_y_check, DQN_pos, DQN_size)
+            self.draw_button(DGA_text, DGA_x_check, DGA_y_check, DGA_pos, DGA_size)
             self.draw_button(BB_text, BB_x_check, BB_y_check, BB_pos, BB_size)
 
             # Update display
@@ -291,11 +291,11 @@ class StartMenu():
                     if NG_x_check and NG_y_check:
                         self.human_settings()
                     # Start game with a single agent
-                    elif SA_x_check and SA_y_check:
-                        self.indiv_settings()
+                    elif DQN_x_check and DQN_y_check:
+                        self.DQL_settings()
                     # Start game with a population of agents
-                    elif PoA_x_check and PoA_y_check:
-                        self.pop_settings()
+                    elif DGA_x_check and DGA_y_check:
+                        self.DGA_settings()
                     # Back to main menu
                     elif BB_x_check and BB_y_check:
                         self.main_menu()
@@ -362,9 +362,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/StandardGameSettings.txt", "w") as file:
-                                self.StandardGameSettings[0] = input_text
-                                file.write('\n'.join(self.StandardGameSettings))
+                            with open(r"./Resources/HumanGameSettings.txt", "w") as file:
+                                self.HumanGameSettings[0] = input_text
+                                file.write(''.join(self.HumanGameSettings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -373,11 +373,11 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
-                        self.StandardGameSettings[0] = input_text
+                        self.HumanGameSettings[0] = input_text
     
 
-    def indiv_settings(self):
-        ''' Set settings for a single agent session. '''
+    def DQL_settings(self):
+        ''' Set settings for a deep q learning session. '''
         active = "" # typing check
         input_text = "" # box text
 
@@ -395,16 +395,16 @@ class StartMenu():
             self.false_display = self.bg_snake.play_step()
 
             # Display menu title
-            t_x, t_y = TITLE_FONT.size("Single Agent Settings")
-            text = TITLE_FONT.render("Single Agent Settings", True, GREEN3)
+            t_x, t_y = TITLE_FONT.size("DQL Settings")
+            text = TITLE_FONT.render("DQL Settings", True, GREEN3)
             self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
 
             # Get current mouse position
             mouse_pos = pyg_mouse_get_pos()
 
             # Settings
-            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("SA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
-            EP_x_check, EP_y_check, EP_box_size = self.draw_option("SA", "Episodes: ", 1, 65, "EP", active, mouse_pos, input_text)
+            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("DQN", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
+            EP_x_check, EP_y_check, EP_box_size = self.draw_option("DQN", "Episodes: ", 1, 65, "EP", active, mouse_pos, input_text)
 
             # BB = Back Button
             BB_text = "Back"
@@ -440,9 +440,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
-                                self.SingleAgentSettings[0] = input_text
-                                file.write('\n'.join(self.SingleAgentSettings))
+                            with open(r"./Resources/DQN_Settings.txt", "w") as file:
+                                self.DQN_Settings[0] = input_text
+                                file.write(''.join(self.DQN_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -451,13 +451,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
-                        self.SingleAgentSettings[0] = input_text
+                        self.DQN_Settings[0] = input_text
                 elif active=="EP":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/SingleAgentSettings.txt", "w") as file:
-                                self.SingleAgentSettings[1] = input_text
-                                file.write('\n'.join(self.SingleAgentSettings))
+                            with open(r"./Resources/DQN_Settings.txt", "w") as file:
+                                self.DQN_Settings[1] = input_text
+                                file.write(''.join(self.DQN_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -466,11 +466,11 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < EP_box_size[0]:
                                 input_text += event.unicode
-                        self.SingleAgentSettings[1] = input_text
+                        self.DQN_Settings[1] = input_text
 
 
-    def pop_settings(self):
-        ''' Set settings for a population of agents session. '''
+    def DGA_settings(self):
+        ''' Set settings for a depp genetic algorithm session. '''
         active = "" # typing check
         input_text = "" # box text
 
@@ -488,18 +488,17 @@ class StartMenu():
             self.false_display = self.bg_snake.play_step()
 
             # Display menu title
-            t_x, t_y = TITLE_FONT.size("Population Settings")
-            text = TITLE_FONT.render("Population Settings", True, GREEN3)
+            t_x, t_y = TITLE_FONT.size("DGA Settings")
+            text = TITLE_FONT.render("DGA Settings", True, GREEN3)
             self.false_display.blit(text, [self.width//2 - t_x//2, t_y//3])
 
             # Get current mouse position
             mouse_pos = pyg_mouse_get_pos()
 
             # Settings
-            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("MA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
-            EP_x_check, EP_y_check, EP_box_size = self.draw_option("MA", "Episodes: ", 1, 65, "EP", active, mouse_pos, input_text)
-            POP_x_check, POP_y_check, POP_box_size = self.draw_option("MA", "Population Size: ", 2, 65, "POP", active, mouse_pos, input_text)
-            NoG_x_check, NoG_y_check, NoG_box_size = self.draw_option("MA", "Number of Generations: ", 3, 65, "NoG", active, mouse_pos, input_text)
+            FPS_x_check, FPS_y_check, FPS_box_size = self.draw_option("DGA", "FPS: ", 0, 65, "FPS", active, mouse_pos, input_text)
+            POP_x_check, POP_y_check, POP_box_size = self.draw_option("DGA", "Population Size: ", 1, 65, "POP", active, mouse_pos, input_text)
+            NoG_x_check, NoG_y_check, NoG_box_size = self.draw_option("DGA", "Number of Generations: ", 2, 65, "NoG", active, mouse_pos, input_text)
 
             # BB = Back Button
             BB_text = "Back"
@@ -528,8 +527,6 @@ class StartMenu():
                     # Check to see if you clicked into a text box
                     if FPS_x_check and FPS_y_check:
                         active = "FPS"
-                    elif EP_x_check and EP_y_check:
-                        active = "EP"
                     elif POP_x_check and POP_y_check:
                         active = "POP"
                     elif NoG_x_check and NoG_y_check:
@@ -539,9 +536,9 @@ class StartMenu():
                 if active=="FPS":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
-                                self.ManyAgentsSettings[0] = input_text
-                                file.write('\n'.join(self.ManyAgentsSettings))
+                            with open(r"./Resources/DGA_Settings.txt", "w") as file:
+                                self.DGA_Settings[0] = input_text
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -550,28 +547,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < FPS_box_size[0]:
                                 input_text += event.unicode
-                        self.ManyAgentsSettings[0] = input_text
-                elif active=="EP":
-                    if event.type == pyg_KEYDOWN:
-                        if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
-                                self.ManyAgentsSettings[1] = input_text
-                                file.write('\n'.join(self.ManyAgentsSettings))
-                            input_text = ""
-                            active = ""
-                        elif event.key == pyg_K_BACKSPACE:
-                            input_text = input_text[:-1]
-                        else:
-                            x, _ = FONT.size(input_text)
-                            if x < EP_box_size[0]:
-                                input_text += event.unicode
-                        self.ManyAgentsSettings[1] = input_text
+                        self.DGA_Settings[0] = input_text
                 elif active=="POP":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
-                                self.ManyAgentsSettings[2] = input_text
-                                file.write('\n'.join(self.ManyAgentsSettings))
+                            with open(r"./Resources/DGA_Settings.txt", "w") as file:
+                                self.DGA_Settings[1] = input_text
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -580,13 +562,13 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < POP_box_size[0]:
                                 input_text += event.unicode
-                        self.ManyAgentsSettings[2] = input_text
+                        self.DGA_Settings[1] = input_text
                 elif active=="NoG":
                     if event.type == pyg_KEYDOWN:
                         if event.key == pyg_K_RETURN:
-                            with open(r"./Resources/ManyAgentsSettings.txt", "w") as file:
-                                self.ManyAgentsSettings[3] = input_text
-                                file.write('\n'.join(self.ManyAgentsSettings))
+                            with open(r"./Resources/DGA_Settings.txt", "w") as file:
+                                self.DGA_Settings[2] = input_text
+                                file.write(''.join(self.DGA_Settings))
                             input_text = ""
                             active = ""
                         elif event.key == pyg_K_BACKSPACE:
@@ -595,7 +577,7 @@ class StartMenu():
                             x, _ = FONT.size(input_text)
                             if x < NoG_box_size[0]:
                                 input_text += event.unicode
-                        self.ManyAgentsSettings[3] = input_text
+                        self.DGA_Settings[2] = input_text
 
 
     def button_values(self, text, y_start, mouse_pos):
@@ -654,21 +636,19 @@ class StartMenu():
         else:
             # Get settings folder
             if menu=="HG":
-                lines = self.StandardGameSettings
-            elif menu=="SA":
-                lines = self.SingleAgentSettings
-            elif menu=="MA":
-                lines = self.ManyAgentsSettings
+                lines = self.HumanGameSettings
+            elif menu=="DQN":
+                lines = self.DQN_Settings
+            elif menu=="DGA":
+                lines = self.DGA_Settings
 
             # Get file path
             if active_checker=="FPS":
-                button_text = lines[0]
-            elif active_checker=="EP":
-                button_text = lines[1]
-            elif active_checker=="POP":
-                button_text = lines[2]
+                button_text = lines[0].strip('\n')
+            elif active_checker=="EP" or active_checker=="POP":
+                button_text = lines[1].strip('\n')
             elif active_checker=="NoG":
-                button_text = lines[3]
+                button_text = lines[2].strip('\n')
 
         # Place text
         text = FONT.render(button_text, True, WHITE)

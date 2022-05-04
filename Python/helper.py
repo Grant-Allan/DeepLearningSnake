@@ -29,6 +29,9 @@ Point = namedtuple("Point", ["x", "y"])
 
 # Game values
 TILE_SIZE = 20
+WIDTH = TILE_SIZE*38
+HEIGHT = TILE_SIZE*28
+MARGIN = TILE_SIZE*4
 
 # Agent values
 MAX_MEMORY = 100_000
@@ -49,160 +52,88 @@ GREEN3 = (0, 200, 0)
 
 class Plotter():
     ''' Class to hold all plotting functions. '''
-    def __init__(self, single_agent=False):
+    def __init__(self):
         plt_ion() # turn on interactable plots
-        if not single_agent:
-            fig, self.ax = plt_subplots(2, 2) # initialize 2x2 graphs
-            self.ax[1, 1].axis("off") # turn axes off for bottom right graph
-            fig.set_size_inches(8, 6) # set figure size
 
-            # set the spacing between subplots
-            plt_subplots_adjust(left=0.1,
-                                bottom=0.1,
-                                right=0.9,
-                                top=0.9,
-                                wspace=0.4,
-                                hspace=0.4)
-        else:
-            # Single subplot for single agent session
-            _, self.ax = plt_subplots()
+        fig, self.ax = plt_subplots(1, 2) # initialize 2x2 graphs
+        self.ax[1].axis("off") # turn axes off for the right graph
+        fig.set_size_inches(10, 5) # set figure size
+
+        # set the spacing between subplots
+        plt_subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.7)
 
 
-    def plot_data(self, all_scores, all_mean_scores,
-                  gen_scores, gen_mean_scores, gen_num,
-                  agent_scores, agent_mean_scores, agent_num,
-                  num_gens, num_agents, cur_episode, num_episodes, top_score,
-                  session_time_elapsed, gen_time_elapsed, agent_time_elapsed, ep_time_elapsed):
-        ''' Plot the data for the game. '''
-        # Set internal values
-        self.all_scores = all_scores
-        self.all_mean_scores = all_mean_scores
+    def plot_DQN(self, scores, top_score, mean_scores, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed, layers):
+        ''' Plot the data when running a sessions with just one agent. '''
 
-        self.gen_scores = gen_scores
-        self.gen_mean_scores = gen_mean_scores
-        self.gen_num = gen_num
-
-        self.agent_scores = agent_scores
-        self.agent_mean_scores = agent_mean_scores
-        self.agent_num = agent_num
-
-        self.num_gens = num_gens
-        self.num_agents = num_agents
-        self.cur_episode = cur_episode
-        self.num_episodes = num_episodes
-        self.top_score = top_score
-
-        self.session_time_elapsed = session_time_elapsed
-        self.gen_time_elapsed = gen_time_elapsed
-        self.agent_time_elapsed = agent_time_elapsed
-        self.ep_time_elapsed = ep_time_elapsed
-
-        # Plot data
-        self._plot_aggregate()
-        self._plot_generation()
-        self._plot_agent()
-        self._show_data()
+        # Update data
+        self._plot_data_DQN(scores, mean_scores, cur_ep, num_eps)
+        self._show_data_DQN(scores[-1], top_score, mean_scores[-1], cur_ep, num_eps,
+                            session_time_elapsed, episode_time_elapsed,
+                            layers)
 
         # Show data
         plt_show(block=False)
         plt_pause(0.001)
 
 
-    def _plot_aggregate(self):
-        ''' Plot all data collected by the game. '''
+    def _plot_data_DQN(self, scores, mean_scores, cur_ep, num_eps):
         # Clear previous display
-        self.ax[0, 0].cla()
+        self.ax[0].cla()
 
         # Set title and axes labels
-        self.ax[0, 0].set_title("Total Aggregate Data")
-        self.ax[0, 0].set_xlabel("Number of Games")
-        self.ax[0, 0].set_ylabel("Score")
+        self.ax[0].set_title(f"Score Tracker\nEpisode {cur_ep} of {num_eps}")
+        self.ax[0].set_xlabel("Number of Games")
+        self.ax[0].set_ylabel("Score")
 
         # Plot data and set legend
-        self.ax[0, 0].plot(self.all_scores, label="Scores")
-        self.ax[0, 0].plot(self.all_mean_scores, label="Mean Scores")
-        self.ax[0, 0].legend(loc="upper left", prop={'size': 8})
+        self.ax[0].plot(scores, label="Scores")
+        self.ax[0].plot(mean_scores, label="Mean Scores")
+        self.ax[0].legend(loc="upper left")
 
         # Set number at tip of each line declaring the current value
-        self.ax[0, 0].text(len(self.all_scores)-1, self.all_scores[-1], str(self.all_scores[-1]))
-        self.ax[0, 0].text(len(self.all_mean_scores)-1, self.all_mean_scores[-1], str(self.all_mean_scores[-1]))
+        self.ax[0].text(len(scores)-1, scores[-1], str(scores[-1]))
+        self.ax[0].text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
 
         # Make sure the graph only shows values with a positive x and y
-        self.ax[0, 0].set_xlim(xmin=0)
-        self.ax[0, 0].set_ylim(ymin=0)
+        self.ax[0].set_xlim(xmin=0)
+        self.ax[0].set_ylim(ymin=0)
 
 
-    def _plot_generation(self):
-        ''' Plot the data for the current generation. '''
-        # Clear previous display
-        self.ax[0, 1].cla()
-
-        # Set title and axes labels
-        self.ax[0, 1].set_title(f"Generation {self.gen_num} Data")
-        self.ax[0, 1].set_xlabel("Number of Games")
-        self.ax[0, 1].set_ylabel("Score")
-
-        # Plot data and set legend
-        self.ax[0, 1].plot(self.gen_scores, label="Scores")
-        self.ax[0, 1].plot(self.gen_mean_scores, label="Mean Scores")
-        self.ax[0, 1].legend(loc="upper left", prop={'size': 8})
-
-        # Set number at tip of each line declaring the current value
-        self.ax[0, 1].text(len(self.gen_scores)-1, self.gen_scores[-1], str(self.gen_scores[-1]))
-        self.ax[0, 1].text(len(self.gen_mean_scores)-1, self.gen_mean_scores[-1], str(self.gen_mean_scores[-1]))
-
-        # Make sure the graph only shows values with a positive x and y
-        self.ax[0, 1].set_xlim(xmin=0)
-        self.ax[0, 1].set_ylim(ymin=0)
-
-
-    def _plot_agent(self):
-        ''' Plot the data for the current agent. '''
-        # Clear previous display
-        self.ax[1, 0].cla()
-
-        # Set title and axes labels
-        self.ax[1, 0].set_title(f"Agent {self.agent_num} Data")
-        self.ax[1, 0].set_xlabel("Number of Games")
-        self.ax[1, 0].set_ylabel("Score")
-
-        # Plot data and set legend
-        self.ax[1, 0].plot(self.agent_scores, label="Scores")
-        self.ax[1, 0].plot(self.agent_mean_scores, label="Mean Scores")
-        self.ax[1, 0].legend(loc="upper left", prop={'size': 8})
-
-        # Set number at tip of each line declaring the current value
-        self.ax[1, 0].text(len(self.agent_scores)-1, self.agent_scores[-1], str(self.agent_scores[-1]))
-        self.ax[1, 0].text(len(self.agent_mean_scores)-1, self.agent_mean_scores[-1], str(self.agent_mean_scores[-1]))
-
-        # Make sure the graph only shows values with a positive x and y
-        self.ax[1, 0].set_xlim(xmin=0)
-        self.ax[1, 0].set_ylim(ymin=0)
-
-
-    def _show_data(self):
+    def _show_data_DQN(self, cur_score, top_score, cur_mean, cur_ep, num_eps,
+                       session_time_elapsed, episode_time_elapsed,
+                       layers):
         ''' Show the data. '''
         # Clear previous display
-        self.ax[1, 1].cla()
+        self.ax[1].cla()
 
         # Turn off axes display
-        self.ax[1, 1].axis("off")
+        self.ax[1].axis("off")
 
         # Set title
-        self.ax[1, 1].set_title("Game Data")
+        self.ax[1].set_title("Session Data")
+
+        # Get model data
+        shapes = [f"Hidden Layer: {layer.get_weights()[0].shape}" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape}" for i, layer in enumerate(layers)]
+        shapes.insert(0, f"Input Size: ({layers[0].get_weights()[0].shape[0]},)")
 
         # Display text
-        self.ax[1, 1].text(0.50, 0.45,
-                f"Current Agent {self.agent_num} of {self.num_agents}\n" +
-                f"Current Episode: {self.cur_episode} of {self.num_episodes}\n" +
-                f"Current Generation: {self.gen_num} of {self.num_gens}\n" +
-                f"Current Score: {self.agent_scores[-1]}\n\n" +
+        self.ax[1].text(0.50, 0.50,
+                f"Current Episode: {cur_ep} of {num_eps}\n" +
+                f"Current Score: {cur_score}\n" +
+                f"Top Score: {top_score}\n" +
+                f"Mean: {cur_mean}\n\n" +
 
-                f"(hours:minutes:seconds)\n" +
-                f"Episode Time: {int(self.ep_time_elapsed//3600)}:{int(self.ep_time_elapsed//60 % 60)}:{int(self.ep_time_elapsed % 60)}\n" +
-                f"Agent Time: {int(self.agent_time_elapsed//3600)}:{int(self.agent_time_elapsed//60 % 60)}:{int(self.agent_time_elapsed % 60)}\n" +
-                f"Generation: {int(self.gen_time_elapsed//3600)}:{int(self.gen_time_elapsed//60 % 60)}:{int(self.gen_time_elapsed % 60)}\n" +
-                f"Session Time: {int(self.session_time_elapsed//3600)}:{int(self.session_time_elapsed//60 % 60)}:{int(self.session_time_elapsed % 60)}",
+                f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
+
+                f"Model:\n" +
+                '\n'.join(shapes),
 
                 bbox={"facecolor": "white", "alpha": 1, "pad": 10},
                 ha="center",
@@ -210,57 +141,9 @@ class Plotter():
                 size=12)
 
 
-    def plot_single_agent(self, scores, mean_scores, cur_ep, num_eps):
-        ''' Plot the data when running a sessions with just one agent. '''
-        # Clear previous display
-        self.ax.cla()
-
-        # Set title and axes labels
-        self.ax.set_title(f"Score Tracker\nEpisode {cur_ep} of {num_eps}")
-        self.ax.set_xlabel("Number of Games")
-        self.ax.set_ylabel("Score")
-
-        # Plot data and set legend
-        self.ax.plot(scores, label="Scores")
-        self.ax.plot(mean_scores, label="Mean Scores")
-        self.ax.legend(loc="upper left")
-
-        # Set number at tip of each line declaring the current value
-        self.ax.text(len(scores)-1, scores[-1], str(scores[-1]))
-        self.ax.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
-
-        # Make sure the graph only shows values with a positive x and y
-        self.ax.set_xlim(xmin=0)
-        self.ax.set_ylim(ymin=0)
-
-        # Show data
-        plt_show(block=False)
-        plt_pause(0.001)
-
-
     def save_session(self):
         ''' Save the data for the entire session. '''
         if not os_exists(r"./graphs"):
             os_makedirs(r"./graphs")
-        if not os_exists(r"./graphs/session_graph.jpg"):
-            plt_savefig(r"./graphs/session_graph.jpg")
-
-
-    def save_gen(self, gen_num):
-        ''' Save the data for this generation. '''
-        if not os_exists(r"./graphs"):
-            os_makedirs(r"./graphs")
-        if not os_exists(r"./graphs/generation_graphs"):
-            os_makedirs(r"./graphs/generation_graphs")
-        if not os_exists(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num)):
-            plt_savefig(r"./graphs/generation_graphs/graph_gen{}.jpg".format(gen_num))
-
-
-    def save_agent(self, gen_num, agent_num):
-        ''' Save the data for this agent. '''
-        if not os_exists(r"./graphs"):
-            os_makedirs(r"./graphs")
-        if not os_exists(r"./graphs/agent_graphs/gen{}".format(gen_num)):
-            os_makedirs(r"./graphs/agent_graphs/gen{}".format(gen_num))
-        if not os_exists(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num)):
-            plt_savefig(r"./graphs/agent_graphs/graph_agent{}.jpg".format(agent_num))
+        if not os_exists(r"./graphs/DQN_session_graph.jpg"):
+            plt_savefig(r"./graphs/DQN_session_graph.jpg")

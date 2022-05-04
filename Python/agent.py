@@ -10,7 +10,7 @@ from numpy import array as np_array
 from numpy import argmax as np_argmax
 
 
-class Agent():
+class AgentDQN():
     ''' The snake agent- not the model itself. '''
     def __init__(self, model_path=None):
         # Current episode
@@ -20,9 +20,9 @@ class Agent():
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        
+
         if model_path == None:
-            self.model = QNet.linear_QNet(input_size=11, hidden_sizes=[128, 128], output_size=3, learning_rate=LR)
+            self.model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
         else:
             self.model = tf_load_model(model_path)
 
@@ -41,11 +41,10 @@ class Agent():
 
     def get_state(self, game):
         ''' Update the agent's state. '''
-        head = game.snake[0]
-        point_l = Point(head.x - TILE_SIZE, head.y)
-        point_r = Point(head.x + TILE_SIZE, head.y)
-        point_u = Point(head.x, head.y - TILE_SIZE)
-        point_d = Point(head.x, head.y + TILE_SIZE)
+        point_l = Point(game.head.x - TILE_SIZE, game.head.y)
+        point_r = Point(game.head.x + TILE_SIZE, game.head.y)
+        point_u = Point(game.head.x, game.head.y - TILE_SIZE)
+        point_d = Point(game.head.x, game.head.y + TILE_SIZE)
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -128,4 +127,119 @@ class Agent():
             move = np_argmax(prediction).item()
             final_move[move] = 1
 
+        return final_move
+
+
+
+class AgentGA():
+    ''' The snake agent- not the model itself. '''
+    def __init__(self, population_size, model_path=None):
+        # Current generation
+        self.generation = 0
+
+        # Internal data
+        self.epsilon = 0 # Randomness
+        self.gamma = 0.9 # Discount rate
+        self.population_size = population_size
+
+        # Generate models and associated colors
+        self.agents = []
+        for i in range(self.population_size):
+            # Model
+            if model_path == None:
+                model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
+            else:
+                model = tf_load_model(model_path)
+
+            # [model, fitness]
+            self.agents.append([model, 0])
+
+        # Overall top score
+        self.top_score = 0
+
+        # Internal mean for graphing
+        self.mean = 0
+
+
+    def get_parents(self, fitness_threshold):
+        '''
+        Sort agents by fitness.
+        If fittness_threshold is > 1, use it as the number of agents.
+        If it's < 1, use it as a percentage.
+        '''
+        # Sort agents by fitness (highest to lowest)
+        self.agents.sort(key=lambda a: a[1], reverse=True)
+
+        # Get the number of breeding agents
+        # If it's less than 1, the threshold is treated as a percent
+        # Otherwise, it's treated as a set number of parents
+        if fitness_threshold <= 1:
+            cutoff = (int)(fitness_threshold * self.population_size)
+            if not cutoff % 2: cutoff -= 1
+            if cutoff < 2: cutoff = 2
+        else:
+            cutoff = fitness_threshold
+
+        # Get number of times each parent pair needs to breed
+        num_children = self.population_size // cutoff
+
+        return self.agents[:cutoff], num_children
+
+
+
+    def _get_state(self, game):
+        ''' Update the agent's state. '''
+        point_l = Point(game.head.x - TILE_SIZE, game.head.y)
+        point_r = Point(game.head.x + TILE_SIZE, game.head.y)
+        point_u = Point(game.head.x, game.head.y - TILE_SIZE)
+        point_d = Point(game.head.x, game.head.y + TILE_SIZE)
+
+        dir_l = game.direction == Direction.LEFT
+        dir_r = game.direction == Direction.RIGHT
+        dir_u = game.direction == Direction.UP
+        dir_d = game.direction == Direction.DOWN
+
+        # List of states, using binary checks to fill values
+        state = [
+            # Danger straight
+            (dir_r and game.is_collision(point_r, game.body)) or
+            (dir_l and game.is_collision(point_l, game.body)) or
+            (dir_u and game.is_collision(point_u, game.body)) or
+            (dir_d and game.is_collision(point_d, game.body)),
+
+            # Danger right
+            (dir_u and game.is_collision(point_r, game.body)) or
+            (dir_d and game.is_collision(point_l, game.body)) or
+            (dir_l and game.is_collision(point_u, game.body)) or
+            (dir_r and game.is_collision(point_d, game.body)),
+
+            # Danger left
+            (dir_d and game.is_collision(point_r, game.body)) or
+            (dir_u and game.is_collision(point_l, game.body)) or
+            (dir_r and game.is_collision(point_u, game.body)) or
+            (dir_l and game.is_collision(point_d, game.body)),
+
+            # Move direction
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+
+            # Food location
+            game.food.x < game.head.x,  # food left
+            game.food.x > game.head.x,  # food right
+            game.food.y < game.head.y,  # food up
+            game.food.y > game.head.y   # food down
+        ]
+        return np_array(state, dtype=float)
+
+
+    def get_action(self, model, game):
+        '''
+        Get the current action of the model.=
+        '''
+        final_move = [0, 0, 0]
+        prediction = model(np_expand_dims(self._get_state(game), 0))
+        move = np_argmax(prediction).item()
+        final_move[move] = 1
         return final_move
