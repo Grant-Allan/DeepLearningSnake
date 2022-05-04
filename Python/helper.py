@@ -119,7 +119,7 @@ class Plotter():
         self.ax[1].set_title("Session Data")
 
         # Get model data
-        shapes = [f"Hidden Layer: {layer.get_weights()[0].shape} (Parameters: {layer.get_weights()[0].shape[0]*layer.get_weights()[0].shape[1]})" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape} (Parameters: {layer.get_weights()[0].shape[0]*layer.get_weights()[0].shape[1]})" for i, layer in enumerate(layers)]
+        shapes = [f"Hidden Layer: {layer.get_weights()[0].shape}" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape}" for i, layer in enumerate(layers)]
         shapes.insert(0, f"Input Size: ({layers[0].get_weights()[0].shape[0]},)")
 
         # Display text
