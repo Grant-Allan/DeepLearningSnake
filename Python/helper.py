@@ -64,8 +64,8 @@ class Plotter():
                             bottom=0.1,
                             right=0.9,
                             top=0.9,
-                            wspace=0.4,
-                            hspace=0.7)
+                            wspace=0.1,
+                            hspace=0.9)
 
 
     def plot_DQN(self, scores, top_score, mean_scores, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed, layers):
