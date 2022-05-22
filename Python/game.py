@@ -402,7 +402,7 @@ class SnakeGameHuman():
 
 
 
-class SnakeGameAI():
+class SnakeGameDQN():
     ''' The logic for having a Deep Q Learning snake run. '''
     def __init__(self, fps=100):
         # Initialize input data
@@ -428,6 +428,7 @@ class SnakeGameAI():
 
         # Reward values
         self.food_reward = 10
+        self.move_reward = 0.1
         self.death_reward = -10
 
         # Colors
@@ -447,7 +448,7 @@ class SnakeGameAI():
                       Point(self.head.x, self.head.y+TILE_SIZE),
                       Point(self.head.x, self.head.y+(2*TILE_SIZE))]
 
-        # Initialize score and food
+        # Initialize score, reward, and food
         self.score = 0
         self._food_gen()
         self.frame_iteration = 0
@@ -484,16 +485,26 @@ class SnakeGameAI():
         game_over = False
         if self.is_collision() or (self.frame_iteration > 125*len(self.snake)):
             game_over = True
-            reward = self.death_reward
+            reward += self.death_reward
             return reward, game_over, self.score
 
         # Place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = self.food_reward
+            reward += self.food_reward
             self._food_gen()
         else:
             self.snake.pop()
+
+        # Check to see if the snake moved closer or further away from the food
+        # Values are scaled to be 0-1
+        if math_dist([self.head.x/WIDTH, self.head.y/HEIGHT], [self.food.x/WIDTH, self.food.y/HEIGHT]) \
+         < math_dist([self.snake[1].x/WIDTH, self.snake[1].y/HEIGHT], [self.food.x/WIDTH, self.food.y/HEIGHT]):
+            # Increase reward due to moving closer to food
+            reward += self.move_reward
+        else:
+            # Decrease fitness due to moving farther to food
+            reward -= self.move_reward
 
         # Update ui and clock
         self._update_ui()

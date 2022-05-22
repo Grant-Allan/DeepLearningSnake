@@ -55,7 +55,8 @@ class StartMenu():
         self.h_scale = th/fh
 
         # Create background snake object
-        self.bg_snake = BackgroundSnake(self.false_display)
+        self.background_snake = True
+        if self.background_snake: self.bg_snake = BackgroundSnake(self.false_display)
 
         # Load menu values
         try:
@@ -95,7 +96,7 @@ class StartMenu():
             # Set placement values
             # NGMB = New Game Menu Button
             NGMB_text = "New Game"
-            NGMB_x_check, NGMB_y_check, NGMB_pos, NGMB_size = self.button_values(NGMB_text, 60, mouse_pos)
+            NGMB_x_check, NGMB_y_check, NGMB_pos, NGMB_size = self.button_values(NGMB_text, TILE_SIZE*2, mouse_pos)
 
             # SMB = Settings Menu Button
             SMB_text = "Settings"
@@ -109,7 +110,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display title
             t_x, t_y = TITLE_FONT.size("Snake")
@@ -163,7 +164,7 @@ class StartMenu():
             # Set placement values
             # NG = Normal Game
             NG_text = "Normal Game"
-            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
+            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, TILE_SIZE*2, mouse_pos)
 
             # DQN = Deep Q Learning
             DQN_text = "Deep Q Learning"
@@ -181,7 +182,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("Select Game Type")
@@ -244,7 +245,7 @@ class StartMenu():
             # Set placement values
             # NG = Normal Game
             NG_text = "Human Game Settings"
-            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, 60, mouse_pos)
+            NG_x_check, NG_y_check, NG_pos, NG_size = self.button_values(NG_text, TILE_SIZE*2, mouse_pos)
 
             # DQN = Deep Q Learning
             DQN_text = "Deep Q Learning Settings"
@@ -262,7 +263,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("Settings Menu")
@@ -317,7 +318,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("Normal Game Settings")
@@ -392,7 +393,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("DQL Settings")
@@ -485,7 +486,7 @@ class StartMenu():
             self.false_display.fill(BLACK)
 
             # Run the background snake
-            self.false_display = self.bg_snake.play_step()
+            if self.background_snake: self.false_display = self.bg_snake.play_step()
 
             # Display menu title
             t_x, t_y = TITLE_FONT.size("DGA Settings")

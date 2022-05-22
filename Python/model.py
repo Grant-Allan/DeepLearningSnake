@@ -1,36 +1,39 @@
+from helper import LR
 from numpy import array, expand_dims, max, argmax
 from random import randrange
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import RootMeanSquaredError
 
 
 class QNet():
-    def linear_QNet(model_path="", input_size=11, output_size=3, learning_rate=0.001):
+    def linear_QNet(input_size, output_size, random_model=True, hidden_layers=None, model_path=""):
         '''
         Build the model, given an input size, list of hidden layer sizes,
         output size, and learning rate.
 
         Either load a trained model or create a new one.
         '''
-        # If you want to load a trained model...
+        # Load a trained model or build a new one
         if (model_path):
             model = load_model(model_path)
-
-        # If you want to build a new model
         else:
             model = Sequential()
-            model.add(Input(shape=(input_size,)))
+            model.add(InputLayer(input_shape=(input_size,)))
 
             # Get the number and size of hidden layers
-            for i in range(randrange(1, 5)):
-                model.add(Dense(units=randrange(5, 25), activation="relu"))
+            if random_model:
+                for i in range(randrange(2, 4)):
+                    model.add(Dense(units=randrange(8, 64), activation="relu"))
+            else:
+                for size in hidden_layers:
+                    model.add(Dense(units=size, activation="relu"))
 
             model.add(Dense(units=output_size))
-            model.compile(optimizer=Adam(learning_rate=learning_rate), loss="mean_squared_error", metrics=[RootMeanSquaredError()])
+            model.compile(optimizer=Adam(learning_rate=LR), loss="mean_squared_error", metrics=[RootMeanSquaredError()])
         return model
 
 

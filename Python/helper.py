@@ -28,7 +28,7 @@ class Direction(Enum):
 Point = namedtuple("Point", ["x", "y"])
 
 # Game values
-TILE_SIZE = 20
+TILE_SIZE = 30
 WIDTH = TILE_SIZE*38
 HEIGHT = TILE_SIZE*28
 MARGIN = TILE_SIZE*4
@@ -64,17 +64,21 @@ class Plotter():
                             bottom=0.1,
                             right=0.9,
                             top=0.9,
-                            wspace=0.4,
-                            hspace=0.7)
+                            wspace=0.1,
+                            hspace=0.9)
 
 
-    def plot_DQN(self, scores, top_score, mean_scores, cur_ep, num_eps, session_time_elapsed, episode_time_elapsed, layers):
+    def plot_DQN(self,
+                 agent,
+                 scores, top_score, mean_scores, cur_ep, num_eps,
+                 session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
+                 layers):
         ''' Plot the data when running a sessions with just one agent. '''
 
         # Update data
-        self._plot_data_DQN(scores, mean_scores, cur_ep, num_eps)
+        self._plot_data_DQN(agent, scores, mean_scores, cur_ep, num_eps)
         self._show_data_DQN(scores[-1], top_score, mean_scores[-1], cur_ep, num_eps,
-                            session_time_elapsed, episode_time_elapsed,
+                            session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
                             layers)
 
         # Show data
@@ -82,12 +86,12 @@ class Plotter():
         plt_pause(0.001)
 
 
-    def _plot_data_DQN(self, scores, mean_scores, cur_ep, num_eps):
+    def _plot_data_DQN(self, agent, scores, mean_scores, cur_ep, num_eps):
         # Clear previous display
         self.ax[0].cla()
 
         # Set title and axes labels
-        self.ax[0].set_title(f"Score Tracker\nEpisode {cur_ep} of {num_eps}")
+        self.ax[0].set_title(f"Agent {agent}\nEpisode {cur_ep} of {num_eps}")
         self.ax[0].set_xlabel("Number of Games")
         self.ax[0].set_ylabel("Score")
 
@@ -106,7 +110,7 @@ class Plotter():
 
 
     def _show_data_DQN(self, cur_score, top_score, cur_mean, cur_ep, num_eps,
-                       session_time_elapsed, episode_time_elapsed,
+                       session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
                        layers):
         ''' Show the data. '''
         # Clear previous display
@@ -120,16 +124,17 @@ class Plotter():
 
         # Get model data
         shapes = [f"Hidden Layer: {layer.get_weights()[0].shape}" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape}" for i, layer in enumerate(layers)]
-        shapes.insert(0, f"Input Size: ({layers[0].get_weights()[0].shape[0]},)")
+        shapes[0] = f"Input Layer: {layers[0].get_weights()[0].shape}"
 
         # Display text
         self.ax[1].text(0.50, 0.50,
-                f"Current Episode: {cur_ep} of {num_eps}\n" +
-                f"Current Score: {cur_score}\n" +
+                f"Previous Episode: {cur_ep} of {num_eps}\n" +
+                f"Previous Score: {cur_score}\n" +
                 f"Top Score: {top_score}\n" +
-                f"Mean: {cur_mean}\n\n" +
+                f"Agent Mean: {cur_mean}\n\n" +
 
                 f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
+                f"Agent Time: {int(agent_time_elapsed//3600)}:{int(agent_time_elapsed//60 % 60)}:{int(agent_time_elapsed % 60)}\n" +
                 f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
 
                 f"Model:\n" +

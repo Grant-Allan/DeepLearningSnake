@@ -1,8 +1,9 @@
 from collections import deque
 from model import QNet, QTrainer
-from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR
+from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR, WIDTH, HEIGHT
 
 from tensorflow.keras.models import load_model as tf_load_model
+from math import dist as math_dist
 from random import randint as rand_randint
 from random import sample as rand_sample
 from numpy import expand_dims as np_expand_dims
@@ -22,7 +23,7 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
 
         if model_path == None:
-            self.model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
+            self.model = QNet.linear_QNet(19, 3)
         else:
             self.model = tf_load_model(model_path)
 
@@ -32,11 +33,10 @@ class AgentDQN():
         self.color1 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
         self.color2 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
 
-        # Internal score for fitness testing
+        # Graphing and data variables
+        self.total_score = 0
         self.top_score = 0
-
-        # Internal mean for graphing
-        self.mean = 0
+        self.mean_score = 0
 
 
     def get_state(self, game):
@@ -51,7 +51,7 @@ class AgentDQN():
         dir_u = game.direction == Direction.UP
         dir_d = game.direction == Direction.DOWN
 
-        # List of states, using binary checks to fill values
+        # List of states, mainly using binary checks to fill values
         state = [
             # Danger straight
             (dir_r and game.is_collision(point_r)) or
@@ -77,11 +77,35 @@ class AgentDQN():
             dir_u,
             dir_d,
 
-            # Food location
+            # Position relative to food
             game.food.x < game.head.x,  # food left
             game.food.x > game.head.x,  # food right
             game.food.y < game.head.y,  # food up
-            game.food.y > game.head.y   # food down
+            game.food.y > game.head.y,  # food down
+
+            # Current head position
+            game.head.x / WIDTH,  # x position
+            game.head.y / HEIGHT, # y position
+
+            # Current food position
+            game.food.x / WIDTH,  # x position
+            game.food.y / HEIGHT, # y position
+
+            # Distance from head to middle block
+            math_dist([game.snake[len(game.snake)//2].x/WIDTH, game.head.y/HEIGHT],\
+                      [game.snake[len(game.snake)//2].y/HEIGHT, game.food.y/HEIGHT]),
+
+            # Current tail position
+            math_dist([game.snake[-1].x/WIDTH, game.head.y/HEIGHT],\
+                      [game.snake[-1].y/HEIGHT, game.food.y/HEIGHT]),
+
+            # Food distances (Values are scaled to be 0-1)
+            # Current distance
+            math_dist([game.head.x/WIDTH, game.head.y/HEIGHT],\
+                      [game.food.x/WIDTH, game.food.y/HEIGHT]),
+            # Previous distance
+            math_dist([game.snake[1].x/WIDTH, game.snake[1].y/HEIGHT],\
+                      [game.food.x/WIDTH, game.food.y/HEIGHT])
         ]
         return np_array(state, dtype=int)
 
@@ -147,7 +171,7 @@ class AgentGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = QNet.linear_QNet(input_size=11, output_size=3, learning_rate=LR)
+                model = QNet.linear_QNet(11, 3, hidden_layers=[128, 128], random_model=False)
             else:
                 model = tf_load_model(model_path)
 
@@ -158,7 +182,7 @@ class AgentGA():
         self.top_score = 0
 
         # Internal mean for graphing
-        self.mean = 0
+        self.mean_score = 0
 
 
     def get_parents(self, fitness_threshold):

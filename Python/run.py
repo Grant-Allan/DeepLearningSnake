@@ -1,9 +1,10 @@
 from agent import AgentDQN, AgentGA
-from game import SnakeGameHuman, SnakeGameAI, SnakeGameGA
+from game import SnakeGameHuman, SnakeGameDQN, SnakeGameGA
 from genetics import GeneticAlgorithm
 from helper import Plotter, WIDTH, HEIGHT, MARGIN
 
 from os import makedirs as os_makedirs
+from os import remove as os_remove
 from os.path import exists as os_exists
 from time import time as time_time
 from numpy import round as np_round
@@ -86,61 +87,63 @@ class RunGame():
 
         # Set internal variables
         self.max_episodes = max_episodes
+        num_agents = 10
 
         # Create objects
         agent = AgentDQN()
         plotter = Plotter()
-        self.game = SnakeGameAI(fps=fps)
+        self.game = SnakeGameDQN(fps=fps)
 
         # Set colors
         self.game.color1 = agent.color1
         self.game.color2 = agent.color2
 
-        # Set aggregate data lists
-        self.agent_scores, self.agent_mean_scores = [], []
-
-        # Set score aggregate for this agent
-        self.agent_score = 0
-
         # Start session timer
         self.session_time = time_time()
 
-        # Run for set number of episodes (adjusting to start at ep 1)
-        for cur_episode in range(1, self.max_episodes+1):
-            # Start episode timer
-            self.episode_time = time_time()
+        for a in range(num_agents):
+            # Set aggregate data lists
+            self.agent_scores, self.agent_mean_scores = [], []
 
-            # Episode variables
-            agent.episode = cur_episode
-            self.game.agent_episode = cur_episode
+            # Set score aggregate for this agent
+            self.agent_score = 0
 
-            # Episode loop
-            agent = self._run_episode(agent)
+            # Start agent timer
+            self.agent_time = time_time()
 
-            # Check for escape
-            for event in pyg_get():
-                # Check for exiting out of window
-                if event.type == pyg_QUIT:
-                    self.quit = True
-                elif event.type == pyg_KEYDOWN:
-                    if event.key == pyg_K_ESCAPE:
+            # Run for set number of episodes (adjusting to start at ep 1)
+            for cur_episode in range(1, self.max_episodes+1):
+                # Start episode timer
+                self.episode_time = time_time()
+
+                # Episode variables
+                agent.episode = cur_episode
+                self.game.agent_episode = cur_episode
+
+                # Episode loop
+                agent = self._run_episode(agent)
+
+                # Check for escape
+                for event in pyg_get():
+                    # Check for exiting out of window
+                    if event.type == pyg_QUIT:
                         self.quit = True
-            if self.quit: break
+                    elif event.type == pyg_KEYDOWN:
+                        if event.key == pyg_K_ESCAPE:
+                            self.quit = True
+                if self.quit: break
 
-            # Plot data
-            plotter.plot_DQN(self.agent_scores,
-                             self.game.top_score,
-                             self.agent_mean_scores,
-                             cur_episode,
-                             self.max_episodes,
-                             time_time()-self.session_time,
-                             time_time()-self.episode_time,
-                             agent.model.layers)
-
-        if not os_exists(r"./models"):
-            os_makedirs(r"./models")
-        if not os_exists(r"./models/DQN_model_({}).h5".format(self.max_episodes)):
-            agent.model.save(r"./models/DQN_model_({}).h5".format(self.max_episodes))
+                # Plot data
+                plotter.plot_DQN(a,
+                                 self.agent_scores,
+                                 self.game.top_score,
+                                 self.agent_mean_scores,
+                                 cur_episode,
+                                 self.max_episodes,
+                                 time_time()-self.session_time,
+                                 time_time()-self.agent_time,
+                                 time_time()-self.episode_time,
+                                 agent.model.layers)
 
 
     def _run_episode(self, agent):
@@ -177,23 +180,30 @@ class RunGame():
             if done:
                 run = False
 
+                # Update agent and game's internal score if needed
+                if score > agent.top_score:
+                    if not os_exists(r"./models"):
+                        os_makedirs(r"./models")
+
+                    shapes = [f"({layer.get_weights()[0].shape})" for layer in agent.model.layers]
+                    shapes = '-'.join(shapes)
+
+                    if not os_exists(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score)):
+                        agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                    else: # delete existing file to make a new one
+                        os_remove(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                        agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                    agent.top_score = score
+
                 # Train long memory
                 self.game.reset()
                 agent.train_long_memory()
 
-                # Update agent's internal score if needed
-                if score > agent.top_score:
-                    agent.top_score = score
-
-                # Update absolute top score if needed
-                if score > self.game.top_score:
-                    self.game.top_score = score
-
                 # Update aggregate score lists
                 self.agent_scores.append(score)
-                self.game.total_score += score
-                self.game.mean_score = np_round((self.game.total_score / len(self.agent_scores)), 3)
-                self.agent_mean_scores.append(self.game.mean_score)
+                agent.total_score += score
+                agent.mean_score = np_round((agent.total_score / len(self.agent_scores)), 3)
+                self.agent_mean_scores.append(agent.mean_score)
         return agent
 
 
@@ -266,9 +276,6 @@ class RunGame():
                             self.quit = True
                 if self.quit: break
             if self.quit: break
-
-            # Save generation's graph
-            #self.plotter.save_gen(cur_gen)
 
             # Reset the internal data in preparation for the next generation
             self.game.reset()
