@@ -23,7 +23,7 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
 
         if model_path == None:
-            self.model = QNet.linear_QNet(19, 3, learning_rate=LR)
+            self.model = QNet.linear_QNet(19, 3)
         else:
             self.model = tf_load_model(model_path)
 
@@ -33,11 +33,10 @@ class AgentDQN():
         self.color1 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
         self.color2 = (rand_randint(0, 255), rand_randint(0, 255), rand_randint(0, 255))
 
-        # Internal score for fitness testing
+        # Graphing and data variables
+        self.total_score = 0
         self.top_score = 0
-
-        # Internal mean for graphing
-        self.mean = 0
+        self.mean_score = 0
 
 
     def get_state(self, game):
@@ -172,7 +171,7 @@ class AgentGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = QNet.linear_QNet(11, 3, learning_rate=LR)
+                model = QNet.linear_QNet(11, 3, hidden_layers=[128, 128], random_model=False)
             else:
                 model = tf_load_model(model_path)
 
@@ -183,7 +182,7 @@ class AgentGA():
         self.top_score = 0
 
         # Internal mean for graphing
-        self.mean = 0
+        self.mean_score = 0
 
 
     def get_parents(self, fitness_threshold):

@@ -10,6 +10,7 @@ class GeneticAlgorithm():
         #self.fitness_threshold = 0.10
         self.fitness_threshold = 2
         self.crossover_rate = 0.05
+        self.gene_size = 4
         self.mutation_rate = 0.01
         self.mutation_degree = 0.50
 
@@ -47,11 +48,13 @@ class GeneticAlgorithm():
 
             # Resort the legacy pool (if needed)
             if changed: self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
-            #[print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
+            [print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
+            '''
             for i, agent in enumerate(self.legacy_pool):
                 print(f"\nAgent {i} Fitness: {agent[1]}")
                 for j, layer in enumerate(agent[0].layers):
                     print(f"Layer {j}: {layer.get_weights()[0].shape}")
+            '''
             print("\n\n")
 
 
@@ -75,101 +78,50 @@ class GeneticAlgorithm():
         children = AgentGA(population.population_size)
 
         # Crossover and mutate to get the children
-        count = 0
-        for c in range(1, num_children-1, 2):
-            for i in range(1, len(parents)-1, 2):
-                children.agents[count][0], children.agents[count+1][0] = self.crossover(parents[i], parents[i+1])
-                count += 2
+        child = 0
+        for i in range(0, len(parents), 2):
+            for c in range(num_children):
+                children.agents[child][0] = self.crossover(children.agents[child][0], parents[i], parents[i+1])
+                child += 1
         return children
 
 
-    def crossover(self, parent_one, parent_two):
+    def crossover(self, child, parent_one, parent_two):
         ''' Apply crossover and mutation between two parents in order to get a child. '''
-        # Find which of the two models has more layers
-        if len(parent_one.layers) > len(parent_two.layers):
-            max_layers = len(parent_one.layers)
-            min_layers = len(parent_two.layers)
-        else:
-            max_layers = len(parent_two.layers)
-            min_layers = len(parent_one.layers)
-
         # Crossover and mutate each layer for the first child
-        for i in range(0, max_layers, max_layers//min_layers):
-            if i > min_layers: break
-
+        for i in range(parent_one.layers):
             # Get weights and biases of the parents
-            # p1 acts as the base for the child
-            child1_data = parent_one.layers[i].get_weights()
+            # p1_data acts as the base for the child
+            p1_data = parent_one.layers[i].get_weights()
             p2_data = parent_two.layers[i].get_weights()
 
-            # Find which of the two layers is bigger
-            X = child1_data[0].shape[0] if child1_data[0].shape[0] > p2_data[0].shape[0] else p2_data[0].shape[0]
-            Y = child1_data[0].shape[1] if child1_data[0].shape[1] > p2_data[0].shape[1] else p2_data[0].shape[1]
-
             # Handle the weights
-            for x in range(child1_data[0].shape[0]):
-                for y in range(child1_data[0].shape[1]):
-                    # Check to see if crossover should occur
-                    if (random() < self.crossover_rate) and not (x > X or y > Y):
-                        child1_data[0][x][y] = p2_data[0][x][y]
-
-                    # Check to see if mutation should occur
-                    if (random() < self.mutation_rate):
-                        child1_data[0][x][y] += child1_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
-
-            # Handle the biases
-            for x in range(child1_data[0].shape[1]):
-                # Check to see if crossover should occur
-                if (random() < self.crossover_rate) and not (x > X):
-                    child1_data[1][x] = p2_data[1][x]
-
-                # Check to see if mutation should occur
-                if (random() < self.mutation_rate):
-                    child1_data[1][x] += child1_data[1][x] * uniform(-self.mutation_degree, self.mutation_degree)
-
-            # Set weights and biases in child
-            #child.layers[i].build(input_shape=child1_data[0].shape[0])
-            #child.layers[i].set_weights(child1_data)
-            parent_one[i].set_weights(child1_data)
-
-        # Crossover and mutate each layer for the second child
-        for i in range(0, min_layers, min_layers//max_layers):
-            if i > max_layers: break
-
-            # Get weights and biases of the parents
-            # p1 acts as the base for the child
-            p1_data = parent_one.layers[i].get_weights()
-            child2_data = parent_two.layers[i].get_weights()
-
-            # Find which of the two layers is bigger
-            X = child2_data[0].shape[0] if child2_data[0].shape[0] > p1_data[0].shape[0] else p1_data[0].shape[0]
-            Y = child2_data[0].shape[1] if child2_data[0].shape[1] > p1_data[0].shape[1] else p1_data[0].shape[1]
-
-            # Handle the weights
-            for x in range(X):
-                for y in range(Y):
+            for x in range(p1_data[0].shape[0]):
+                for y in range(self.gene_size, p1_data[0].shape[1], self.gene_size):
                     # Check to see if crossover should occur
                     if (random() < self.crossover_rate):
-                        child2_data[0][x][y] = p1_data[0][x][y]
+                        p1_data[0][x][y] = p2_data[0][x][y]
 
                     # Check to see if mutation should occur
                     if (random() < self.mutation_rate):
-                        child2_data[0][x][y] += child2_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
+                        #p1_data[0][x][y] += p1_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
+                        p1_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
 
             # Handle the biases
-            for x in range(X):
+            for x in range(p1_data[0].shape[1]):
                 # Check to see if crossover should occur
                 if (random() < self.crossover_rate):
-                    child2_data[1][x] = p1_data[1][x]
+                    p1_data[1][x] = p2_data[1][x]
 
                 # Check to see if mutation should occur
                 if (random() < self.mutation_rate):
-                    child2_data[1][x] += child2_data[1][x] * uniform(-self.mutation_degree, self.mutation_degree)
+                    #p1_data[1][x] += p1_data[1][x] * uniform(-self.mutation_degree, self.mutation_degree)
+                    p1_data[1][x] += uniform(-self.mutation_degree, self.mutation_degree)
 
             # Set weights and biases in child
-            #child.layers[i].build(input_shape=child2_data[0].shape[0])
-            #child.layers[i].set_weights(child2_data)
-            parent_two[i].set_weights(child2_data)
+            child.layers[i].build(input_shape=p1_data[0].shape[0])
+            child.layers[i].set_weights(p1_data)
+            parent_one[i].set_weights(p1_data)
 
         #return child
         return parent_one, parent_two
