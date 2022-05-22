@@ -55,7 +55,7 @@ class StartMenu():
         self.h_scale = th/fh
 
         # Create background snake object
-        self.background_snake = False
+        self.background_snake = True
         if self.background_snake: self.bg_snake = BackgroundSnake(self.false_display)
 
         # Load menu values

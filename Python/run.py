@@ -201,9 +201,9 @@ class RunGame():
 
                 # Update aggregate score lists
                 self.agent_scores.append(score)
-                self.agent.total_score += score
-                self.agent.mean_score = np_round((self.agent.total_score / len(self.agent_scores)), 3)
-                self.agent_mean_scores.append(self.agent.mean_score)
+                agent.total_score += score
+                agent.mean_score = np_round((agent.total_score / len(self.agent_scores)), 3)
+                self.agent_mean_scores.append(agent.mean_score)
         return agent
 
 
@@ -276,9 +276,6 @@ class RunGame():
                             self.quit = True
                 if self.quit: break
             if self.quit: break
-
-            # Save generation's graph
-            #self.plotter.save_gen(cur_gen)
 
             # Reset the internal data in preparation for the next generation
             self.game.reset()

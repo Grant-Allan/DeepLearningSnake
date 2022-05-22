@@ -28,7 +28,7 @@ class Direction(Enum):
 Point = namedtuple("Point", ["x", "y"])
 
 # Game values
-TILE_SIZE = 40
+TILE_SIZE = 30
 WIDTH = TILE_SIZE*38
 HEIGHT = TILE_SIZE*28
 MARGIN = TILE_SIZE*4
@@ -124,7 +124,7 @@ class Plotter():
 
         # Get model data
         shapes = [f"Hidden Layer: {layer.get_weights()[0].shape}" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape}" for i, layer in enumerate(layers)]
-        shapes[0] = f"Input Layer: ({layers[0].get_weights()[0].shape},)"
+        shapes[0] = f"Input Layer: {layers[0].get_weights()[0].shape}"
 
         # Display text
         self.ax[1].text(0.50, 0.50,

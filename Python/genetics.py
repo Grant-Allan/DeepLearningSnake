@@ -3,9 +3,9 @@ from random import random, uniform, shuffle
 
 
 class GeneticAlgorithm():
-    ''' The logic for getting the new generation of agents. '''
-
+    '''The logic for getting the new generation of agents.'''
     ''' Try NEAT algorithm? neat-python '''
+
     def __init__(self):
         #self.fitness_threshold = 0.10
         self.fitness_threshold = 2
@@ -19,7 +19,7 @@ class GeneticAlgorithm():
 
 
     def _improvement_check(self, new_generation):
-        ''' Only allow the parents to be the absolute fittest of all generations. '''
+        '''Only allow the parents to be the absolute fittest of all generations.'''
         # For the first time, we just set it to the first generation of parents
         changed = False
         if self.legacy_pool == None:
@@ -87,9 +87,9 @@ class GeneticAlgorithm():
 
 
     def crossover(self, child, parent_one, parent_two):
-        ''' Apply crossover and mutation between two parents in order to get a child. '''
+        '''Apply crossover and mutation between two parents in order to get a child.'''
         # Crossover and mutate each layer for the first child
-        for i in range(parent_one.layers):
+        for i in range(len(parent_one.layers)):
             # Get weights and biases of the parents
             # p1_data acts as the base for the child
             p1_data = parent_one.layers[i].get_weights()
@@ -121,7 +121,6 @@ class GeneticAlgorithm():
             # Set weights and biases in child
             child.layers[i].build(input_shape=p1_data[0].shape[0])
             child.layers[i].set_weights(p1_data)
-            parent_one[i].set_weights(p1_data)
+            parent_one.layers[i].set_weights(p1_data)
 
-        #return child
-        return parent_one, parent_two
+        return child

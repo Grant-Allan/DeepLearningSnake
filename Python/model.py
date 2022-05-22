@@ -3,7 +3,7 @@ from numpy import array, expand_dims, max, argmax
 from random import randrange
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import RootMeanSquaredError
@@ -22,7 +22,7 @@ class QNet():
             model = load_model(model_path)
         else:
             model = Sequential()
-            model.add(Input(shape=(input_size,)))
+            model.add(InputLayer(input_shape=(input_size,)))
 
             # Get the number and size of hidden layers
             if random_model:
