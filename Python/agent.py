@@ -200,9 +200,7 @@ class AgentGA():
         # Otherwise, it's treated as a set number of parents
         if fitness_threshold <= 1:
             cutoff = ceil(fitness_threshold * self.population_size)
-            if not cutoff % 2:
-                cutoff -= 1
-                print("Subtracting 1")
+            if (cutoff % 2): cutoff -= 1 # it's counterintuitive, but 0 is treated as false and not 0 as true, so it works
             if cutoff < 2: cutoff = 2
         else:
             cutoff = fitness_threshold

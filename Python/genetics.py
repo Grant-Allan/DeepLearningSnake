@@ -78,6 +78,7 @@ class GeneticAlgorithm():
         child = 0
         for i in range(0, len(parents), 2):
             for c in range(num_children):
+                print(i, len(parents))
                 children.agents[child][0] = self.crossover(children.agents[child][0], parents[i], parents[i+1])
                 child += 1
         return children
