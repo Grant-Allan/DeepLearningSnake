@@ -4,6 +4,7 @@ from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR, WIDT
 
 from tensorflow.keras.models import load_model as tf_load_model
 from math import dist as math_dist
+from math import ceil
 from random import randint as rand_randint
 from random import sample as rand_sample
 from numpy import expand_dims as np_expand_dims
@@ -198,8 +199,10 @@ class AgentGA():
         # If it's less than 1, the threshold is treated as a percent
         # Otherwise, it's treated as a set number of parents
         if fitness_threshold <= 1:
-            cutoff = (int)(fitness_threshold * self.population_size)
-            if not cutoff % 2: cutoff -= 1
+            cutoff = ceil(fitness_threshold * self.population_size)
+            if not cutoff % 2:
+                cutoff -= 1
+                print("Subtracting 1")
             if cutoff < 2: cutoff = 2
         else:
             cutoff = fitness_threshold
