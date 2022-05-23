@@ -7,11 +7,11 @@ class GeneticAlgorithm():
     ''' Try NEAT algorithm? neat-python '''
 
     def __init__(self):
-        #self.fitness_threshold = 0.10
-        self.fitness_threshold = 2
+        self.fitness_threshold = 0.10
+        #self.fitness_threshold = 2
         self.crossover_rate = 0.05
         self.gene_size = 4
-        self.mutation_rate = 0.01
+        self.mutation_rate = 0.0001
         self.mutation_degree = 0.50
 
         # Pool of previous parents so we can use the fittest of all time
@@ -21,10 +21,8 @@ class GeneticAlgorithm():
     def _improvement_check(self, new_generation):
         '''Only allow the parents to be the absolute fittest of all generations.'''
         # For the first time, we just set it to the first generation of parents
-        changed = False
         if self.legacy_pool == None:
             self.legacy_pool = new_generation
-            changed = True
             for i, agent in enumerate(self.legacy_pool):
                 print(f"\nAgent {i} Fitness: {agent[1]}")
                 for j, layer in enumerate(agent[0].layers):
@@ -42,12 +40,11 @@ class GeneticAlgorithm():
                 for j in range(len(self.legacy_pool)):
                     if new_generation[i][1] > self.legacy_pool[j][1]:
                         self.legacy_pool[j] = new_generation[i]
-                        changed = True
                         print(f"New Value: {self.legacy_pool[j][1]}")
                         break # so we only add a new agent once
 
             # Resort the legacy pool (if needed)
-            if changed: self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
+            self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
             [print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
             '''
             for i, agent in enumerate(self.legacy_pool):
