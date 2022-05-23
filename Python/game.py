@@ -1,8 +1,9 @@
-from agent import AgentDQN
+from agent import AgentDQN, AgentDGA
 from helper import Direction, Point, TILE_SIZE, WHITE, BLACK, RED, GREEN1, GREEN2, WIDTH, HEIGHT, MARGIN
 
 from random import randint as rand_randint
 from numpy import array_equal as np_array_equal
+from numpy import round as np_round
 from math import dist as math_dist
 
 from pygame import RESIZABLE as pyg_RESIZABLE
@@ -613,7 +614,7 @@ class SnakeGameDQN():
 
 
 
-class SnakeGameGA():
+class SnakeGameDGA():
     ''' The logic for having a Deep Q Learning snake run. '''
     def __init__(self, population_size, num_gens, fps=100):
         # Initialize input data
@@ -631,9 +632,13 @@ class SnakeGameGA():
         self.clock = pyg_Clock()
 
         # Initialize game values
+        self.agents = AgentDGA(population_size)
         self.reset()
         self.generation = 0
         self.top_score = 0
+        self.total_score = 0
+        self.total_mean_score = 0
+        self.gen_mean_score = 0
 
 
     def reset(self):
@@ -677,7 +682,7 @@ class SnakeGameGA():
         return self.food
 
 
-    def play_step(self, agents):
+    def play_step(self):
         ''' Run a frame of the game. '''
         self.frame_count += 1
         for i, agent in enumerate(self.agents_data):
@@ -697,7 +702,7 @@ class SnakeGameGA():
             self.food = agent[3]
 
             # Have each agent take their action
-            action = agents.get_action(agents.agents[i][0], self)
+            action = self.agents.get_action(self.agents.agents[i][0], self)
 
             # Move
             agent[0], agent[1] = self._move(action, agent[0], agent[1])
@@ -707,6 +712,7 @@ class SnakeGameGA():
             if self.is_collision(agent[1], agent[2]) or (self.frame_count > 125*len(agent[2])):
                 agent[4] = True
                 self.remaining_agents -= 1
+                self.gen_mean_score = np_round(((self.gen_mean_score) + (agent[6] / self.population_size))/2, 3)
             else:
                 # If it's alive, very slightly increase fitness
                 #agents.agents[i][1] += 0.00001
@@ -714,15 +720,15 @@ class SnakeGameGA():
                 # Check to see if the snake moved closer or further away from the food
                 if math_dist([agent[1].x, agent[1].y], [agent[3].x, agent[3].y]) < math_dist([agent[2][1].x, agent[2][1].y], [agent[3].x, agent[3].y]):
                     # Increase fitness
-                    agents.agents[i][1] += 0.001
+                    self.agents.agents[i][1] += 0.001
                 else:
                     # Decrease fitness
-                    agents.agents[i][1] -= 0.001
+                    self.agents.agents[i][1] -= 0.001
 
             # Place new food or just move
             if agent[1] == agent[3]:
                 agent[6] += 1 # increase agent's score
-                agents.agents[i][1] += 1 # increase agent's fitness
+                self.agents.agents[i][1] += 1 # increase agent's fitness
                 agent[3] = self._food_gen(snake=agent[2])
             else:
                 agent[2].pop()
@@ -740,8 +746,7 @@ class SnakeGameGA():
         self.clock.tick(self.fps)
 
         # Check for game over
-        if self.remaining_agents: return False, agents
-        else: return True, agents
+        return False if self.remaining_agents else True
 
 
     def is_collision(self, head, body):

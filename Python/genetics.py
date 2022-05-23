@@ -1,4 +1,4 @@
-from agent import AgentGA
+from agent import AgentDGA
 from random import random, uniform, shuffle
 
 
@@ -55,13 +55,13 @@ class GeneticAlgorithm():
             print("\n\n")
 
 
-    def breed_population(self, population):
+    def breed_population(self, population, shuffle_pool=True):
         '''
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
         '''
         # Get the new generation and the number of children each pair needs to have
-        new_generation, num_children = population.get_parents(self.fitness_threshold)
+        new_generation, num_children, num_parents = population.get_parents(self.fitness_threshold)
 
         # Update the legacy pool of agents to include any members of the new generation
         # that are better than the old generations
@@ -69,18 +69,25 @@ class GeneticAlgorithm():
 
         # # Get the parent models
         parents = [agent[0] for agent in self.legacy_pool]
-        #shuffle(parents) # Shuffle the parents into a random order
+        if shuffle_pool: shuffle(parents) # Shuffle the parents into a random order
 
         # Initialize children
-        children = AgentGA(population.population_size)
+        children = AgentDGA(population.population_size)
 
         # Crossover and mutate to get the children
         child = 0
-        for i in range(0, len(parents), 2):
-            for c in range(num_children):
-                children.agents[child][0] = self.crossover(children.agents[child][0], parents[i], parents[i+1])
-                child += 1
-        return children
+        if shuffle_pool:
+            for i in range(0, num_parents, 2):
+                for c in range(0, num_children, 2):
+                    children.agents[child][0] = self.crossover(children.agents[child][0], parents[i], parents[i+1])
+                    children.agents[child+1][0] = self.crossover(children.agents[child+1][0], parents[i+1], parents[i])
+                    child += 2
+        else:
+            for i in range(0, num_parents, 2):
+                for c in range(num_children):
+                    children.agents[child][0] = self.crossover(children.agents[child][0], parents[i], parents[i+1])
+                    child += 1
+        return children, num_parents
 
 
     def crossover(self, child, parent_one, parent_two):

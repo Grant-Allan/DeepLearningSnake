@@ -9,7 +9,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import RootMeanSquaredError
 
 
-class QNet():
+class LinearNet():
     def linear_QNet(input_size, output_size, random_model=True, hidden_layers=None, model_path=""):
         '''
         Build the model, given an input size, list of hidden layer sizes,

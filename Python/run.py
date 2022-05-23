@@ -1,5 +1,5 @@
-from agent import AgentDQN, AgentGA
-from game import SnakeGameHuman, SnakeGameDQN, SnakeGameGA
+from agent import AgentDQN
+from game import SnakeGameHuman, SnakeGameDQN, SnakeGameDGA
 from genetics import GeneticAlgorithm
 from helper import Plotter, WIDTH, HEIGHT, MARGIN
 
@@ -90,20 +90,23 @@ class RunGame():
         num_agents = 10
 
         # Create objects
-        agent = AgentDQN()
-        plotter = Plotter()
+        self.plotter = Plotter()
         self.game = SnakeGameDQN(fps=fps)
-
-        # Set colors
-        self.game.color1 = agent.color1
-        self.game.color2 = agent.color2
 
         # Start session timer
         self.session_time = time_time()
 
-        for a in range(num_agents):
+        # Run through all agents to train
+        for agent_num in range(1, num_agents+1):
+            # Create agent for this loop
+            agent = AgentDQN()
+
+            # Set colors
+            self.game.color1 = agent.color1
+            self.game.color2 = agent.color2
+
             # Set aggregate data lists
-            self.agent_scores, self.agent_mean_scores = [], []
+            self.agent_scores, self.agent_mean_scores = [0], [0]
 
             # Set score aggregate for this agent
             self.agent_score = 0
@@ -121,7 +124,7 @@ class RunGame():
                 self.game.agent_episode = cur_episode
 
                 # Episode loop
-                agent = self._run_episode(agent)
+                agent = self._run_episode(agent_num, agent)
 
                 # Check for escape
                 for event in pyg_get():
@@ -132,21 +135,11 @@ class RunGame():
                         if event.key == pyg_K_ESCAPE:
                             self.quit = True
                 if self.quit: break
-
-                # Plot data
-                plotter.plot_DQN(a,
-                                 self.agent_scores,
-                                 self.game.top_score,
-                                 self.agent_mean_scores,
-                                 cur_episode,
-                                 self.max_episodes,
-                                 time_time()-self.session_time,
-                                 time_time()-self.agent_time,
-                                 time_time()-self.episode_time,
-                                 agent.model.layers)
+        # Save session graph
+        self.plotter.save_dqn_session()
 
 
-    def _run_episode(self, agent):
+    def _run_episode(self, agent_num, agent):
         ''' Run an episode of the game. '''
         run = True
         while run:
@@ -182,17 +175,18 @@ class RunGame():
 
                 # Update agent and game's internal score if needed
                 if score > agent.top_score:
-                    if not os_exists(r"./models"):
-                        os_makedirs(r"./models")
+                    if score > 9:
+                        if not os_exists(r"./models"):
+                            os_makedirs(r"./models")
 
-                    shapes = [f"({layer.get_weights()[0].shape})" for layer in agent.model.layers]
-                    shapes = '-'.join(shapes)
+                        shapes = [f"({layer.get_weights()[0].shape})" for layer in agent.model.layers]
+                        shapes = '-'.join(shapes)
 
-                    if not os_exists(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score)):
-                        agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
-                    else: # delete existing file to make a new one
-                        os_remove(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
-                        agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                        if not os_exists(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score)):
+                            agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                        else: # delete existing file to make a new one
+                            os_remove(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                            agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
                     agent.top_score = score
 
                 # Train long memory
@@ -204,6 +198,19 @@ class RunGame():
                 agent.total_score += score
                 agent.mean_score = np_round((agent.total_score / len(self.agent_scores)), 3)
                 self.agent_mean_scores.append(agent.mean_score)
+            
+            # Plot data
+            self.plotter.plot_DQN(agent_num,
+                                  self.agent_scores,
+                                  self.game.top_score,
+                                  self.agent_mean_scores,
+                                  agent.episode,
+                                  self.max_episodes,
+                                  time_time()-self.session_time,
+                                  time_time()-self.agent_time,
+                                  time_time()-self.episode_time,
+                                  agent.model.layers)
+
         return agent
 
 
@@ -234,21 +241,24 @@ class RunGame():
         # Set internal variables
         self.population_size = population_size
         self.max_generations = max_generations
+        self.num_parents = 0
 
         # Create class objects
-        self.agents = AgentGA(self.population_size)
-        self.game = SnakeGameGA(self.population_size, self.max_generations, fps=fps)
+        self.game = SnakeGameDGA(self.population_size, self.max_generations, fps=fps)
         self.genetics = GeneticAlgorithm()
-        #self.plotter = Plotter()
+        self.plotter = Plotter()
 
         # Start session timer
         self.session_time = time_time()
+
+        # Set aggregate data lists
+        self.all_scores, self.all_mean_scores = [0], [0]
 
         # Run for set number of generations (adjusting to start at gen 1)
         self._run_genetic_algorithm()
 
         # Save session's graph
-        #self.plotter.save_session()
+        self.plotter.save_dga_session()
 
 
     def _run_genetic_algorithm(self):
@@ -264,7 +274,7 @@ class RunGame():
             game_over = False
             while not game_over:
                 # Run for set number of generations
-                game_over, self.agents = self.game.play_step(self.agents)
+                game_over = self.game.play_step()
 
                 # Check for escape
                 for event in pyg_get():
@@ -275,10 +285,30 @@ class RunGame():
                         if event.key == pyg_K_ESCAPE:
                             self.quit = True
                 if self.quit: break
+
+                # Update graph
+                self.plotter.plot_DGA(cur_gen,
+                                      self.max_generations,
+                                      self.all_scores,
+                                      self.all_mean_scores,
+                                      self.population_size,
+                                      self.num_parents,
+                                      self.game.top_gen_score,
+                                      self.game.top_score,
+                                      self.game.total_mean_score,
+                                      self.game.gen_mean_score,
+                                      time_time()-self.session_time,
+                                      time_time()-self.gen_time)
             if self.quit: break
+
+            # Update aggregate score lists
+            self.all_scores.append(self.game.top_gen_score)
+            self.game.total_score += self.game.top_gen_score
+            self.game.total_mean_score = np_round((self.game.total_score / len(self.all_scores)), 3)
+            self.all_mean_scores.append(self.game.total_mean_score)
 
             # Reset the internal data in preparation for the next generation
             self.game.reset()
 
             # Make new population
-            self.agents = self.genetics.breed_population(self.agents)
+            self.game.agents, self.num_parents = self.genetics.breed_population(self.game.agents)

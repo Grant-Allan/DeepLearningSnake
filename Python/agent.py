@@ -1,5 +1,5 @@
 from collections import deque
-from model import QNet, QTrainer
+from model import LinearNet, QTrainer
 from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR, WIDTH, HEIGHT
 
 from tensorflow.keras.models import load_model as tf_load_model
@@ -24,7 +24,7 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
 
         if model_path == None:
-            self.model = QNet.linear_QNet(19, 3)
+            self.model = LinearNet.linear_QNet(19, 3)
         else:
             self.model = tf_load_model(model_path)
 
@@ -156,7 +156,7 @@ class AgentDQN():
 
 
 
-class AgentGA():
+class AgentDGA():
     ''' The snake agent- not the model itself. '''
     def __init__(self, population_size, model_path=None):
         # Current generation
@@ -172,7 +172,7 @@ class AgentGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = QNet.linear_QNet(11, 3, hidden_layers=[128, 128], random_model=False)
+                model = LinearNet.linear_QNet(11, 3, hidden_layers=[128, 128], random_model=False)
             else:
                 model = tf_load_model(model_path)
 
@@ -199,16 +199,16 @@ class AgentGA():
         # If it's less than 1, the threshold is treated as a percent
         # Otherwise, it's treated as a set number of parents
         if fitness_threshold <= 1:
-            cutoff = ceil(fitness_threshold * self.population_size)
-            if (cutoff % 2): cutoff -= 1 # it's counterintuitive, but 0 is treated as false and not 0 as true, so it works
-            if cutoff < 2: cutoff = 2
+            num_parents = ceil(fitness_threshold * self.population_size)
+            if (num_parents % 2): num_parents -= 1 # it's counterintuitive, but 0 is treated as false and not 0 as true, so it works
+            if num_parents < 2: num_parents = 2
         else:
-            cutoff = fitness_threshold
+            num_parents = fitness_threshold
 
         # Get number of times each parent pair needs to breed
-        num_children = self.population_size // cutoff
+        num_children = self.population_size // num_parents
 
-        return self.agents[:cutoff], num_children
+        return self.agents[:num_parents], num_children, num_parents
 
 
 

@@ -12,6 +12,9 @@ from matplotlib.pyplot import subplots_adjust as plt_subplots_adjust
 from matplotlib.pyplot import show as plt_show
 from matplotlib.pyplot import pause as plt_pause
 from matplotlib.pyplot import savefig as plt_savefig
+from matplotlib import use as plt_use
+plt_use("TkAgg")
+#https://matplotlib.org/2.0.2/examples/animation/simple_anim.html
 
 
 # Set up a clear console function
@@ -55,9 +58,9 @@ class Plotter():
     def __init__(self):
         plt_ion() # turn on interactable plots
 
-        fig, self.ax = plt_subplots(1, 2) # initialize 2x2 graphs
+        self.fig, self.ax = plt_subplots(1, 2) # initialize 2x2 graphs
         self.ax[1].axis("off") # turn axes off for the right graph
-        fig.set_size_inches(10, 5) # set figure size
+        self.fig.set_size_inches(10, 5) # set figure size
 
         # set the spacing between subplots
         plt_subplots_adjust(left=0.1,
@@ -82,7 +85,9 @@ class Plotter():
                             layers)
 
         # Show data
-        plt_show(block=False)
+        #plt_show(block=False)
+        self.fig.canvas.draw_idle()
+        self.fig.canvas.flush_events()
         plt_pause(0.001)
 
 
@@ -128,9 +133,10 @@ class Plotter():
 
         # Display text
         self.ax[1].text(0.50, 0.50,
-                f"Previous Episode: {cur_ep} of {num_eps}\n" +
-                f"Previous Score: {cur_score}\n" +
+                f"Current Episode: {cur_ep} of {num_eps}\n\n" +
+
                 f"Top Score: {top_score}\n" +
+                f"Agent Score: {cur_score}\n" +
                 f"Agent Mean: {cur_mean}\n\n" +
 
                 f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
@@ -146,9 +152,93 @@ class Plotter():
                 size=12)
 
 
-    def save_session(self):
+    def save_dqn_session(self):
         ''' Save the data for the entire session. '''
         if not os_exists(r"./graphs"):
             os_makedirs(r"./graphs")
         if not os_exists(r"./graphs/DQN_session_graph.jpg"):
             plt_savefig(r"./graphs/DQN_session_graph.jpg")
+    
+
+    def plot_DGA(self, cur_gen, num_gens, scores, mean_scores,
+                 pop_size, num_parents,
+                 top_gen_score, top_score, total_mean, gen_mean,
+                 session_time_elapsed, gen_time_elapsed):
+        '''Plot and display all data for the DGA session.'''
+        # Update data
+        self._plot_data_DGA(cur_gen, num_gens, scores, mean_scores)
+        self._show_data_DGA(cur_gen, num_gens, pop_size, num_parents,
+                            top_gen_score, top_score,
+                            total_mean, gen_mean,
+                            session_time_elapsed, gen_time_elapsed)
+
+        # Show data
+        plt_show(block=False)
+        plt_pause(0.001)
+
+
+    def _plot_data_DGA(self, cur_gen, num_gens, scores, mean_scores):
+        '''Plot the dga data.'''
+        # Clear previous display
+        self.ax[0].cla()
+
+        # Set title and axes labels
+        self.ax[0].set_title(f"Generation {cur_gen} of {num_gens}")
+        self.ax[0].set_xlabel("Number of Games")
+        self.ax[0].set_ylabel("Score")
+
+        # Plot data and set legend
+        self.ax[0].plot(scores, label="Scores")
+        self.ax[0].plot(mean_scores, label="Mean Scores")
+        self.ax[0].legend(loc="upper left")
+
+        # Set number at tip of each line declaring the current value
+        self.ax[0].text(len(scores)-1, scores[-1], str(scores[-1]))
+        self.ax[0].text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+
+        # Make sure the graph only shows values with a positive x and y
+        self.ax[0].set_xlim(xmin=0)
+        self.ax[0].set_ylim(ymin=0)
+
+
+    def _show_data_DGA(self, cur_gen, num_gens, pop_size, num_parents,
+                       top_gen_score, top_score,
+                       total_mean, gen_mean,
+                       session_time_elapsed, gen_time_elapsed):
+        '''Show the generation data.'''
+        # Clear previous display
+        self.ax[1].cla()
+
+        # Turn off axes display
+        self.ax[1].axis("off")
+
+        # Set title
+        self.ax[1].set_title("Session Data")
+
+        # Display text
+        self.ax[1].text(0.50, 0.50,
+                f"Current Generation: {cur_gen} of {num_gens}\n" +
+                f"Population Size: {pop_size}\n" +
+                f"Parent Pool Size: {num_parents}\n\n" +
+
+                f"Top Generation Score: {top_gen_score}\n" +
+                f"Top Score: {top_score}\n\n" +
+
+                f"Generation Mean: {gen_mean}\n" +
+                f"Total Mean: {total_mean}\n\n" +
+
+                f"Generation Time: {int(gen_time_elapsed//3600)}:{int(gen_time_elapsed//60 % 60)}:{int(gen_time_elapsed % 60)}\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n",
+
+                bbox={"facecolor": "white", "alpha": 1, "pad": 10},
+                ha="center",
+                va="center",
+                size=12)
+    
+
+    def save_dga_session(self):
+        ''' Save the data for the entire session. '''
+        if not os_exists(r"./graphs"):
+            os_makedirs(r"./graphs")
+        if not os_exists(r"./graphs/DGA_session_graph.jpg"):
+            plt_savefig(r"./graphs/DGA_session_graph.jpg")
