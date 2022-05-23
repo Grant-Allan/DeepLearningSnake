@@ -12,9 +12,6 @@ from matplotlib.pyplot import subplots_adjust as plt_subplots_adjust
 from matplotlib.pyplot import show as plt_show
 from matplotlib.pyplot import pause as plt_pause
 from matplotlib.pyplot import savefig as plt_savefig
-from matplotlib import use as plt_use
-plt_use("TkAgg")
-#https://matplotlib.org/2.0.2/examples/animation/simple_anim.html
 
 
 # Set up a clear console function
@@ -85,10 +82,8 @@ class Plotter():
                             layers)
 
         # Show data
-        #plt_show(block=False)
         self.fig.canvas.draw_idle()
-        self.fig.canvas.flush_events()
-        plt_pause(0.001)
+        self.fig.canvas.start_event_loop(0.001)
 
 
     def _plot_data_DQN(self, agent, scores, mean_scores, cur_ep, num_eps):
@@ -173,8 +168,8 @@ class Plotter():
                             session_time_elapsed, gen_time_elapsed)
 
         # Show data
-        plt_show(block=False)
-        plt_pause(0.001)
+        self.fig.canvas.draw_idle()
+        self.fig.canvas.start_event_loop(0.001)
 
 
     def _plot_data_DGA(self, cur_gen, num_gens, scores, mean_scores):
