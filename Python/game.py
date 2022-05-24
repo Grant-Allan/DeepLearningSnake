@@ -712,7 +712,7 @@ class SnakeGameDGA():
             if self.is_collision(agent[1], agent[2]) or (self.frame_count > 125*len(agent[2])):
                 agent[4] = True
                 self.remaining_agents -= 1
-                self.gen_mean_score = np_round(((self.gen_mean_score) + (agent[6] / self.population_size))/2, 3)
+                self.gen_mean_score = np_round(((self.gen_mean_score) + (agent[6] / self.population_size)), 3)
             else:
                 # If it's alive, very slightly increase fitness
                 #agents.agents[i][1] += 0.00001
