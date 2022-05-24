@@ -196,7 +196,7 @@ class RunGame():
                 # Update aggregate score lists
                 self.agent_scores.append(score)
                 agent.total_score += score
-                agent.mean_score = np_round((agent.total_score / len(self.agent_scores)), 3)
+                agent.mean_score = np_round((agent.total_score / (len(self.agent_scores)-1)), 3)
                 self.agent_mean_scores.append(agent.mean_score)
             
             # Plot data
@@ -305,7 +305,7 @@ class RunGame():
             # Update aggregate score lists
             self.all_scores.append(self.game.top_gen_score)
             self.game.total_score += self.game.top_gen_score
-            self.game.total_mean_score = np_round((self.game.total_score / len(self.all_scores)), 3)
+            self.game.total_mean_score = np_round((self.game.total_score / (len(self.all_scores)-1)), 3)
             self.all_mean_scores.append(self.game.total_mean_score)
             self.gen_mean_scores.append(self.game.gen_mean_score)
 

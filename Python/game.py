@@ -647,6 +647,7 @@ class SnakeGameDGA():
         self.remaining_agents = self.population_size
         self.frame_count = 0
         self.top_gen_score = 0
+        self.gen_mean_score = 0
         self.agents_data = []
 
         # Generate food (everyone starts with it at the same spot)
