@@ -252,7 +252,7 @@ class RunGame():
         self.session_time = time_time()
 
         # Set aggregate data lists
-        self.all_scores, self.all_mean_scores = [0], [0]
+        self.all_scores, self.all_mean_scores, self.gen_mean_scores = [0], [0], [0]
 
         # Run for set number of generations (adjusting to start at gen 1)
         self._run_genetic_algorithm()
@@ -291,6 +291,7 @@ class RunGame():
                                       self.max_generations,
                                       self.all_scores,
                                       self.all_mean_scores,
+                                      self.gen_mean_scores,
                                       self.population_size,
                                       self.num_parents,
                                       self.game.top_gen_score,
@@ -306,6 +307,7 @@ class RunGame():
             self.game.total_score += self.game.top_gen_score
             self.game.total_mean_score = np_round((self.game.total_score / len(self.all_scores)), 3)
             self.all_mean_scores.append(self.game.total_mean_score)
+            self.gen_mean_scores.append(self.game.gen_mean_score)
 
             # Reset the internal data in preparation for the next generation
             self.game.reset()

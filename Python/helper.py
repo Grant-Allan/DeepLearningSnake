@@ -155,13 +155,13 @@ class Plotter():
             plt_savefig(r"./graphs/DQN_session_graph.jpg")
     
 
-    def plot_DGA(self, cur_gen, num_gens, scores, mean_scores,
+    def plot_DGA(self, cur_gen, num_gens, scores, all_mean_scores, gen_mean_score,
                  pop_size, num_parents,
                  top_gen_score, top_score, total_mean, gen_mean,
                  session_time_elapsed, gen_time_elapsed):
         '''Plot and display all data for the DGA session.'''
         # Update data
-        self._plot_data_DGA(cur_gen, num_gens, scores, mean_scores)
+        self._plot_data_DGA(cur_gen, num_gens, scores, all_mean_scores, gen_mean_score)
         self._show_data_DGA(cur_gen, num_gens, pop_size, num_parents,
                             top_gen_score, top_score,
                             total_mean, gen_mean,
@@ -172,7 +172,7 @@ class Plotter():
         self.fig.canvas.start_event_loop(0.001)
 
 
-    def _plot_data_DGA(self, cur_gen, num_gens, scores, mean_scores):
+    def _plot_data_DGA(self, cur_gen, num_gens, scores, all_mean_scores, gen_mean_score):
         '''Plot the dga data.'''
         # Clear previous display
         self.ax[0].cla()
@@ -184,12 +184,14 @@ class Plotter():
 
         # Plot data and set legend
         self.ax[0].plot(scores, label="Scores")
-        self.ax[0].plot(mean_scores, label="Mean Scores")
+        self.ax[0].plot(all_mean_scores, label="All Mean Scores")
+        self.ax[0].plot(gen_mean_score, label="Generation Mean Scores")
         self.ax[0].legend(loc="upper left")
 
         # Set number at tip of each line declaring the current value
         self.ax[0].text(len(scores)-1, scores[-1], str(scores[-1]))
-        self.ax[0].text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+        self.ax[0].text(len(all_mean_scores)-1, all_mean_scores[-1], str(all_mean_scores[-1]))
+        self.ax[0].text(len(gen_mean_score)-1, gen_mean_score[-1], str(gen_mean_score[-1]))
 
         # Make sure the graph only shows values with a positive x and y
         self.ax[0].set_xlim(xmin=0)
