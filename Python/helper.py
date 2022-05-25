@@ -83,7 +83,7 @@ class Plotter():
 
         # Show data
         self.fig.canvas.draw_idle()
-        self.fig.canvas.start_event_loop(0.001)
+        self.fig.canvas.start_event_loop(0.0000000000001)
 
 
     def _plot_data_DQN(self, agent, scores, mean_scores, cur_ep, num_eps):
@@ -169,7 +169,7 @@ class Plotter():
 
         # Show data
         self.fig.canvas.draw_idle()
-        self.fig.canvas.start_event_loop(0.001)
+        self.fig.canvas.start_event_loop(0.0000000000001)
 
 
     def _plot_data_DGA(self, cur_gen, num_gens, scores, all_mean_scores, gen_mean_score):

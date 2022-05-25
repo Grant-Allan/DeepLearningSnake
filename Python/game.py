@@ -744,7 +744,7 @@ class SnakeGameDGA():
 
         # Update ui and clock
         self._update_ui()
-        self.clock.tick(self.fps)
+        #self.clock.tick(self.fps)
 
         # Check for game over
         return False if self.remaining_agents else True

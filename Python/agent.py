@@ -172,7 +172,7 @@ class AgentDGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = LinearNet.linear_QNet(11, 3, hidden_layers=[128, 128], random_model=False)
+                model = LinearNet.linear_QNet(11, 3, hidden_layers=[10], random_model=False)
             else:
                 model = tf_load_model(model_path)
 
