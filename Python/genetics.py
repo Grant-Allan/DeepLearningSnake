@@ -14,7 +14,7 @@ class GeneticAlgorithm():
         #self.fitness_threshold = 2
         self.crossover_rate = 0.05
         self.gene_size = 4
-        self.mutation_rate = 0.1
+        self.mutation_rate = 0.001
         self.mutation_degree = 0.50
 
         # Pool of previous parents so we can use the fittest of all time
@@ -228,7 +228,7 @@ class GeneticAlgorithm():
             # Remove layer
             if len(hidden_layers) and (random() > 0.5):
                 # Choose layer to remove
-                location = randint(0, len(hidden_layers))
+                location = randint(0, len(hidden_layers)-1)
                 del hidden_layers[location]
 
                 # We've removed it, so we don't want to try to copy it
@@ -260,22 +260,23 @@ class GeneticAlgorithm():
         child = LinearNet.linear_QNet(child_crossover[0][0].shape[0], child_crossover[-1][0].shape[1], hidden_layers=hidden_layers, random_model=False)
         p_counter = 0
         for i in range(len(child.layers)):
-            # Copy old weight and bias values over to new model, if it's not a new layer
+            # Copy old weight and bias values over to new model and mutate them, if it's not a new layer
             child_data = child.layers[i].get_weights()
             if not modded_layer[i]:
                 child_data[0][0:pieces[p_counter][0], 0:pieces[p_counter][1]] = child_crossover[p_counter][0][0:pieces[p_counter][0], 0:pieces[p_counter][1]]
                 child_data[1][0:pieces[p_counter][1]] = child_crossover[p_counter][1][0:pieces[p_counter][1]]
-                p_counter += 1
 
-            for x in range(child_data[0].shape[0]):
-                # Check for weight mutation
-                for y in range(child_data[0].shape[1]):
-                    if (random() < self.mutation_rate):
-                        child_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
-                    
-                    # Check for bias mutation
-                    if (random() < self.mutation_rate):
-                        child_data[1][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                for x in range(pieces[p_counter][0]):
+                    # Check for weight mutation
+                    for y in range(pieces[p_counter][1]):
+                        if (random() < self.mutation_rate):
+                            child_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                        
+                        # Check for bias mutation
+                        if (random() < self.mutation_rate):
+                            child_data[1][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                
+                p_counter += 1
             # Set weights and biases in child
             child.layers[i].build(input_shape=child_data[0].shape[0])
             child.layers[i].set_weights(child_data)
