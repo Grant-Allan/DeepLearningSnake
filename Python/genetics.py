@@ -165,7 +165,7 @@ class GeneticAlgorithm():
             p1_data = parent1.layers[i].get_weights()
 
             # The layer we use for p2, since they might have different numbers of layers
-            p2_layer = int(i * len(parent1.layers) / len(parent2.layers))
+            p2_layer = int(i * len(parent2.layers) / len(parent1.layers))
 
             # Handle the weights
             for x in range(p1_data[0].shape[0]):
@@ -176,7 +176,7 @@ class GeneticAlgorithm():
                         if len(p2_genes[p2_layer][0]) and (random() < self.crossover_rate):
                             p1_data[0][x][(y-self.gene_size):y] = p2_genes[p2_layer][0][int((y / p1_data[0].shape[1]) * len(p2_genes[p2_layer][0]))]
                     except:
-                        print(f"\nFailed to crossover weight. (list index out of range? - {p2_layer}, {len(p2_genes)}\n")
+                        print(f"\nFailed to crossover weight. (list index out of range? -> {p2_layer}, {len(p2_genes)}, {i}, {len(parent1.layers)}, {len(parent2.layers)}\n")
 
                     # Handle the biases
                     # Check to see if crossover should occur
@@ -184,7 +184,7 @@ class GeneticAlgorithm():
                         if len(p2_genes[p2_layer][1]) and (random() < self.crossover_rate):
                             p1_data[1][(y-self.gene_size):y] = p2_genes[p2_layer][1][int((y / p1_data[1].shape[0]) * len(p2_genes[p2_layer][1]))]
                     except:
-                        print(f"\nFailed to crossover bias. (list index out of range? - {p2_layer}, {len(p2_genes)}\n")
+                        print(f"\nFailed to crossover bias. (list index out of range? -> {p2_layer}, {len(p2_genes)}, {i}, {len(parent1.layers)}, {len(parent2.layers)}\n")
             
             # Collect the layer data after crossover
             child_crossover.append(p1_data)
