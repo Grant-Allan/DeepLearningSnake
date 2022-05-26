@@ -14,7 +14,7 @@ class GeneticAlgorithm():
         #self.fitness_threshold = 2
         self.crossover_rate = 0.10
         self.gene_size = 4
-        self.mutation_rate = 0.5
+        self.mutation_rate = 0.0001
         self.mutation_degree = 0.50
 
         # Pool of previous parents so we can use the fittest of all time
