@@ -179,7 +179,7 @@ class Plotter():
 
         # Set title and axes labels
         self.ax[0].set_title(f"Generation {cur_gen} of {num_gens}")
-        self.ax[0].set_xlabel("Number of Games")
+        self.ax[0].set_xlabel("Number of Generations")
         self.ax[0].set_ylabel("Score")
 
         # Plot data and set legend

@@ -26,7 +26,7 @@ class LinearNet():
 
             # Get the number and size of hidden layers
             if random_model:
-                for i in range(randrange(2, 4)):
+                for i in range(randrange(1, 2)):
                     model.add(Dense(units=randrange(8, 64), activation="relu"))
             else:
                 for size in hidden_layers:
