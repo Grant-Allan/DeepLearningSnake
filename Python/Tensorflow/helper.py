@@ -28,7 +28,7 @@ class Direction(Enum):
 Point = namedtuple("Point", ["x", "y"])
 
 # Game values
-TILE_SIZE = 30
+TILE_SIZE = 40
 WIDTH = TILE_SIZE*38
 HEIGHT = TILE_SIZE*28
 MARGIN = TILE_SIZE*4
@@ -70,8 +70,14 @@ class Plotter():
 
     def plot_DQN(self,
                  agent,
-                 scores, top_score, mean_scores, cur_ep, num_eps,
-                 session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
+                 scores,
+                 top_score,
+                 mean_scores,
+                 cur_ep,
+                 num_eps,
+                 session_time_elapsed,
+                 agent_time_elapsed,
+                 episode_time_elapsed,
                  layers):
         ''' Plot the data when running a sessions with just one agent. '''
 
@@ -134,9 +140,9 @@ class Plotter():
                 f"Agent Score: {cur_score}\n" +
                 f"Agent Mean: {cur_mean}\n\n" +
 
-                f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
-                f"Agent Time: {int(agent_time_elapsed//3600)}:{int(agent_time_elapsed//60 % 60)}:{int(agent_time_elapsed % 60)}\n" +
-                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
+                f"Episode Time: {int(episode_time_elapsed//3600)}h {int(episode_time_elapsed//60 % 60)}m {int(episode_time_elapsed % 60)}s\n" +
+                f"Agent Time: {int(agent_time_elapsed//3600)}h {int(agent_time_elapsed//60 % 60)}m {int(agent_time_elapsed % 60)}s\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}h {int(session_time_elapsed//60 % 60)}m {int(session_time_elapsed % 60)}s\n\n" +
 
                 f"Model:\n" +
                 '\n'.join(shapes),
@@ -155,10 +161,20 @@ class Plotter():
             plt_savefig(r"./graphs/DQN_session_graph.jpg")
     
 
-    def plot_DGA(self, cur_gen, num_gens, scores, all_mean_scores, gen_mean_score,
-                 pop_size, num_parents,
-                 top_gen_score, top_score, total_mean, gen_mean,
-                 session_time_elapsed, gen_time_elapsed):
+    def plot_DGA(self,
+                 cur_gen,
+                 num_gens,
+                 scores,
+                 all_mean_scores,
+                 gen_mean_score,
+                 pop_size,
+                 num_parents,
+                 top_gen_score,
+                 top_score,
+                 total_mean,
+                 gen_mean,
+                 session_time_elapsed,
+                 gen_time_elapsed):
         '''Plot and display all data for the DGA session.'''
         # Update data
         self._plot_data_DGA(cur_gen, num_gens, scores, all_mean_scores, gen_mean_score)
@@ -224,8 +240,8 @@ class Plotter():
                 f"Generation Mean: {gen_mean}\n" +
                 f"Total Mean: {total_mean}\n\n" +
 
-                f"Generation Time: {int(gen_time_elapsed//3600)}:{int(gen_time_elapsed//60 % 60)}:{int(gen_time_elapsed % 60)}\n" +
-                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n",
+                f"Generation Time: {int(gen_time_elapsed//3600)}h {int(gen_time_elapsed//60 % 60)}m {int(gen_time_elapsed % 60)}s\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}h {int(session_time_elapsed//60 % 60)}m {int(session_time_elapsed % 60)}s\n",
 
                 bbox={"facecolor": "white", "alpha": 1, "pad": 10},
                 ha="center",

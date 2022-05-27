@@ -1,6 +1,8 @@
 from enum import Enum
 from collections import namedtuple
 
+from torch.nn import Linear as nn_Linear
+
 from os import makedirs as os_makedirs
 from os import system as os_system
 from os import name as os_name
@@ -9,8 +11,6 @@ from os.path import exists as os_exists
 from matplotlib.pyplot import ion as plt_ion
 from matplotlib.pyplot import subplots as plt_subplots
 from matplotlib.pyplot import subplots_adjust as plt_subplots_adjust
-from matplotlib.pyplot import show as plt_show
-from matplotlib.pyplot import pause as plt_pause
 from matplotlib.pyplot import savefig as plt_savefig
 
 
@@ -28,7 +28,7 @@ class Direction(Enum):
 Point = namedtuple("Point", ["x", "y"])
 
 # Game values
-TILE_SIZE = 30
+TILE_SIZE = 40
 WIDTH = TILE_SIZE*38
 HEIGHT = TILE_SIZE*28
 MARGIN = TILE_SIZE*4
@@ -70,16 +70,22 @@ class Plotter():
 
     def plot_DQN(self,
                  agent,
-                 scores, top_score, mean_scores, cur_ep, num_eps,
-                 session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
-                 layers):
+                 scores,
+                 top_score,
+                 mean_scores,
+                 cur_ep,
+                 num_eps,
+                 session_time_elapsed,
+                 agent_time_elapsed,
+                 episode_time_elapsed,
+                 model):
         ''' Plot the data when running a sessions with just one agent. '''
 
         # Update data
         self._plot_data_DQN(agent, scores, mean_scores, cur_ep, num_eps)
         self._show_data_DQN(scores[-1], top_score, mean_scores[-1], cur_ep, num_eps,
                             session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
-                            layers)
+                            model)
 
         # Show data
         self.fig.canvas.draw_idle()
@@ -111,7 +117,7 @@ class Plotter():
 
     def _show_data_DQN(self, cur_score, top_score, cur_mean, cur_ep, num_eps,
                        session_time_elapsed, agent_time_elapsed, episode_time_elapsed,
-                       layers):
+                       model):
         ''' Show the data. '''
         # Clear previous display
         self.ax[1].cla()
@@ -123,8 +129,14 @@ class Plotter():
         self.ax[1].set_title("Session Data")
 
         # Get model data
-        shapes = [f"Hidden Layer: {layer.get_weights()[0].shape}" if i != len(layers)-1 else f"Output Layer: {layer.get_weights()[0].shape}" for i, layer in enumerate(layers)]
-        shapes[0] = f"Input Layer: {layers[0].get_weights()[0].shape}"
+        shapes = []
+        for i, info in enumerate(model.named_modules()):
+            if (i == 2) and isinstance(info[1], nn_Linear):
+                shapes.append(f"Input Hidden Layer: {list(info[1].weight.data.size())}")
+            elif (i == model.num_layers+1) and isinstance(info[1], nn_Linear):
+                shapes.append(f"Output Layer: {list(info[1].weight.data.size())}")
+            elif isinstance(info[1], nn_Linear):
+                shapes.append(f"Hidden Layer: {list(info[1].weight.data.size())}")
 
         # Display text
         self.ax[1].text(0.50, 0.50,
@@ -134,9 +146,9 @@ class Plotter():
                 f"Agent Score: {cur_score}\n" +
                 f"Agent Mean: {cur_mean}\n\n" +
 
-                f"Episode Time: {int(episode_time_elapsed//3600)}:{int(episode_time_elapsed//60 % 60)}:{int(episode_time_elapsed % 60)}\n" +
-                f"Agent Time: {int(agent_time_elapsed//3600)}:{int(agent_time_elapsed//60 % 60)}:{int(agent_time_elapsed % 60)}\n" +
-                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n\n" +
+                f"Episode Time: {int(episode_time_elapsed//3600)}h {int(episode_time_elapsed//60 % 60)}m {int(episode_time_elapsed % 60)}s\n" +
+                f"Agent Time: {int(agent_time_elapsed//3600)}h {int(agent_time_elapsed//60 % 60)}m {int(agent_time_elapsed % 60)}s\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}h {int(session_time_elapsed//60 % 60)}m {int(session_time_elapsed % 60)}s\n\n" +
 
                 f"Model:\n" +
                 '\n'.join(shapes),
@@ -155,10 +167,20 @@ class Plotter():
             plt_savefig(r"./graphs/DQN_session_graph.jpg")
     
 
-    def plot_DGA(self, cur_gen, num_gens, scores, all_mean_scores, gen_mean_score,
-                 pop_size, num_parents,
-                 top_gen_score, top_score, total_mean, gen_mean,
-                 session_time_elapsed, gen_time_elapsed):
+    def plot_DGA(self,
+                 cur_gen,
+                 num_gens,
+                 scores,
+                 all_mean_scores,
+                 gen_mean_score,
+                 pop_size,
+                 num_parents,
+                 top_gen_score,
+                 top_score,
+                 total_mean,
+                 gen_mean,
+                 session_time_elapsed,
+                 gen_time_elapsed):
         '''Plot and display all data for the DGA session.'''
         # Update data
         self._plot_data_DGA(cur_gen, num_gens, scores, all_mean_scores, gen_mean_score)
@@ -224,8 +246,8 @@ class Plotter():
                 f"Generation Mean: {gen_mean}\n" +
                 f"Total Mean: {total_mean}\n\n" +
 
-                f"Generation Time: {int(gen_time_elapsed//3600)}:{int(gen_time_elapsed//60 % 60)}:{int(gen_time_elapsed % 60)}\n" +
-                f"Session Time: {int(session_time_elapsed//3600)}:{int(session_time_elapsed//60 % 60)}:{int(session_time_elapsed % 60)}\n",
+                f"Generation Time: {int(gen_time_elapsed//3600)}h {int(gen_time_elapsed//60 % 60)}m {int(gen_time_elapsed % 60)}s\n" +
+                f"Session Time: {int(session_time_elapsed//3600)}h {int(session_time_elapsed//60 % 60)}m {int(session_time_elapsed % 60)}s\n",
 
                 bbox={"facecolor": "white", "alpha": 1, "pad": 10},
                 ha="center",

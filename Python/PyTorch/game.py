@@ -58,7 +58,7 @@ class BackgroundSnake():
         self.clock = pyg_Clock()
 
         # Initialize agent
-        self.agent = AgentDQN(model_path=r"./Resources/background_model.h5")
+        self.agent = AgentDQN(model_path=r"./Resources/background_model.pt")
 
         # Initialize game values
         self.reset()
@@ -98,52 +98,8 @@ class BackgroundSnake():
         ''' Run a frame of the game. '''
         self.frame_iteration += 1
 
-        # Set-up for getting the state
-        head = self.snake[0]
-        point_l = Point(head.x - TILE_SIZE, head.y)
-        point_r = Point(head.x + TILE_SIZE, head.y)
-        point_u = Point(head.x, head.y - TILE_SIZE)
-        point_d = Point(head.x, head.y + TILE_SIZE)
-
-        dir_l = self.direction == Direction.LEFT
-        dir_r = self.direction == Direction.RIGHT
-        dir_u = self.direction == Direction.UP
-        dir_d = self.direction == Direction.DOWN
-
-        # List of states, using binary checks to fill values
-        state = [
-            # Danger straight
-            (dir_r and self.is_collision(point_r)) or
-            (dir_l and self.is_collision(point_l)) or
-            (dir_u and self.is_collision(point_u)) or
-            (dir_d and self.is_collision(point_d)),
-
-            # Danger right
-            (dir_u and self.is_collision(point_r)) or
-            (dir_d and self.is_collision(point_l)) or
-            (dir_l and self.is_collision(point_u)) or
-            (dir_r and self.is_collision(point_d)),
-
-            # Danger left
-            (dir_d and self.is_collision(point_r)) or
-            (dir_u and self.is_collision(point_l)) or
-            (dir_r and self.is_collision(point_u)) or
-            (dir_l and self.is_collision(point_d)),
-
-            # Move direction
-            dir_l,
-            dir_r,
-            dir_u,
-            dir_d,
-
-            # Food location
-            self.food.x < head.x,  # food left
-            self.food.x > head.x,  # food right
-            self.food.y < head.y,  # food up
-            self.food.y > head.y   # food down
-        ]
-
         # Get action from the agent
+        state = self.agent.get_state(self)
         action = self.agent.get_action(state)
 
         # Move
@@ -363,10 +319,6 @@ class SnakeGameHuman():
         self.false_display.fill(BLACK)
 
         # Draw out the snake block by block
-        #x, y = self.snake[0]
-        #pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE])
-        #pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE], 1)
-        #for x, y in self.snake[1:]:
         for x, y in self.snake:
             pyg_rect(self.false_display, GREEN1, [x, y, TILE_SIZE, TILE_SIZE])
             pyg_rect(self.false_display, GREEN2, [x, y, TILE_SIZE, TILE_SIZE], 1)
@@ -422,6 +374,7 @@ class SnakeGameDQN():
         self.reset()
         self.generation = 0
         self.agent_num = 0
+        self.agent_top_score = 0
         self.top_score = 0
         self.agent_episode = 0
         self.mean_score = 0.0
@@ -551,21 +504,17 @@ class SnakeGameDQN():
         text = FONT.render(f"Episode: {self.agent_episode}", True, WHITE)
         self.false_display.blit(text, [TILE_SIZE*9, int(self.height+(TILE_SIZE//4))])
 
-        # Show the current generation
-        text = FONT.render(f"Generation: {self.generation}", True, WHITE)
-        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+(TILE_SIZE//4))])
-
         # Show the current score
         text = FONT.render(f"Score: {self.score}", True, WHITE)
         self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the highest score
-        text = FONT.render(f"Top Score: {self.top_score}", True, WHITE)
+        text = FONT.render(f"Top Score: {self.agent_top_score}", True, WHITE)
         self.false_display.blit(text, [TILE_SIZE*9, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the mean score
         text = FONT.render(f"Mean: {self.mean_score}", True, WHITE)
-        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
+        self.false_display.blit(text, [TILE_SIZE*20, int(self.height+((TILE_SIZE//8)+(self.margin//2)))])
 
         # Update the display
         self.true_display.blit(pyg_scale(self.false_display, self.true_display.get_size()), (0, 0))

@@ -2,14 +2,16 @@ from collections import deque
 from model import LinearNet, QTrainer
 from helper import Direction, Point, TILE_SIZE, MAX_MEMORY, BATCH_SIZE, LR, WIDTH, HEIGHT
 
-from tensorflow.keras.models import load_model as tf_load_model
 from math import dist as math_dist
 from math import ceil
 from random import randint as rand_randint
 from random import sample as rand_sample
-from numpy import expand_dims as np_expand_dims
 from numpy import array as np_array
-from numpy import argmax as np_argmax
+
+from torch import tensor as torch_tensor
+from torch import float as torch_float
+from torch import argmax as torch_argmax
+from torch.jit import load as torch_jit_load
 
 
 class AgentDQN():
@@ -24,9 +26,9 @@ class AgentDQN():
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
 
         if model_path == None:
-            self.model = LinearNet.linear_QNet(19, 3)
+            self.model = LinearNet(19, 3)
         else:
-            self.model = tf_load_model(model_path)
+            self.model = torch_jit_load(model_path)
 
         self.trainer = QTrainer(self.model, gamma=self.gamma)
 
@@ -147,11 +149,10 @@ class AgentDQN():
             move = rand_randint(0, 2)
             final_move[move] = 1
         else:
-            state0 = np_expand_dims(np_array(state, dtype=float), 0)
+            state0 = torch_tensor(state, dtype=torch_float)
             prediction = self.model(state0)
-            move = np_argmax(prediction).item()
+            move = torch_argmax(prediction).item()
             final_move[move] = 1
-
         return final_move
 
 
@@ -172,9 +173,9 @@ class AgentDGA():
         for i in range(self.population_size):
             # Model
             if model_path == None:
-                model = LinearNet.linear_QNet(11, 3, hidden_layers=[10], random_model=False)
+                model = LinearNet(11, 3, hidden_layers=[10], random_model=False)
             else:
-                model = tf_load_model(model_path)
+                self.model = torch_jit_load(model_path)
 
             # [model, fitness]
             self.agents.append([model, 0])
@@ -260,11 +261,9 @@ class AgentDGA():
 
 
     def get_action(self, model, game):
-        '''
-        Get the current action of the model.=
-        '''
+        '''Get the current action of the model.'''
         final_move = [0, 0, 0]
-        prediction = model(np_expand_dims(self._get_state(game), 0))
-        move = np_argmax(prediction).item()
+        prediction = model(torch_tensor(self._get_state(game), dtype=torch_float))
+        move = torch_argmax(prediction).item()
         final_move[move] = 1
         return final_move

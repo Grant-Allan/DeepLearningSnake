@@ -188,6 +188,9 @@ class RunGame():
                             os_remove(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
                             agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
                     agent.top_score = score
+                    self.game.agent_top_score = score
+                if score > self.game.top_score:
+                    self.game.top_score = score
 
                 # Train long memory
                 self.game.reset()
@@ -202,7 +205,7 @@ class RunGame():
             # Plot data
             self.plotter.plot_DQN(agent_num,
                                   self.agent_scores,
-                                  self.game.top_score,
+                                  self.game.agent_top_score,
                                   self.agent_mean_scores,
                                   agent.episode,
                                   self.max_episodes,

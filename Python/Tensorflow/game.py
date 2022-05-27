@@ -422,6 +422,7 @@ class SnakeGameDQN():
         self.reset()
         self.generation = 0
         self.agent_num = 0
+        self.agent_top_score = 0
         self.top_score = 0
         self.agent_episode = 0
         self.mean_score = 0.0
@@ -560,7 +561,7 @@ class SnakeGameDQN():
         self.false_display.blit(text, [0, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the highest score
-        text = FONT.render(f"Top Score: {self.top_score}", True, WHITE)
+        text = FONT.render(f"Top Score: {self.agent_top_score}", True, WHITE)
         self.false_display.blit(text, [TILE_SIZE*9, int(self.height+((TILE_SIZE//4)+(self.margin//2)))])
 
         # Show the mean score

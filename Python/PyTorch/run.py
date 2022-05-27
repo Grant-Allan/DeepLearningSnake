@@ -173,21 +173,15 @@ class RunGame():
             if done:
                 run = False
 
-                # Update agent and game's internal score if needed
+                # Update top scores, if needed
                 if score > agent.top_score:
-                    if score > 9:
-                        if not os_exists(r"./models"):
-                            os_makedirs(r"./models")
-
-                        shapes = [f"({layer.get_weights()[0].shape})" for layer in agent.model.layers]
-                        shapes = '-'.join(shapes)
-
-                        if not os_exists(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score)):
-                            agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
-                        else: # delete existing file to make a new one
-                            os_remove(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
-                            agent.model.save(r"./models/DQN_model_({})_({})__({}).h5".format(self.max_episodes, shapes, agent.top_score))
+                    if score >= 10:
+                        agent.model.save(self.max_episodes, score, agent.top_score) # update saved version of the agent
+                        print(f"Saving Model: {self.game.agent_num}\nTop Score: {score}\n")
                     agent.top_score = score
+                    self.game.agent_top_score = score
+                if score > self.game.top_score:
+                    self.game.top_score = score
 
                 # Train long memory
                 self.game.reset()
@@ -202,14 +196,14 @@ class RunGame():
             # Plot data
             self.plotter.plot_DQN(agent_num,
                                   self.agent_scores,
-                                  self.game.top_score,
+                                  self.game.agent_top_score,
                                   self.agent_mean_scores,
                                   agent.episode,
                                   self.max_episodes,
                                   time_time()-self.session_time,
                                   time_time()-self.agent_time,
                                   time_time()-self.episode_time,
-                                  agent.model.layers)
+                                  agent.model)
 
         return agent
 

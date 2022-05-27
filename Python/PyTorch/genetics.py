@@ -1,8 +1,9 @@
-from tkinter.tix import Y_REGION
-from turtle import hideturtle
 from model import LinearNet
 from agent import AgentDGA
 from random import random, randint, uniform, shuffle
+
+from torch.nn import Linear as nn_Linear
+from torch.nn import Parameter as nn_Parameter
 
 
 class GeneticAlgorithm():
@@ -28,8 +29,13 @@ class GeneticAlgorithm():
             self.legacy_pool = new_generation
             for i, agent in enumerate(self.legacy_pool):
                 print(f"\nAgent {i} Fitness: {agent[1]}")
-                for j, layer in enumerate(agent[0].layers):
-                    print(f"Layer {j}: {layer.get_weights()[0].shape}")
+                for i, info in enumerate(agent[0].named_modules()):
+                    if (i == 2) and isinstance(info[1], nn_Linear):
+                        print(f"Input Hidden Layer: {list(info[1].weight.data.size())}")
+                    elif (i == agent[0].num_layers+1) and isinstance(info[1], nn_Linear):
+                        print(f"Output Layer: {list(info[1].weight.data.size())}")
+                    elif isinstance(info[1], nn_Linear):
+                        print(f"Hidden Layer: {list(info[1].weight.data.size())}")
             print("\n\n")
         # For every other generation, we actually check for improvements
         else:
@@ -48,11 +54,16 @@ class GeneticAlgorithm():
 
             # Resort the legacy pool (if needed)
             self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
-            [print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
+            #[print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
             for i, agent in enumerate(self.legacy_pool):
                 print(f"\nAgent {i} Fitness: {agent[1]}")
-                for j, layer in enumerate(agent[0].layers):
-                    print(f"Layer {j}: {layer.get_weights()[0].shape}")
+                for i, info in enumerate(agent[0].named_modules()):
+                    if (i == 2) and isinstance(info[1], nn_Linear):
+                        print(f"Input Hidden Layer: {list(info[1].weight.data.size())}")
+                    elif (i == agent[0].num_layers+1) and isinstance(info[1], nn_Linear):
+                        print(f"Output Layer: {list(info[1].weight.data.size())}")
+                    elif isinstance(info[1], nn_Linear):
+                        print(f"Hidden Layer: {list(info[1].weight.data.size())}")
             print("\n\n")
 
 
@@ -98,40 +109,39 @@ class GeneticAlgorithm():
     def fast_crossover(self, child, parent1, parent2):
         '''A crossover/mutation function designed to work with static models that have the same structure.'''
         # Crossover and mutate each layer
-        for i in range(len(parent1.layers)):
-            # Get weights and biases of the parents
-            # p1_data acts as the base for the child
-            p1_data = parent1.layers[i].get_weights()
-            p2_data = parent2.layers[i].get_weights()
+        for i in range(parent1.num_layers):
+            # Layer variables
+            weight = parent1.layers[i].weight.data
+            bias = parent1.layers[i].bias.data
 
-            for x in range(p1_data[0].shape[0]):
-                for y in range(self.gene_size, p1_data[0].shape[1], self.gene_size):
-                    #
-                    # Handle the weights
+            #
+            # Handle the weights
+            for x in range(weight.shape[0]):
+                for y in range(self.gene_size, weight.shape[1], self.gene_size):
                     # Check to see if crossover should occur
-                    if (random() < self.crossover_rate):
-                        p1_data[0][x][(y-self.gene_size):y] = p2_data[0][x][(y-self.gene_size):y]
+                    if (weight[x][(y-self.gene_size):y].shape[0] != self.gene_size) and (random() < self.crossover_rate):
+                        weight[x][(y-self.gene_size):y] = parent2.layers[i].weight.data[x][(y-self.gene_size):y]
 
                     # Check to see if weight mutation should occur
-                    if (random() < self.mutation_rate):
-                        #p1_data[0][x][y] += p1_data[0][x][y] * uniform(-self.mutation_degree, self.mutation_degree)
-                        p1_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                    if (weight[x][(y-self.gene_size):y].shape[0] != self.gene_size) and (random() < self.mutation_rate):
+                        #weight[x][y] += weight[x][y] * uniform(-self.mutation_degree, self.mutation_degree)
+                        weight[x][y] += uniform(-self.mutation_degree, self.mutation_degree)
 
-                    #
-                    # Handle the biases
-                    # Check to see if crossover should occur
-                    # Make sure we aren't on the output layer
-                    if (random() < self.crossover_rate):
-                        p1_data[1][(y-self.gene_size):y] = p2_data[1][(y-self.gene_size):y]
+            #
+            # Handle the biases
+            for x in range(self.gene_size, bias.shape[0], self.gene_size):
+                # Check to see if crossover should occur
+                if (bias[(x-self.gene_size):x].shape != self.gene_size) and (random() < self.crossover_rate):
+                    bias[(x-self.gene_size):x] = parent2.layers[i].bias.data[(x-self.gene_size):x]
 
-                    # Check to see if bias mutation should occur
-                    if (random() < self.mutation_rate):
-                        #p1_data[1][y] += p1_data[1][y] * uniform(-self.mutation_degree, self.mutation_degree)
-                        p1_data[1][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                # Check to see if bias mutation should occur
+                if (bias[(x-self.gene_size):x].shape != self.gene_size) and (random() < self.mutation_rate):
+                    #bias[x] += bias[x] * uniform(-self.mutation_degree, self.mutation_degree)
+                    bias[x] += uniform(-self.mutation_degree, self.mutation_degree)
 
             # Set weights and biases in child
-            child.layers[i].build(input_shape=p1_data[0].shape[0])
-            child.layers[i].set_weights(p1_data)
+            child.layers[i].weight = nn_Parameter(weight)
+            child.layers[i].bias = nn_Parameter(bias)
         return child
 
 
@@ -146,48 +156,48 @@ class GeneticAlgorithm():
         p2_genes = [] # [weights, biases]
         for layer in parent2.layers:
             # Get weight/bias data and empty lists to store genes
-            p2_data = layer.get_weights()
-            weight, bias = [], []
-            # Get the weight genes
-            for x in range(p2_data[0].shape[0]):
-                for y in range(self.gene_size, p2_data[0].shape[1], self.gene_size):
-                        weight.append(p2_data[0][x][(y-self.gene_size):y])
-            # Get the bias genes
-            for x in range(self.gene_size, p2_data[1].shape[0], self.gene_size):
-                bias.append(p2_data[1][(x-self.gene_size):x])
-            p2_genes.append([weight, bias])
+            weight = layer.weight.data
+            bias = layer.bias.data
+            weight_genes, bias_genes = [], []
+
+            for y in range(weight.shape[1]):
+                for x in range(self.gene_size, weight.shape[0], self.gene_size):
+                    # Get the weight genes
+                    if (weight[x][(y-self.gene_size):y].shape[0] != self.gene_size) and weight[x][(y-self.gene_size):y].shape[0]:
+                        weight_genes.append(weight[x][(y-self.gene_size):y])
+                    # Get the bias genes
+                    if (bias[(x-self.gene_size):x].shape != self.gene_size) and bias[(x-self.gene_size):x].shape[0]:
+                        bias_genes.append(bias[(x-self.gene_size):x])
+            p2_genes.append([weight_genes, bias_genes])
 
         # Crossover genes
         child_crossover = []
-        for i in range(len(parent1.layers)):
+        for i in range(parent1.num_layers):
             # Get weights and biases of the parents
             # p1_data acts as the base for the child
-            p1_data = parent1.layers[i].get_weights()
+            weight = parent1.layers[i].weight.data
+            bias = parent1.layers[i].bias.data
 
             # The layer we use for p2, since they might have different numbers of layers
-            p2_layer = int(i * len(parent2.layers) / len(parent1.layers))
+            p2_layer = int(i * parent2.num_layers / parent1.num_layers)
 
+            #
             # Handle the weights
-            for x in range(p1_data[0].shape[0]):
-                for y in range(self.gene_size, p1_data[0].shape[1], self.gene_size):
+            for x in range(weight.shape[0]):
+                for y in range(self.gene_size, weight.shape[1], self.gene_size):
                     # Check to see if crossover should occur
-                    # Make sure there's genes available to be used
-                    try:
-                        if len(p2_genes[p2_layer][0]) and (random() < self.crossover_rate):
-                            p1_data[0][x][(y-self.gene_size):y] = p2_genes[p2_layer][0][int((y / p1_data[0].shape[1]) * len(p2_genes[p2_layer][0]))]
-                    except:
-                        print(f"\nFailed to crossover weight. (list index out of range? -> {p2_layer}, {len(p2_genes)}, {i}, {len(parent1.layers)}, {len(parent2.layers)}\n")
+                    if len(p2_genes[p2_layer][0]) and (random() < self.crossover_rate):
+                        weight[x][(y-self.gene_size):y] = p2_genes[p2_layer][0][int((y / weight.shape[1]) * len(p2_genes[p2_layer][0]))]
 
-                    # Handle the biases
-                    # Check to see if crossover should occur
-                    try:
-                        if len(p2_genes[p2_layer][1]) and (random() < self.crossover_rate):
-                            p1_data[1][(y-self.gene_size):y] = p2_genes[p2_layer][1][int((y / p1_data[1].shape[0]) * len(p2_genes[p2_layer][1]))]
-                    except:
-                        print(f"\nFailed to crossover bias. (list index out of range? -> {p2_layer}, {len(p2_genes)}, {i}, {len(parent1.layers)}, {len(parent2.layers)}\n")
+            #
+            # Handle the biases
+            for x in range(self.gene_size, bias.shape[0], self.gene_size):
+                # Check to see if crossover should occur
+                if len(p2_genes[p2_layer][1]) and (random() < self.crossover_rate):
+                    bias[(x-self.gene_size):x] = p2_genes[p2_layer][1][int((x / bias.shape[0]) * len(p2_genes[p2_layer][1]))]
             
             # Collect the layer data after crossover
-            child_crossover.append(p1_data)
+            child_crossover.append([weight, bias])
 
         # 
         # Mutate
@@ -200,7 +210,7 @@ class GeneticAlgorithm():
         #
         # Mutate number of neurons
         for i in range(len(child_crossover) - 1):
-            num_neurons = child_crossover[i][0].shape[1]
+            num_neurons = child_crossover[i][0].shape[0]
             # Check to see if the size of this layer will mutate
             if (random() < self.mutation_rate):
                 num_neurons += 1 if (random() > 0.5) else -1
@@ -227,30 +237,30 @@ class GeneticAlgorithm():
 
         #
         # Copy weights and biases, then mutate individual weights and biases
-        child = LinearNet.linear_QNet(child_crossover[0][0].shape[0], child_crossover[-1][0].shape[1], hidden_layers=hidden_layers, random_model=False)
+        child = LinearNet(parent1.input_size, parent1.output_size, hidden_layers=hidden_layers, random_model=False)
         p_counter = 0
         for i in range(len(child.layers)):
             # Copy old weight and bias values over to new model and mutate them, if it's not a new layer
-            child_data = child.layers[i].get_weights()
+            weight = child.layers[i].weight.data
+            bias = child.layers[i].bias.data
             if not modded_layer[i]:
-                weight_x = child_data[0].shape[0] if child_data[0].shape[0] < child_crossover[p_counter][0].shape[0] else child_crossover[p_counter][0].shape[0]
-                weight_y = child_data[0].shape[1] if child_data[0].shape[1] < child_crossover[p_counter][0].shape[1] else child_crossover[p_counter][0].shape[1]
-                child_data[0][0:weight_x, 0:weight_y] = child_crossover[p_counter][0][0:weight_x, 0:weight_y]
-                child_data[1][0:weight_y] = child_crossover[p_counter][1][0:weight_y]
+                _x = weight.shape[0] if weight.shape[0] < child_crossover[p_counter][0].shape[0] else child_crossover[p_counter][0].shape[0]
+                _y = weight.shape[1] if weight.shape[1] < child_crossover[p_counter][0].shape[1] else child_crossover[p_counter][0].shape[1]
+                weight[0:_x, 0:_y] = child_crossover[p_counter][0][0:_x, 0:_y]
+                bias[0:_x] = child_crossover[p_counter][1][0:_x]
 
-                for x in range(weight_x):
+                for x in range(_x):
                     # Check for weight mutation
-                    for y in range(weight_y):
+                    for y in range(_y):
                         if (random() < self.mutation_rate):
-                            child_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
+                            weight[x][y] += uniform(-self.mutation_degree, self.mutation_degree)
                         
                         # Check for bias mutation
                         if ((len(child.layers) - i) - 1) and (random() < self.mutation_rate):
-                            child_data[1][y] += uniform(-self.mutation_degree, self.mutation_degree)
-                
+                            bias[x] += uniform(-self.mutation_degree, self.mutation_degree)
                 p_counter += 1
             # Set weights and biases in child
-            child.layers[i].build(input_shape=child_data[0].shape[0])
-            child.layers[i].set_weights(child_data)
+            child.layers[i].weight = nn_Parameter(weight)
+            child.layers[i].bias = nn_Parameter(bias)
 
         return child

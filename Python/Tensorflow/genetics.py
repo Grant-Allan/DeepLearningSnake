@@ -1,5 +1,3 @@
-from tkinter.tix import Y_REGION
-from turtle import hideturtle
 from model import LinearNet
 from agent import AgentDGA
 from random import random, randint, uniform, shuffle
@@ -233,14 +231,14 @@ class GeneticAlgorithm():
             # Copy old weight and bias values over to new model and mutate them, if it's not a new layer
             child_data = child.layers[i].get_weights()
             if not modded_layer[i]:
-                weight_x = child_data[0].shape[0] if child_data[0].shape[0] < child_crossover[p_counter][0].shape[0] else child_crossover[p_counter][0].shape[0]
-                weight_y = child_data[0].shape[1] if child_data[0].shape[1] < child_crossover[p_counter][0].shape[1] else child_crossover[p_counter][0].shape[1]
-                child_data[0][0:weight_x, 0:weight_y] = child_crossover[p_counter][0][0:weight_x, 0:weight_y]
-                child_data[1][0:weight_y] = child_crossover[p_counter][1][0:weight_y]
+                _x = child_data[0].shape[0] if child_data[0].shape[0] < child_crossover[p_counter][0].shape[0] else child_crossover[p_counter][0].shape[0]
+                _y = child_data[0].shape[1] if child_data[0].shape[1] < child_crossover[p_counter][0].shape[1] else child_crossover[p_counter][0].shape[1]
+                child_data[0][0:_x, 0:_y] = child_crossover[p_counter][0][0:_x, 0:_y]
+                child_data[1][0:_y] = child_crossover[p_counter][1][0:_y]
 
-                for x in range(weight_x):
+                for x in range(_x):
                     # Check for weight mutation
-                    for y in range(weight_y):
+                    for y in range(_y):
                         if (random() < self.mutation_rate):
                             child_data[0][x][y] += uniform(-self.mutation_degree, self.mutation_degree)
                         
