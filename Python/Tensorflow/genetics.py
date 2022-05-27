@@ -14,6 +14,8 @@ class GeneticAlgorithm():
         self.gene_size = 4
         self.mutation_rate = 0.0001
         self.mutation_degree = 0.50
+        self.morph_models = False
+        self.additional_info = False
 
         # Pool of previous parents so we can use the fittest of all time
         self.legacy_pool = None
@@ -24,10 +26,14 @@ class GeneticAlgorithm():
         # For the first time, we just set it to the first generation of parents
         if self.legacy_pool == None:
             self.legacy_pool = new_generation
+
+            # Check for if the model structures are changeable
+            if self.morph_models: print("The models are morphing!")
+            else: print("The models are static.")
+
             for i, agent in enumerate(self.legacy_pool):
                 print(f"\nAgent {i} Fitness: {agent[1]}")
-                for j, layer in enumerate(agent[0].layers):
-                    print(f"Layer {j}: {layer.get_weights()[0].shape}")
+                [print(f"Layer {j}: {layer.get_weights()[0].shape}") for j, layer in enumerate(agent[0].layers)]
             print("\n\n")
         # For every other generation, we actually check for improvements
         else:
@@ -35,6 +41,10 @@ class GeneticAlgorithm():
             # Reverse the lists to increase accuracy
             new_generation.reverse()
             self.legacy_pool.reverse()
+
+            # Check for if the model structures are changeable
+            if self.morph_models: print("The models are morphing!")
+            else: print("The models are static.")
 
             # Check for improvements
             for i in range(len(new_generation)):
@@ -46,15 +56,16 @@ class GeneticAlgorithm():
 
             # Resort the legacy pool (if needed)
             self.legacy_pool.sort(key=lambda a: a[1], reverse=True)
-            [print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
-            for i, agent in enumerate(self.legacy_pool):
-                print(f"\nAgent {i} Fitness: {agent[1]}")
-                for j, layer in enumerate(agent[0].layers):
-                    print(f"Layer {j}: {layer.get_weights()[0].shape}")
+            if self.morph_models:
+                for i, agent in enumerate(self.legacy_pool):
+                    print(f"\nAgent {i} Fitness: {agent[1]}")
+                    [print(f"Layer {j}: {layer.get_weights()[0].shape}") for j, layer in enumerate(agent[0].layers)]
+            else:
+                [print(f"Pool Fitness: {agent[1]}") for agent in self.legacy_pool]
             print("\n\n")
 
 
-    def breed_population(self, population, shuffle_pool=True, morph_models=True):
+    def breed_population(self, population, shuffle_pool=True):
         '''
         Crossover the weights and biases of the fittest members of the population,
         then randomly mutate weights and biases.
@@ -78,9 +89,9 @@ class GeneticAlgorithm():
         if shuffle_pool:
             for i in range(0, num_parents, 2):
                 for c in range(0, num_children, 2):
-                    if morph_models:
-                        children.agents[child][0] = self.slow_crossover(parents[i], parents[i+1])
-                        children.agents[child+1][0] = self.slow_crossover(parents[i+1], parents[i])
+                    if self.morph_models:
+                        children.agents[child][0] = self.slow_crossover(parents[i], parents[i+1], child)
+                        children.agents[child+1][0] = self.slow_crossover(parents[i+1], parents[i], child+1)
                     else:
                         children.agents[child][0] = self.fast_crossover(children.agents[child][0], parents[i], parents[i+1])
                         children.agents[child+1][0] = self.fast_crossover(children.agents[child+1][0], parents[i+1], parents[i])
@@ -88,7 +99,7 @@ class GeneticAlgorithm():
         else:
             for i in range(0, num_parents, 2):
                 for c in range(num_children):
-                    children.agents[child][0] = self.fast_crossover(children.agents[child][0], parents[i], parents[i+1]) if morph_models else self.slow_crossover(parents[i], parents[i+1])
+                    children.agents[child][0] = self.fast_crossover(children.agents[child][0], parents[i], parents[i+1]) if self.morph_models else self.slow_crossover(parents[i], parents[i+1], child)
                     child += 1
         return children, num_parents
 
@@ -133,8 +144,9 @@ class GeneticAlgorithm():
         return child
 
 
-    def slow_crossover(self, parent1, parent2):
+    def slow_crossover(self, parent1, parent2, child_num):
         '''A crossover/mutation function designed to work with models that can change sizes.'''
+        if self.additional_info: print(f"================================\nChild {child_num}:")
         # 
         # Crossover
         #
@@ -202,6 +214,7 @@ class GeneticAlgorithm():
             # Check to see if the size of this layer will mutate
             if (random() < self.mutation_rate):
                 num_neurons += 1 if (random() > 0.5) else -1
+                if self.additional_info: print("Neuron count changed!")
             hidden_layers.append(num_neurons)
 
         #
@@ -214,6 +227,7 @@ class GeneticAlgorithm():
                 del hidden_layers[location]
                 # We've removed it, so we don't want to try to copy it
                 modded_layer.insert(location, True)
+                if self.additional_info: print("Removed hidden layer!")
             # Add layer
             else:
                 # Choose where to insert the new layer and how many neurons it should have
@@ -222,6 +236,7 @@ class GeneticAlgorithm():
                 # Insert layer
                 hidden_layers.insert(location, num_neurons)
                 modded_layer.insert(location, True)
+                if self.additional_info: print("Added hidden layer!")
 
         #
         # Copy weights and biases, then mutate individual weights and biases
@@ -250,5 +265,9 @@ class GeneticAlgorithm():
             # Set weights and biases in child
             child.layers[i].build(input_shape=child_data[0].shape[0])
             child.layers[i].set_weights(child_data)
+        
+        print(f"Agent {i}")
+        [print(f"Layer {j}: {layer.get_weights()[0].shape}") for j, layer in enumerate(child.layers)]
+        print("")
 
         return child

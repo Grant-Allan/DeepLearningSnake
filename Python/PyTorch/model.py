@@ -120,9 +120,9 @@ class LinearNet(nn.Module):
             print(param_tensor, "\t", self.state_dict()[param_tensor].size())
 
         # Print optimizer's state_dict
-        #print("\nOptimizer's state_dict:")
-        #for var_name in self.optimizer.state_dict():
-        #    print(var_name, "\t", self.optimizer.state_dict()[var_name])
+        print("\nOptimizer's state_dict:")
+        for var_name in self.optimizer.state_dict():
+            print(var_name, "\t", self.optimizer.state_dict()[var_name])
 
         # Break
         print("==================================================\n")
