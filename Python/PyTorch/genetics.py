@@ -17,7 +17,7 @@ class GeneticAlgorithm():
         self.gene_size = 4
         self.mutation_rate = 0.0001
         self.mutation_degree = 0.50
-        self.morph_models = False
+        self.morph_models = True
         self.additional_info = False
 
         # Pool of previous parents so we can use the fittest of all time
