@@ -1,4 +1,4 @@
-#include "./NeuralNetworkLib/source/NeuralNetwork.cpp"
+#include "./NeuralNetLib/source/NeuralNet.cpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -6,10 +6,23 @@
 
 int main()
 {
-    std::vector<unsigned> topology;
-    topology.push_back(2); // input (not an actual layer)
-    topology.push_back(4); // hidden
-    topology.push_back(1); // output
+    std::vector<LayerSet> topology;
+    LayerSet layer;
+    
+    layer.neurons = 2;
+    layer.layer_type = "Dense";
+    layer.activation_function = "ReLu";
+    topology.push_back(layer); // input (not an actual layer)
+
+    layer.neurons = 4;
+    layer.layer_type = "Dense";
+    layer.activation_function = "ReLu";
+    topology.push_back(layer); // hidden
+
+    layer.neurons = 1;
+    layer.layer_type = "Dense";
+    layer.activation_function = "ReLu";
+    topology.push_back(layer); // output
     Net net(topology);
 
 
