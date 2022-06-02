@@ -92,15 +92,17 @@ void Neuron::updateInputWeights(Layer& prevLayer)
         Neuron& neuron = prevLayer[n];
 
         double oldDeltaWeight = neuron.m_outputWeights[m_index].deltaWeight;
-        double newDeltaWeight = // Individual input, magnified by the gradient and learning rate
+        //double newDeltaWeight = // Individual input, magnified by the gradient and learning rate
                                 // learning rate is also called eta
-                                learning_rate * m_gradient * neuron.getOutputVal()
+                                //learning_rate * m_gradient * neuron.getOutputVal()
                                 // Affected by momentum (a fraction of the previous delta weight)
                                 // momentum is also called alpha
-                                + momentum + oldDeltaWeight;
+                                //+ momentum + oldDeltaWeight;
+        double newDeltaWeight = m_gradient * neuron.getOutputVal();
 
         neuron.m_outputWeights[m_index].deltaWeight = newDeltaWeight;
         neuron.m_outputWeights[m_index].weight += newDeltaWeight;
+        neuron.m_outputWeights[m_index].bias += oldDeltaWeight;
     }
 }
 

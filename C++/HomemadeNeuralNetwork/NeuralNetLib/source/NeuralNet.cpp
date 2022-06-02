@@ -151,7 +151,7 @@ void Net::backPropagation(const std::vector<double>& targetVals)
 void Net::getResults(std::vector<double> &resultVals) const
 {
     resultVals.clear();
-    for (unsigned n = 0; n < m_layers.back().size() - 1; ++n) {
+    for (unsigned n = 0; n < m_layers.back().size(); ++n) {
         resultVals.push_back(m_layers.back()[n].getOutputVal());
     }
 }
