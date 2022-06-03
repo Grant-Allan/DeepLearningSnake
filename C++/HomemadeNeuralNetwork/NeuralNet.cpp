@@ -4,11 +4,11 @@
 /*
  * Neural Net constructor
  */
-NeuralNetwork::NeuralNetwork(std::vector<uint> topology, Scalar learningRate)
+NeuralNetwork::NeuralNetwork(std::vector<uint> topology, Scalar learning_rate)
 {
     // Set internal variables
     this->topology = topology;
-    this->learningRate = learningRate;
+    this->learning_rate = learning_rate;
 
     // Build model according to given topology
     for (uint i = 0; i < topology.size(); i++) {
@@ -47,6 +47,9 @@ NeuralNetwork::NeuralNetwork(std::vector<uint> topology, Scalar learningRate)
 };
 
 
+/*
+ * Get an output through forward propagation
+ */
 void NeuralNetwork::forwardPropagation(RowVector& input)
 {
     // set the input to input layer
@@ -65,6 +68,9 @@ void NeuralNetwork::forwardPropagation(RowVector& input)
 }
 
 
+/*
+ * Calculate each layer's error
+ */
 void NeuralNetwork::calcErrors(RowVector& output)
 {
     // calculate the errors made by neurons of last layer
@@ -92,7 +98,7 @@ void NeuralNetwork::updateWeights()
         if (i != topology.size() - 2) {
             for (uint c = 0; c < weights[i]->cols() - 1; c++) {
                 for (uint r = 0; r < weights[i]->rows(); r++) {
-                    weights[i]->coeffRef(r, c) += learningRate * deltas[i + 1]->coeffRef(c)
+                    weights[i]->coeffRef(r, c) += learning_rate * deltas[i + 1]->coeffRef(c)
                                                   * activationFunctionDerivative(cacheLayers[i + 1]->coeffRef(c))
                                                   * neuronLayers[i]->coeffRef(r);
                 }
@@ -101,7 +107,7 @@ void NeuralNetwork::updateWeights()
         else {
             for (uint c = 0; c < weights[i]->cols(); c++) {
                 for (uint r = 0; r < weights[i]->rows(); r++) {
-                    weights[i]->coeffRef(r, c) += learningRate * deltas[i + 1]->coeffRef(c)
+                    weights[i]->coeffRef(r, c) += learning_rate * deltas[i + 1]->coeffRef(c)
                                                   * activationFunctionDerivative(cacheLayers[i + 1]->coeffRef(c))
                                                   * neuronLayers[i]->coeffRef(r);
                 }

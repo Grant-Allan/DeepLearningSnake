@@ -2,7 +2,8 @@
 
 int main()
 {
-    NeuralNetwork n({ 2, 3, 1 });
+    // Topology, learning rate
+    NeuralNetwork net({2, 3, 1}, Scalar(0.001));
 
     RowVector input(2);
     RowVector targets(1);
@@ -39,7 +40,7 @@ int main()
             results[0] = 0;
         }
 
-        n.train(input, results);
+        net.train(input, results);
 
         std::cout << "Input: " << input[0] << " " << input[1] << '\n';
         std::cout << "Target: " << targets[0] << '\n';
