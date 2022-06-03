@@ -3,7 +3,6 @@
 #include <vector>
 
 
-typedef float Scalar;
 typedef Eigen::MatrixXd Matrix;
 typedef Eigen::RowVectorXd RowVector;
 typedef Eigen::VectorXd ColVector;
@@ -12,7 +11,7 @@ typedef Eigen::VectorXd ColVector;
 class NeuralNetwork {
 public:
     // Constructor
-    NeuralNetwork(std::vector<uint> topology, Scalar learning_rate=Scalar(0.005));
+    NeuralNetwork(std::vector<unsigned> topology, float learning_rate=0.001f);
  
     // Get an output through forward propagation
     void forwardPropagation(RowVector& input);
@@ -36,12 +35,12 @@ public:
      * pushed back. We use pointers so that it can't do that. Also, because we can use less
      * memory that way.
      */
-    std::vector<uint> topology; // stores the number of neurons in each layer
+    std::vector<unsigned> topology; // stores the number of neurons in each layer
     std::vector<RowVector*> neuronLayers; // stores the different layers of out network
     std::vector<RowVector*> cacheLayers; // stores the unactivated (activation fn not yet applied) values of layers
     std::vector<RowVector*> deltas; // stores the error contribution of each neurons
     std::vector<Matrix*> weights; // the connection weights itself
-    Scalar learning_rate;
+    float learning_rate;
 };
 
 

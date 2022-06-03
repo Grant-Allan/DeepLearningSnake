@@ -1,9 +1,11 @@
-#include "NeuralNet.hpp"
+#include "NeuralNet.cpp"
 
 int main()
 {
     // Topology, learning rate
-    NeuralNetwork net({2, 3, 1}, Scalar(0.001));
+    std::vector<unsigned> topology = {2, 3, 1};
+    float learning_rate = 0.001f;
+    NeuralNetwork net(topology, learning_rate);
 
     RowVector input(2);
     RowVector targets(1);
