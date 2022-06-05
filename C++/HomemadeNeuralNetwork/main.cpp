@@ -1,53 +1,78 @@
 #include "NeuralNet.cpp"
 
+
 int main()
 {
-    // Topology, learning rate
-    std::vector<unsigned> topology = {2, 3, 1};
-    float learning_rate = 0.001f;
-    NeuralNetwork net(topology, learning_rate);
+    unsigned input_size = 2;
+    std::vector<LayerSettings> topology;
 
-    RowVector input(2);
-    RowVector targets(1);
-    RowVector results(1);
+    // Build topology
+    LayerSettings layer;
+    
+    layer.units = 4;
+    layer.layer_type = "Dense";
+    layer.activation_function = "ReLu";
+    topology.push_back(layer);
+    
+    layer.units = 1;
+    layer.layer_type = "Dense";
+    layer.activation_function = "ReLu";
+    topology.push_back(layer);
 
+    Net net(input_size, topology);
 
+    std::vector<double> input;
+    std::vector<double> targets;
+    std::vector<double> output;
+
+    input.push_back(0);
+    input.push_back(0);
+    targets.push_back(0);
+
+    net.predict(input, output);
+    std::cout << "Output: " << output[0] << '\n';
+
+    /*
     // Train the model to be an XOR gate
-    for (int i = 0; i < 2000; i++)
+    for (int i = 0; i < 10000; i++)
     {
         std::cout << '\n' << "Episode: " << i << '\n';
 
         if (i % 4 == 0)
         {
-            input[0] = 0;
-            input[1] = 0;
-            results[0] = 0;
+            input.push_back(0);
+            input.push_back(0);
+            targets.push_back(0);
         }
         else if ((i+1) % 4 == 0)
         {
-            input[0] = 0;
-            input[1] = 1;
-            results[0] = 1;
+            input.push_back(0);
+            input.push_back(1);
+            targets.push_back(1);
         }
         else if ((i+2) % 4 == 0)
         {
-            input[0] = 1;
-            input[1] = 0;
-            results[0] = 1;
+            input.push_back(1);
+            input.push_back(0);
+            targets.push_back(1);
         }
         else if ((i+3) % 4 == 0)
         {
-            input[0] = 1;
-            input[1] = 1;
-            results[0] = 0;
+            input.push_back(1);
+            input.push_back(1);
+            targets.push_back(0);
         }
 
-        net.train(input, results);
+        net.train(input, targets);
+        net.results(output);
 
         std::cout << "Input: " << input[0] << " " << input[1] << '\n';
         std::cout << "Target: " << targets[0] << '\n';
-        std::cout << "Results: " << results[0] << '\n';
-    }
+        std::cout << "Output: " << output[0] << '\n';
 
-    return 0;
+        input.clear();
+        targets.clear();
+        output.clear();
+    }
+    */
 }

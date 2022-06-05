@@ -3,46 +3,66 @@
 #include <vector>
 
 
-typedef Eigen::MatrixXd Matrix;
-typedef Eigen::RowVectorXd RowVector;
-typedef Eigen::VectorXd ColVector;
- 
-// Neural Network implementation
-class NeuralNetwork {
-public:
-    // Constructor
-    NeuralNetwork(std::vector<unsigned> topology, float learning_rate=0.001f);
- 
-    // Get an output through forward propagation
-    void forwardPropagation(RowVector& input);
- 
-    // Calculate each layer's error
-    void calcErrors(RowVector& output);
- 
-    // Update weights and biases using the previously calculated error/loss
-    void updateWeights();
- 
-    // Backpropagate through the network, updating weights and biases
-    void backpropagation(RowVector& output);
- 
-    // Training functions
-    void train_batch(std::vector<RowVector*> input_data, std::vector<RowVector*> output_data);
-    void train(RowVector& input_data, RowVector& output_data);
- 
-    /* Storage objects for working of neural network
-     * 
-     * std::vector<Class> calls the destructor of whatever Class you're using after it's
-     * pushed back. We use pointers so that it can't do that. Also, because we can use less
-     * memory that way.
-     */
-    std::vector<unsigned> topology; // stores the number of neurons in each layer
-    std::vector<RowVector*> neuronLayers; // stores the different layers of out network
-    std::vector<RowVector*> cacheLayers; // stores the unactivated (activation fn not yet applied) values of layers
-    std::vector<RowVector*> deltas; // stores the error contribution of each neurons
-    std::vector<Matrix*> weights; // the connection weights itself
-    float learning_rate;
+/*
+ * Support structs
+ */
+// Settings used in topology to build each layer
+struct LayerSettings
+{
+    unsigned units;
+    std::string layer_type;
+    std::string activation_function;
+};
+
+// The neuron used in the layers
+struct Neuron
+{
+    Eigen::RowVectorXd values;
+    unsigned id;
+    std::vector<unsigned> connections;
+
+    // Set a (-1, 1) random value
+    void randomValues(void) { this->values.setRandom(); }
 };
 
 
+/*
+ * Layers
+ */
+// Parent layer used to create a vector of layers
+class Layer{};
+
+// Layer of densely connected neurons
+class DenseLayer : public Layer
+{
+public:
+    std::vector<Neuron> neurons;
+    Eigen::RowVectorXd outputs;
+    std::string activation_function;
+    //std::function<double(double)> activation_function;
+    DenseLayer(unsigned prev_layer_size, unsigned size, std::string activation_function);
+private:
+};
 
 
+/*
+ * The neural network itself
+ */
+class Net
+{
+public:
+    std::vector<LayerSettings> topology;
+    std::vector<DenseLayer*> layers;
+    std::string loss_function;
+    unsigned input_size;
+    static unsigned neuron_id;
+
+    Net(unsigned input_size, std::vector<LayerSettings> topology);
+    void predict(std::vector<double> &input, std::vector<double> &output);
+    void train(std::vector<double> &input, std::vector<double> &targets);
+    void results(std::vector<double> &output);
+
+private:
+    void feedforward(std::vector<double> &input, std::vector<double> &output);
+    void backpropagation(std::vector<double> &output, std::vector<double> &targets);
+};
