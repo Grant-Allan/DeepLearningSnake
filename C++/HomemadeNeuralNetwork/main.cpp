@@ -16,7 +16,7 @@ int main()
     
     layer.units = 1;
     layer.layer_type = "Dense";
-    layer.activation_function = "ReLu";
+    layer.activation_function = "Sigmoid";
     topology.push_back(layer);
 
     Net net(input_size, topology);
