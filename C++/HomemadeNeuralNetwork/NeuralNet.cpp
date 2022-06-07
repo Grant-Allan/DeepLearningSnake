@@ -11,7 +11,7 @@ Net::Net(unsigned input_size, std::vector<LayerSettings> topology)
 
     // Build neural network using given topology
     // Create first layer
-    this->layers.push_back(new DenseLayer(input_size, topology[0].units+1, topology[0].activation_function, this->neuron_id));
+    this->layers.push_back(new DenseLayer(input_size, topology[0].units, topology[0].activation_function, this->neuron_id));
 
     // Create other layers
     for (int l = 1; l < topology.size(); l++)
@@ -47,33 +47,28 @@ void Net::feedforward(std::vector<double> &input, std::vector<double> &output)
 
     // Feed input into first hidden layer and get outputs
     if (input.size() == this->input_size) {
-        Eigen::RowVectorXd cur_output;
         for (int n = 0; n < this->topology[0].units; n++) {
             // References to make it easier to read
             Eigen::RowVectorXd &cur_value = this->layers[0]->neurons[n].values;
             Eigen::RowVectorXd &bias = this->layers[0]->neurons.back().values;
 
-            // Resize row vector (conservativeResize preserves stored data)
-            cur_output.conservativeResize(n+1);
-
             // Apply activation function
             if (this->layers[0]->activation_function == "ReLu" || this->layers[0]->activation_function == "relu") {
-                cur_output[n] = Net::ReLu(inputs, cur_value, bias[n]);
+                this->layers[0]->outputs[n] = Net::ReLu(inputs, cur_value, bias[n]);
             } else if (this->layers[0]->activation_function == "Step" || this->layers[0]->activation_function == "step") {
-                cur_output[n] = Net::Step(inputs, cur_value, bias[n]);
+                this->layers[0]->outputs[n] = Net::Step(inputs, cur_value, bias[n]);
             } else if (this->layers[0]->activation_function == "Sigmoid" || this->layers[0]->activation_function == "sigmoid") {
-                cur_output[n] = Net::Sigmoid(inputs, cur_value, bias[n]);
+                this->layers[0]->outputs[n] = Net::Sigmoid(inputs, cur_value, bias[n]);
             } else if (this->layers[0]->activation_function == "Tanh" || this->layers[0]->activation_function == "tanh") {
-                cur_output[n] = Net::Tanh(inputs, cur_value, bias[n]);
+                this->layers[0]->outputs[n] = Net::Tanh(inputs, cur_value, bias[n]);
             } else if (this->layers[0]->activation_function == "Softmax" || this->layers[0]->activation_function == "softmax") {
-                cur_output[n] = cur_value[n] + bias[n];
+                this->layers[0]->outputs[n] = cur_value.dot(inputs) + bias[n];
             }
         }
         // Set layer output to our newly obtained values
         if (this->layers[0]->activation_function == "Softmax" || this->layers[0]->activation_function == "softmax") {
-            cur_output = Net::Softmax(cur_output);
+            this->layers[0]->outputs = Net::Softmax(this->layers[0]->outputs);
         }
-        this->layers[0]->outputs = cur_output;
     } else {
         std::cout << "Wrong input size (expected size: "
                   << this->input_size << ", received size: "
@@ -84,34 +79,29 @@ void Net::feedforward(std::vector<double> &input, std::vector<double> &output)
     // Feed input from each hidden layer into the next hidden layer
     for (int l = 1; l < this->topology.size(); l++) {
         // Apply dot product to each neuron and the previous layer's output
-        Eigen::RowVectorXd cur_output;
         for (int n = 0; n < this->topology[l].units; n++) {
             // References to make it easier to read
             Eigen::RowVectorXd &prev_output = this->layers[l-1]->outputs;
             Eigen::RowVectorXd &cur_value = this->layers[l]->neurons[n].values;
             Eigen::RowVectorXd &bias = this->layers[l]->neurons.back().values;
 
-            // Resize row vector (conservativeResize preserves stored data)
-            cur_output.conservativeResize(n+1);
-
             // Apply activation function
             if (this->layers[l]->activation_function == "ReLu" || this->layers[l]->activation_function == "relu") {
-                cur_output[n] = Net::ReLu(cur_value, prev_output, bias[n]);
+                this->layers[l]->outputs[n] = Net::ReLu(cur_value, prev_output, bias[n]);
             } else if (this->layers[l]->activation_function == "Step" || this->layers[l]->activation_function == "step") {
-                cur_output[n] = Net::Step(cur_value, prev_output, bias[n]);
+                this->layers[l]->outputs[n] = Net::Step(cur_value, prev_output, bias[n]);
             } else if (this->layers[l]->activation_function == "Sigmoid" || this->layers[l]->activation_function == "sigmoid") {
-                cur_output[n] = Net::Sigmoid(cur_value, prev_output, bias[n]);
+                this->layers[l]->outputs[n] = Net::Sigmoid(cur_value, prev_output, bias[n]);
             } else if (this->layers[l]->activation_function == "Tanh" || this->layers[l]->activation_function == "tanh") {
-                cur_output[n] = Net::Tanh(cur_value, prev_output, bias[n]);
+                this->layers[l]->outputs[n] = Net::Tanh(cur_value, prev_output, bias[n]);
             } else if (this->layers[l]->activation_function == "Softmax" || this->layers[l]->activation_function == "softmax") {
-                cur_output[n] = cur_value[n] + bias[n];
+                this->layers[l]->outputs[n] = cur_value.dot(prev_output) + bias[n];
             }
         }
         // Set layer output to our newly obtained values
         if (this->layers[l]->activation_function == "Softmax" || this->layers[l]->activation_function == "softmax") {
-            cur_output = Net::Softmax(cur_output);
+            this->layers[l]->outputs = Net::Softmax(this->layers[l]->outputs);
         }
-        this->layers[l]->outputs = cur_output;
     }
 
     // Fill output with the value of the output neurons
@@ -209,9 +199,23 @@ DenseLayer::DenseLayer(unsigned prev_layer_size, unsigned size, std::string acti
     bias.id = neuron_id++;
     neurons.push_back(bias);
 
+    // Create output layer
+    Eigen::RowVectorXd outputs(size);
+    this->outputs = outputs;
+
     // Set neurons and activation function
     this->neurons = neurons;
     this->activation_function = activation_function;
+}
+
+
+
+/*
+ * Optimizer
+ */
+double Optimizer::categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true)
+{
+    return -((y_true * ((y_pred.array().log()).matrix())).sum());
 }
 
 

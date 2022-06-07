@@ -47,6 +47,16 @@ private:
 
 
 /*
+ * The Optimizer used for the neural network's backpropagation.
+ */
+class Optimizer
+{
+public:
+    double categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true);
+};
+
+
+/*
  * The neural network itself
  */
 class Net
