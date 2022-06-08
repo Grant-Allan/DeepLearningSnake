@@ -166,7 +166,7 @@ double Net::Tanh(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, d
 Eigen::RowVectorXd Net::Softmax(Eigen::RowVectorXd x)
 {
     // 0 to 1, where the values sum to 1
-    Eigen::RowVectorXd e_x = (x.array() - x.maxCoeff());
+    Eigen::RowVectorXd e_x = x.array().log();
     return e_x.array() / e_x.sum();
 }
 
@@ -215,7 +215,8 @@ DenseLayer::DenseLayer(unsigned prev_layer_size, unsigned size, std::string acti
  */
 double Optimizer::categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true)
 {
-    return -((y_true * ((y_pred.array().log()).matrix())).sum());
+    Eigen::RowVectorXd log_y_pred = y_pred.array().log();
+    return -(y_true.dot(log_y_pred));
 }
 
 
