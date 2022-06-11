@@ -2,12 +2,14 @@
 
 
 // Neural Network constructor
-Net::Net(unsigned input_size, std::vector<LayerSettings> topology)
+Net::Net(int input_size, std::vector<LayerSettings> topology)
 {
     // Save the topology and input size
     this->topology = topology;
     this->input_size = input_size;
     this->neuron_id = 0;
+    Optimizer opt;
+    this->optimizer = opt;
 
     // Build neural network using given topology
     // Create first layer
@@ -117,6 +119,8 @@ void Net::feedforward(std::vector<double> &input, std::vector<double> &output)
 // Use an output and loss function to update the weights
 void Net::backpropagation(std::vector<double> &output, std::vector<double> &targets)
 {
+    double learning_rate = 0.001;
+
     // Calculate layer error
 
     // Update layer weights
@@ -139,35 +143,72 @@ void Net::results(std::vector<double> &output)
 /*
  * Activation functions
  */
+//
+// ReLu
 double Net::ReLu(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
 {
     // 0 or x, where x is cur_value.dot(prev_output) + bias)
     return ((cur_value.dot(prev_output) + bias) > 0) ? (cur_value.dot(prev_output) + bias) : 0;
 }
 
+//
+// Step
 double Net::Step(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
 {
     // 0 or 1
     return ((cur_value.dot(prev_output) + bias) > 0) ? 1 : 0;
 }
 
+//
+// Sigmoid
 double Net::Sigmoid(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
 {
     // 0 to 1
     return 1 / (1 + std::exp(cur_value.dot(prev_output) + bias));
 }
 
+double SigmoidDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
+{
+    double x = 1 / (1 + std::exp(cur_value.dot(prev_output) + bias));
+    return x * (1 - x);
+}
+
+//
+// Tanh
 double Net::Tanh(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
 {
     // -1 to 1
     return tanh(cur_value.dot(prev_output) + bias);
 }
 
+double Net::TanhDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias)
+{
+    double x = tanh(cur_value.dot(prev_output) + bias);
+    return 1 - (x*x);
+}
+
+//
+// Softmax
 Eigen::RowVectorXd Net::Softmax(Eigen::RowVectorXd x)
 {
     // 0 to 1, where the values sum to 1
     Eigen::RowVectorXd e_x = x.array().log();
     return e_x.array() / e_x.sum();
+}
+
+Eigen::MatrixXd Net::SoftmaxDerivative(Eigen::RowVectorXd x)
+{
+    // Create array of zeros with a diagonal of ones
+    int size = this->topology.back().units;
+    Eigen::MatrixXd ones = Eigen::MatrixXd::Constant(size, 1, 1.0);
+    Eigen::MatrixXd I = Eigen::MatrixXd::Constant(size, size, 0.0);
+    I = ones.asDiagonal();
+
+    // Store softmax so we don't have to calculate it twice
+    Eigen::RowVectorXd softmax =  this->Softmax(x);
+
+    // Return gradient
+    return (I.rowwise() - softmax).array().colwise() * softmax.transpose().array();
 }
 
 
@@ -215,8 +256,12 @@ DenseLayer::DenseLayer(unsigned prev_layer_size, unsigned size, std::string acti
  */
 double Optimizer::categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true)
 {
-    Eigen::RowVectorXd log_y_pred = y_pred.array().log();
-    return -(y_true.dot(log_y_pred));
+    return -(y_true.dot(y_pred.array().log().matrix()));
+}
+
+double Optimizer::mean_squared_error(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true)
+{
+    return (((y_true - y_pred).array().square()) / y_pred.rows()).sum();
 }
 
 

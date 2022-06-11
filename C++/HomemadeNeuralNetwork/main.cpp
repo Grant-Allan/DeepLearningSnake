@@ -3,7 +3,7 @@
 
 int main()
 {
-    unsigned input_size = 2;
+    int input_size = 2;
     std::vector<LayerSettings> topology;
 
     // Build topology
@@ -14,9 +14,9 @@ int main()
     layer.activation_function = "ReLu";
     topology.push_back(layer);
     
-    layer.units = 2;
+    layer.units = 1;
     layer.layer_type = "Dense";
-    layer.activation_function = "Softmax";
+    layer.activation_function = "Sigmoid";
     topology.push_back(layer);
 
     Net net(input_size, topology);
@@ -30,24 +30,7 @@ int main()
     targets.push_back(0);
 
     net.predict(input, output);
-    std::cout << "Output: " << output[0] << " " << output[1] << '\n' << '\n';
-
-    Optimizer opt;
-
-    Eigen::RowVectorXd _outputs;
-    Eigen::RowVectorXd _targets;
-
-    _outputs.resize(2);
-    _targets.resize(2);
-
-    _outputs[0] = output[0];
-    _outputs[1] = output[1];
-
-    _targets[0] = 0;
-    _targets[1] = 1;
-
-    opt.categorical_crossentropy(_outputs, _targets);
-    std::cout << "Categorical Cross Entropy: " << opt.categorical_crossentropy(_outputs, _targets) << '\n' << '\n';
+    std::cout << "Output: " << output[0] << '\n' << '\n';
 
     /*
     // Train the model to be an XOR gate

@@ -9,7 +9,7 @@
 // Settings used in topology to build each layer
 struct LayerSettings
 {
-    unsigned units;
+    int units;
     std::string layer_type;
     std::string activation_function;
 };
@@ -53,6 +53,7 @@ class Optimizer
 {
 public:
     double categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true);
+    double mean_squared_error(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true);
 };
 
 
@@ -67,9 +68,10 @@ public:
     std::string loss_function;
     unsigned input_size;
     unsigned neuron_id;
+    Optimizer optimizer;
 
     // Model use
-    Net(unsigned input_size, std::vector<LayerSettings> topology);
+    Net(int input_size, std::vector<LayerSettings> topology);
     void predict(std::vector<double> &input, std::vector<double> &output);
     void train(std::vector<double> &input, std::vector<double> &targets);
     void results(std::vector<double> &output);
@@ -77,9 +79,15 @@ public:
     // Activation functions
     double ReLu(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
     double Step(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+
     double Sigmoid(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+    double SigmoidDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+
     double Tanh(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+    double TanhDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+
     Eigen::RowVectorXd Softmax(Eigen::RowVectorXd x);
+    Eigen::MatrixXd SoftmaxDerivative(Eigen::RowVectorXd x);
 
 private:
     void feedforward(std::vector<double> &input, std::vector<double> &output);
