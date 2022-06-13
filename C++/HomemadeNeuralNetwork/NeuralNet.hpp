@@ -38,10 +38,11 @@ class DenseLayer : public Layer
 {
 public:
     std::vector<Neuron> neurons;
-    Eigen::RowVectorXd outputs;
+    Eigen::RowVectorXd simple_outputs;
+    Eigen::RowVectorXd activated_outputs;
     std::string activation_function;
     //std::function<double(double)> activation_function;
-    DenseLayer(unsigned prev_layer_size, unsigned size, std::string activation_function, unsigned &neuron_id);
+    DenseLayer(unsigned prev_layer_size, unsigned cur_layer_size, std::string activation_function, unsigned &neuron_id);
 private:
 };
 
@@ -52,8 +53,11 @@ private:
 class Optimizer
 {
 public:
-    double categorical_crossentropy(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true);
-    double mean_squared_error(Eigen::RowVectorXd y_pred, Eigen::RowVectorXd y_true);
+    double categorical_crossentropy(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
+    Eigen::RowVectorXd categorical_crossentropy_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
+
+    double mean_squared_error(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
+    Eigen::RowVectorXd mean_squared_error_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 };
 
 
@@ -69,27 +73,31 @@ public:
     unsigned input_size;
     unsigned neuron_id;
     Optimizer optimizer;
+    Eigen::RowVectorXd input;
 
     // Model use
-    Net(int input_size, std::vector<LayerSettings> topology);
-    void predict(std::vector<double> &input, std::vector<double> &output);
-    void train(std::vector<double> &input, std::vector<double> &targets);
-    void results(std::vector<double> &output);
+    Net(int input_size, std::vector<LayerSettings> topology, Optimizer opt);
+    void predict(Eigen::RowVectorXd &input, Eigen::RowVectorXd &prediction);
+    void train(Eigen::RowVectorXd &input, Eigen::RowVectorXd &y_true);
+    void results(Eigen::RowVectorXd &prediction);
+    void backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 
     // Activation functions
-    double ReLu(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
-    double Step(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+    Eigen::RowVectorXd Step(Eigen::RowVectorXd &x);
 
-    double Sigmoid(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
-    double SigmoidDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+    Eigen::RowVectorXd ReLu(Eigen::RowVectorXd &x);
+    Eigen::RowVectorXd ReLuDerivative(Eigen::RowVectorXd &x);
 
-    double Tanh(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
-    double TanhDerivative(Eigen::RowVectorXd cur_value, Eigen::RowVectorXd prev_output, double bias);
+    Eigen::RowVectorXd Sigmoid(Eigen::RowVectorXd &x);
+    Eigen::RowVectorXd SigmoidDerivative(Eigen::RowVectorXd &x);
 
-    Eigen::RowVectorXd Softmax(Eigen::RowVectorXd x);
-    Eigen::MatrixXd SoftmaxDerivative(Eigen::RowVectorXd x);
+    Eigen::RowVectorXd Tanh(Eigen::RowVectorXd &x);
+    Eigen::RowVectorXd TanhDerivative(Eigen::RowVectorXd &x);
+
+    Eigen::RowVectorXd Softmax(Eigen::RowVectorXd &x);
+    Eigen::MatrixXd SoftmaxDerivative(Eigen::RowVectorXd &x);
 
 private:
-    void feedforward(std::vector<double> &input, std::vector<double> &output);
-    void backpropagation(std::vector<double> &output, std::vector<double> &targets);
+    void feedforward(Eigen::RowVectorXd &input, Eigen::RowVectorXd &output);
+    void batch_update(std::vector<Eigen::MatrixXd> &d_weights, std::vector<Eigen::RowVectorXd> &d_biases);
 };
