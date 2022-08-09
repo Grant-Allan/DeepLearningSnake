@@ -31,6 +31,7 @@ int main()
 
     Optimizer opt;
     Net net(input_size, topology, opt);
+    net.learning_rate = 0.001;
 
     Eigen::RowVectorXd input;
     Eigen::RowVectorXd output;
@@ -39,13 +40,15 @@ int main()
     input.resize(input_size);
     y_true.resize(1);
 
-    //net.predict(input, output);
-    //std::cout << "Output: " << output[0] << '\n' << '\n';
+    // Set max_accum_loss to make sure the model ends up well trained
+    net.max_accum_loss = 16;
 
-    //net.backpropagation(output, y_true);
+    // Add value to accum_loss so we get through at least one set of accumaluated losses
+    net.accumulated_loss(1000000000);
 
     // Train the model to be an XOR gate
-    for (int i = 0; i < 10; i++)
+    int i = 0;
+    while (net.avg_loss > 0.000000001)
     {
         std::cout << '\n' << "=============================" << '\n';
         std::cout << '\n' << "Episode: " << i << '\n';
@@ -74,5 +77,7 @@ int main()
         std::cout << "Input: " << input[0] << " " << input[1] << '\n';
         std::cout << "Prediction: " << output[0] << '\n';
         std::cout << "Target: " << y_true[0] << '\n';
+        i++;
     }
+    std::cout << '\n' << "=============================" << '\n';
 }

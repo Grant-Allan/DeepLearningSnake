@@ -1,4 +1,5 @@
 #include "NeuralNet.hpp"
+#include <numeric>
 
 
 // Neural Network constructor
@@ -112,14 +113,40 @@ void Net::feedforward(Eigen::RowVectorXd &inputs, Eigen::RowVectorXd &prediction
 }
 
 
+// Calculate accumulated loss
+void Net::accumulated_loss(double loss_)
+{
+    // Add current loss to the accumultion
+    if (this->accum_loss.size() < this->max_accum_loss) {
+        this->accum_loss.push_back(loss_);
+        this->cur_loss = this->accum_loss.size()-1;
+    } else {
+        this->accum_loss[this->cur_loss] = loss_;
+        this->cur_loss++;
+
+        // Reset cur_loss, if needed
+        if (this->cur_loss >= this->max_accum_loss) {
+            this->cur_loss = 0;
+        }
+    }
+
+    // Recalculate avg_loss
+    this->avg_loss = std::accumulate(this->accum_loss.begin(), this->accum_loss.end(), 0.0) / this->accum_loss.size();
+}
+
+
 // Use an output and loss function to update the weights
 void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true)
 {
-    double learning_rate = 0.001;
-
     // Current loss
-    Eigen::RowVectorXd d_error = this->optimizer.mean_squared_error_derivative(y_pred, y_true);
-    std::cout << "Error: " << d_error.sum() << '\n' << '\n';
+    this->loss = this->optimizer.mean_squared_error(y_pred, y_true);
+    std::cout << "y_pred: " << y_pred << '\n';
+    std::cout << "y_true: " << y_true << '\n';
+    std::cout << "Loss: " << this->loss << '\n' << '\n';
+
+    // Calculate accumulated loss
+    this->accumulated_loss(this->loss);
+    //std::cout << "Average Loss: " << this->avg_loss << '\n' << '\n';
 
     // The changes we'll make to the weights and biases
     std::vector<Eigen::MatrixXd> d_weights;
@@ -150,6 +177,7 @@ void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true
     Eigen::RowVectorXd &activated_outputs = this->layers[this->topology.size()-2]->activated_outputs;
 
     // Calculations
+    Eigen::RowVectorXd d_error = this->optimizer.mean_squared_error_derivative(y_pred, y_true);
     Eigen::RowVectorXd delta = d_error * this->SigmoidDerivative(simple_outputs);
     d_weights.back() += (activated_outputs.transpose() * delta);
     d_biases.back() += delta;
@@ -169,8 +197,8 @@ void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true
         // Calculations
         Eigen::RowVectorXd delta = d_error * this->ReLuDerivative(simple_outputs);
 
-        d_weights[l] += (activated_outputs.transpose() * delta);
-        d_biases[l] += delta;
+        d_weights[l] += learning_rate * (activated_outputs.transpose() * delta);
+        d_biases[l] += learning_rate * delta;
 
         //std::cout << "d_weights " << l << ":" << '\n' << d_weights[l] << '\n' << '\n';
         //std::cout << "d_bias " << l << ":" << '\n' << d_biases[l] << '\n' << '\n';
@@ -180,20 +208,26 @@ void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true
     this->batch_update(d_weights, d_biases);
 }
 
+
 void Net::batch_update(std::vector<Eigen::MatrixXd> &d_weights, std::vector<Eigen::RowVectorXd> &d_biases)
 {
     // Update the neurons of each layer
     for (int l = 0; l < topology.size(); l++) {
         // Update weight neurons
+        //std::cout << "weights " << l << ":" << '\n';
         for (int n = 0; n < topology[l].units; n++) {
             Eigen::RowVectorXd &neuron = this->layers[l]->neurons[n].values;
             const Eigen::RowVectorXd &d_neuron = d_weights[l].col(n);
-            neuron += d_neuron;
+            neuron -= d_neuron;
+
+            //std::cout << neuron << '\n'; // weight
         }
 
         // Update bias neuron
         Eigen::RowVectorXd &neuron = this->layers[l]->neurons.back().values;
-        neuron += d_biases[l];
+        neuron -= d_biases[l];
+
+        //std::cout << '\n' << "bias " << l << ":" << '\n' << neuron << '\n' << '\n'; // bias
     }
 }
 
@@ -339,7 +373,8 @@ DenseLayer::DenseLayer(unsigned prev_layer_size, unsigned cur_layer_size, std::s
 
 
 /*
- * Optimizer
+ * Optimizers
+ * NOTE: if y_hat is ever used, it's the same as y_pred
  */
 //
 // Categorical Cross Entropy
@@ -354,15 +389,27 @@ Eigen::RowVectorXd Optimizer::categorical_crossentropy_derivative(Eigen::RowVect
 }
 
 //
+// Squared Error
+double Optimizer::squared_error(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true)
+{
+    return ((y_true - y_pred).array().square()).sum() / 2;
+}
+
+Eigen::RowVectorXd Optimizer::squared_error_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true)
+{
+    return y_pred.array() - y_true.array();
+}
+
+//
 // Mean Squared Error
 double Optimizer::mean_squared_error(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true)
 {
-    return (((y_true - y_pred).array().square()) / y_pred.cols()).sum();
+    return ((y_true - y_pred).array().square()).sum() / y_true.cols();
 }
 
 Eigen::RowVectorXd Optimizer::mean_squared_error_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true)
 {
-    return 2 * ((y_pred.array() - y_true.array()) / y_pred.cols());
+    return 2 * (y_pred.array() - y_true.array()) / y_true.cols();
 }
 
 

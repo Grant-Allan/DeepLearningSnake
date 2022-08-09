@@ -56,6 +56,9 @@ public:
     double categorical_crossentropy(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
     Eigen::RowVectorXd categorical_crossentropy_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 
+    double squared_error(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
+    Eigen::RowVectorXd squared_error_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
+
     double mean_squared_error(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
     Eigen::RowVectorXd mean_squared_error_derivative(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 };
@@ -74,12 +77,18 @@ public:
     unsigned neuron_id;
     Optimizer optimizer;
     Eigen::RowVectorXd input;
+    double learning_rate=1; // default of no learning rate
+    double loss;
+    int max_accum_loss=8; // limit of how many loss values you collect, with 8 as the default
+    std::vector<double> accum_loss; // collect loss values for averaging
+    double avg_loss; // average of some number of loss values
 
     // Model use
     Net(int input_size, std::vector<LayerSettings> topology, Optimizer opt);
     void predict(Eigen::RowVectorXd &input, Eigen::RowVectorXd &prediction);
     void train(Eigen::RowVectorXd &input, Eigen::RowVectorXd &y_true);
     void results(Eigen::RowVectorXd &prediction);
+    void accumulated_loss(double loss);
     void backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 
     // Activation functions
@@ -98,6 +107,7 @@ public:
     Eigen::MatrixXd SoftmaxDerivative(Eigen::RowVectorXd &x);
 
 private:
+    int cur_loss=0; // current loss value
     void feedforward(Eigen::RowVectorXd &input, Eigen::RowVectorXd &output);
     void batch_update(std::vector<Eigen::MatrixXd> &d_weights, std::vector<Eigen::RowVectorXd> &d_biases);
 };
