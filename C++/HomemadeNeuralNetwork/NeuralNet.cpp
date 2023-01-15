@@ -39,6 +39,21 @@ void Net::train(Eigen::RowVectorXd &input, Eigen::RowVectorXd &y_true)
     Net::backpropagation(output, y_true);
 }
 
+// Apply the designated activation function to the given input
+Eigen::RowVectorXd Net::applyActivationFunction(std::string actFuncName, Eigen::RowVectorXd &simple_outputs)
+{
+    if (actFuncName == "ReLu" || actFuncName == "relu") return Net::ReLu(simple_outputs);
+    else if (actFuncName == "Sigmoid" || actFuncName == "sigmoid") return Net::Sigmoid(simple_outputs);
+    else if (actFuncName == "Tanh" || actFuncName == "tanh") return Net::Tanh(simple_outputs);
+    else if (actFuncName == "Softmax" || actFuncName == "softmax") return Net::Softmax(simple_outputs);
+}
+
+Eigen::RowVectorXd Net::applyActivationFunctionDerivative(std::string actFuncName, Eigen::RowVectorXd &simple_outputs)
+{
+    if (actFuncName == "ReLu" || actFuncName == "relu") return Net::ReLuDerivative(simple_outputs);
+    else if (actFuncName == "Sigmoid" || actFuncName == "sigmoid") return Net::SigmoidDerivative(simple_outputs);
+    else if (actFuncName == "Tanh" || actFuncName == "tanh") return Net::TanhDerivative(simple_outputs);
+}
 
 // Process an input to get an output
 void Net::feedforward(Eigen::RowVectorXd &inputs, Eigen::RowVectorXd &prediction)
@@ -60,17 +75,7 @@ void Net::feedforward(Eigen::RowVectorXd &inputs, Eigen::RowVectorXd &prediction
             simple_outputs[n] = cur_value.dot(inputs) + bias[n];
         }
         // Set layer output to our newly obtained values
-        if (this->layers[0]->activation_function == "ReLu" || this->layers[0]->activation_function == "relu") {
-            activated_outputs = Net::ReLu(simple_outputs);
-        } else if (this->layers[0]->activation_function == "Step" || this->layers[0]->activation_function == "step") {
-            activated_outputs = Net::Step(simple_outputs);
-        } else if (this->layers[0]->activation_function == "Sigmoid" || this->layers[0]->activation_function == "sigmoid") {
-            activated_outputs = Net::Sigmoid(simple_outputs);
-        } else if (this->layers[0]->activation_function == "Tanh" || this->layers[0]->activation_function == "tanh") {
-            activated_outputs = Net::Tanh(simple_outputs);
-        } else if (this->layers[0]->activation_function == "Softmax" || this->layers[0]->activation_function == "softmax") {
-            activated_outputs = Net::Softmax(simple_outputs);
-        }
+        activated_outputs = applyActivationFunction(this->layers[0]->activation_function, simple_outputs);
     } else {
         std::cout << "Wrong input size (expected size: "
                   << this->input_size << ", received size: "
@@ -95,17 +100,7 @@ void Net::feedforward(Eigen::RowVectorXd &inputs, Eigen::RowVectorXd &prediction
             cur_simple_outputs[n] = cur_value.dot(prev_output) + bias[n];
         }
         // Set layer output to our newly obtained values
-        if (this->layers[l]->activation_function == "ReLu" || this->layers[l]->activation_function == "relu") {
-            cur_activated_outputs = Net::ReLu(cur_simple_outputs);
-        } else if (this->layers[l]->activation_function == "Step" || this->layers[l]->activation_function == "step") {
-            cur_activated_outputs = Net::Step(cur_simple_outputs);
-        } else if (this->layers[l]->activation_function == "Sigmoid" || this->layers[l]->activation_function == "sigmoid") {
-            cur_activated_outputs = Net::Sigmoid(cur_simple_outputs);
-        } else if (this->layers[l]->activation_function == "Tanh" || this->layers[l]->activation_function == "tanh") {
-            cur_activated_outputs = Net::Tanh(cur_simple_outputs);
-        } else if (this->layers[l]->activation_function == "Softmax" || this->layers[l]->activation_function == "softmax") {
-            cur_activated_outputs = Net::Softmax(cur_simple_outputs);
-        }
+        cur_activated_outputs = applyActivationFunction(this->layers[l]->activation_function, cur_simple_outputs);
     }
 
     // Set final output
@@ -178,7 +173,7 @@ void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true
 
     // Calculations
     Eigen::RowVectorXd d_error = this->optimizer.mean_squared_error_derivative(y_pred, y_true);
-    Eigen::RowVectorXd delta = d_error * this->SigmoidDerivative(simple_outputs);
+    Eigen::RowVectorXd delta = d_error * applyActivationFunctionDerivative(this->layers.back()->activation_function, simple_outputs);
     d_weights.back() += (activated_outputs.transpose() * delta);
     d_biases.back() += delta;
 
@@ -195,7 +190,7 @@ void Net::backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true
         Eigen::RowVectorXd &activated_outputs = (l > 0) ? this->layers[l-1]->activated_outputs : this->input;
 
         // Calculations
-        Eigen::RowVectorXd delta = d_error * this->ReLuDerivative(simple_outputs);
+        Eigen::RowVectorXd delta = d_error * applyActivationFunctionDerivative(this->layers[l]->activation_function, simple_outputs);
 
         d_weights[l] += learning_rate * (activated_outputs.transpose() * delta);
         d_biases[l] += learning_rate * delta;
@@ -245,16 +240,6 @@ void Net::results(Eigen::RowVectorXd &prediction)
 /*
  * Activation functions
  */
-
-//
-// Step
-Eigen::RowVectorXd Net::Step(Eigen::RowVectorXd &x)
-{
-    // 0 or 1
-    for(auto &w : x) w = (w > 0) ? 1 : 0;
-    return x;
-}
-
 //
 // ReLu
 Eigen::RowVectorXd Net::ReLu(Eigen::RowVectorXd &x)

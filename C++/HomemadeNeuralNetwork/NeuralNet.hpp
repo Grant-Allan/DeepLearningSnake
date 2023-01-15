@@ -1,4 +1,4 @@
-#include <Eigen/Eigen>
+#include "Eigen/Eigen"
 #include <iostream>
 #include <vector>
 
@@ -85,6 +85,8 @@ public:
 
     // Model use
     Net(int input_size, std::vector<LayerSettings> topology, Optimizer opt);
+    Eigen::RowVectorXd applyActivationFunction(std::string actFuncName, Eigen::RowVectorXd &simple_outputs);
+    Eigen::RowVectorXd applyActivationFunctionDerivative(std::string actFuncName, Eigen::RowVectorXd &simple_outputs);
     void predict(Eigen::RowVectorXd &input, Eigen::RowVectorXd &prediction);
     void train(Eigen::RowVectorXd &input, Eigen::RowVectorXd &y_true);
     void results(Eigen::RowVectorXd &prediction);
@@ -92,8 +94,6 @@ public:
     void backpropagation(Eigen::RowVectorXd &y_pred, Eigen::RowVectorXd &y_true);
 
     // Activation functions
-    Eigen::RowVectorXd Step(Eigen::RowVectorXd &x);
-
     Eigen::RowVectorXd ReLu(Eigen::RowVectorXd &x);
     Eigen::RowVectorXd ReLuDerivative(Eigen::RowVectorXd &x);
 
